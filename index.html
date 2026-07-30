@@ -1119,6 +1119,65 @@
       width: var(--pct, 0%);
       background: var(--borrow);
     }
+    .external-worker-shell,
+    .external-building-list {
+      display: grid;
+      gap: 12px;
+    }
+    .external-building-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .external-worker-source {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--borrow-soft);
+      color: var(--borrow);
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .worker-source-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      margin-bottom: 10px;
+    }
+    .worker-source-toggle strong,
+    .worker-source-toggle span {
+      display: block;
+    }
+    .worker-source-toggle input {
+      width: 22px;
+      min-height: 22px;
+      flex: 0 0 auto;
+      accent-color: var(--primary);
+    }
+    .external-building-list table {
+      min-width: 720px;
+    }
+    .external-building-list th:nth-child(1),
+    .external-building-list td:nth-child(1) {
+      width: 150px;
+    }
+    .external-building-list th:nth-child(2),
+    .external-building-list td:nth-child(2) {
+      width: 240px;
+    }
+    .external-building-list th:nth-child(3),
+    .external-building-list td:nth-child(3) {
+      width: 150px;
+    }
     .item-list {
       display: grid;
       gap: 10px;
@@ -1835,6 +1894,7 @@
         <section class="tab-panel" id="tab-periodData"></section>
         <section class="tab-panel" id="tab-attendance"></section>
         <section class="tab-panel" id="tab-borrow"></section>
+        <section class="tab-panel" id="tab-externalWorkers"></section>
         <section class="tab-panel" id="tab-workers"></section>
         <section class="tab-panel" id="tab-machines"></section>
         <section class="tab-panel" id="tab-holidays"></section>
@@ -1942,6 +2002,7 @@
       ["periodData", "ข้อมูลงวดงาน"],
       ["attendance", "วันมาทำงาน"],
       ["borrow", "ยืมคนงาน"],
+      ["externalWorkers", "คนงานหลังอื่น"],
       ["workers", "คนงาน"],
       ["machines", "เครื่องจักร"],
       ["holidays", "วันหยุดบริษัท"],
@@ -2032,6 +2093,7 @@
           borrowView: "ALL",
           borrowMonth: "",
           borrowDraft: {},
+          externalWorkerBuildingId: "",
           periodDataBuilding: ""
         },
         sync: {
@@ -2049,6 +2111,7 @@
         buildings: [""],
         manual: { ALL: { initialLaborCost: 0, initialMachineCost: 0, note: "" } },
         workers: [],
+        externalWorkerBuildings: [],
         machines: [],
         holidays: [],
         borrowedWorkers: [],
@@ -2381,6 +2444,16 @@
       next.manual = cloneManual(next.manual);
       next.buildings = Array.isArray(next.buildings) ? next.buildings.map((row) => String(row || "").trim()).filter((row, index, list) => index === list.indexOf(row)) : [];
       next.workers = Array.isArray(next.workers) ? next.workers : [];
+      next.externalWorkerBuildings = Array.isArray(next.externalWorkerBuildings) ? next.externalWorkerBuildings.map((building) => ({
+        id: building.id || uid("ewb"),
+        name: String(building.name || "").trim(),
+        workers: Array.isArray(building.workers) ? building.workers.map((worker) => ({
+          id: worker.id || uid("ew"),
+          code: String(worker.code || "").trim(),
+          name: String(worker.name || "").trim(),
+          dailyWage: n(worker.dailyWage)
+        })).filter((worker) => worker.id) : []
+      })).filter((building) => building.id) : [];
       next.machines = Array.isArray(next.machines) ? next.machines : [];
       next.holidays = Array.isArray(next.holidays) ? next.holidays : [];
       next.borrowedWorkers = Array.isArray(next.borrowedWorkers) ? next.borrowedWorkers.map((row) => ({
@@ -2466,9 +2539,10 @@
       if (!["all", "plan", "actual", "planActual", "machine"].includes(next.ui.fillMode)) next.ui.fillMode = "all";
       if (!["hide", "move"].includes(next.ui.workerListMode)) next.ui.workerListMode = "hide";
       const viewOptions = buildingViewOptionsFromState(next);
+      const planViewOptions = planBuildingViewOptionsFromState(next);
       const fallbackView = viewOptions[0] || "";
       const fallbackCombined = viewOptions.at(-1) || fallbackView || "ALL";
-      if (!viewOptions.includes(next.ui.planView)) next.ui.planView = fallbackView;
+      if (!planViewOptions.includes(next.ui.planView)) next.ui.planView = planViewOptions[0] || fallbackView;
       if (!viewOptions.includes(next.ui.manualView)) next.ui.manualView = fallbackCombined;
       if (!viewOptions.includes(next.ui.reportView)) next.ui.reportView = fallbackCombined;
       if (!["full", "projectPlan"].includes(next.ui.reportMode)) next.ui.reportMode = "full";
@@ -2477,6 +2551,9 @@
       if (!["full", "noWage"].includes(next.ui.attendanceExportMode)) next.ui.attendanceExportMode = "full";
       next.ui.borrowDraft = next.ui.borrowDraft && typeof next.ui.borrowDraft === "object" ? next.ui.borrowDraft : {};
       next.ui.borrowMonth = next.ui.borrowMonth || "";
+      if (!next.externalWorkerBuildings.some((building) => building.id === next.ui.externalWorkerBuildingId)) {
+        next.ui.externalWorkerBuildingId = next.externalWorkerBuildings[0]?.id || "";
+      }
       const periodDataBuildings = allBuildingsFromState(next).filter(Boolean);
       if (!periodDataBuildings.includes(next.ui.periodDataBuilding)) next.ui.periodDataBuilding = periodDataBuildings[0] || "";
       return next;
@@ -2687,8 +2764,40 @@
       return state.holidays.some((holiday) => holiday.date === date);
     }
 
+    function externalWorkerRecords() {
+      return (state.externalWorkerBuildings || []).flatMap((building) =>
+        (building.workers || []).map((worker) => ({
+          worker,
+          buildingId: building.id,
+          buildingName: building.name
+        }))
+      );
+    }
+
+    function externalWorkerRecord(id) {
+      return externalWorkerRecords().find((row) => row.worker.id === id) || null;
+    }
+
     function getWorker(id) {
-      return state.workers.find((worker) => worker.id === id);
+      return state.workers.find((worker) => worker.id === id) || externalWorkerRecord(id)?.worker;
+    }
+
+    function externalWorkerSource(id) {
+      return externalWorkerRecord(id)?.buildingName || "";
+    }
+
+    function isExternalWorker(id) {
+      return Boolean(externalWorkerRecord(id));
+    }
+
+    function workerUsedInPlans(id) {
+      return (state.workPlans || []).some((plan) =>
+        Object.values(plan.itemData || {}).some((data) =>
+          Object.values(data.actual || {}).some((entries) =>
+            (entries || []).some((entry) => entry.workerId === id)
+          )
+        )
+      );
     }
 
     function getMachine(id) {
@@ -2761,6 +2870,14 @@
       return buildings.length > 1 ? [...buildings, combinedViewValueFromState(source)] : buildings;
     }
 
+    function planBuildingViewOptionsFromState(source) {
+      const options = buildingViewOptionsFromState(source);
+      const combined = combinedViewValueFromState(source);
+      return options.includes(combined)
+        ? [combined, ...options.filter((view) => view !== combined)]
+        : options;
+    }
+
     function buildingLabel(building) {
       return building ? `หลัง ${building}` : "ยังไม่ตั้งชื่ออาคาร";
     }
@@ -2787,6 +2904,10 @@
 
     function buildingViewOptions() {
       return buildingViewOptionsFromState(state);
+    }
+
+    function planBuildingViewOptions() {
+      return planBuildingViewOptionsFromState(state);
     }
 
     function normalizePeriodTemplates(source = {}) {
@@ -3641,6 +3762,7 @@
       if (activeTab === "periodData") renderPeriodData();
       if (activeTab === "attendance") renderAttendance();
       if (activeTab === "borrow") renderBorrowedWorkers();
+      if (activeTab === "externalWorkers") renderExternalWorkers();
       if (activeTab === "workers") renderWorkers();
       if (activeTab === "machines") renderMachines();
       if (activeTab === "holidays") renderHolidays();
@@ -3912,7 +4034,7 @@
     }
 
     function renderPlan() {
-      const viewOptions = buildingViewOptions();
+      const viewOptions = planBuildingViewOptions();
       const view = viewOptions.includes(state.ui.planView) ? state.ui.planView : (viewOptions[0] || "");
       const dates = getDates();
       const el = $("#tab-plan");
@@ -4041,7 +4163,7 @@
     }
 
     function buildPlanTable(view, dates) {
-      const editable = !["GI", "ALL"].includes(view);
+      const editable = true;
       const activePeriods = periodsForView(view);
       const totalCols = dates.length + 4;
       let body = "";
@@ -4568,6 +4690,68 @@
       const key = String(no || "").trim();
       if (!key) return null;
       return periodTemplateForBuilding(building).find((period) => String(period.no) === key) || null;
+    }
+
+    function renderExternalWorkers() {
+      const el = $("#tab-externalWorkers");
+      const buildings = state.externalWorkerBuildings || [];
+      const buildingCards = buildings.map((building) => `
+        <div class="panel">
+          <div class="panel-head external-building-head">
+            <label style="min-width:min(100%,320px)">
+              <span>ชื่ออาคาร</span>
+              <input data-external-building-field="name" data-building-id="${esc(building.id)}" value="${esc(building.name)}" placeholder="เช่น หลัง B">
+            </label>
+            <div class="inline-list">
+              <span class="pill">${money((building.workers || []).length, 0)} คน</span>
+              <button class="danger" data-action="delete-external-building" data-building-id="${esc(building.id)}">ลบอาคาร</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid" style="margin-bottom:10px">
+              <label><span>รหัสพนักงาน</span><input data-external-new-field="code" data-building-id="${esc(building.id)}" placeholder="B001"></label>
+              <label><span>ชื่อ-สกุล</span><input data-external-new-field="name" data-building-id="${esc(building.id)}"></label>
+              <label><span>ค่าแรงเต็มวัน</span><input type="number" min="0" step="0.01" data-external-new-field="dailyWage" data-building-id="${esc(building.id)}"></label>
+              <button class="primary" data-action="add-external-worker" data-building-id="${esc(building.id)}">เพิ่มคนงาน</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th class="num">ค่าแรงเต็มวัน</th><th class="num">ต่อชั่วโมง</th><th></th></tr></thead>
+                <tbody>
+                  ${(building.workers || []).map((worker) => `
+                    <tr>
+                      <td><input data-external-worker-field="code" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}" value="${esc(worker.code)}"></td>
+                      <td><input data-external-worker-field="name" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}" value="${esc(worker.name)}"></td>
+                      <td><input class="num" type="number" min="0" step="0.01" data-external-worker-field="dailyWage" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}" value="${esc(worker.dailyWage)}"></td>
+                      <td class="num">${money(n(worker.dailyWage) / n(state.settings.dayHours), 0)}</td>
+                      <td><button class="danger" data-action="delete-external-worker" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}">ลบ</button></td>
+                    </tr>
+                  `).join("") || `<tr><td colspan="5" class="muted">ยังไม่มีคนงานของอาคารนี้</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `).join("");
+      el.innerHTML = `
+        <div class="section external-worker-shell">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>คนงานหลังอื่น</h2>
+                <p class="muted">เก็บรายชื่อคนงานที่ยืมมาจากอาคารอื่น เพื่อเลือกใช้ในแผนงวดงาน</p>
+              </div>
+            </div>
+            <div class="panel-body form-grid">
+              <label><span>ชื่ออาคาร</span><input id="externalBuildingName" placeholder="เช่น B"></label>
+              <button class="primary" data-action="add-external-building">เพิ่มอาคาร</button>
+            </div>
+          </div>
+          <div class="external-building-list">
+            ${buildingCards || `<div class="panel"><div class="panel-body muted">ยังไม่มีอาคารอื่น กดเพิ่มอาคารเพื่อเริ่มบันทึกรายชื่อคนงาน</div></div>`}
+          </div>
+        </div>
+      `;
     }
 
     function renderWorkers() {
@@ -5457,7 +5641,8 @@
         date,
         planned: itemPlanValue(item, date),
         assignments: actualEntries(item, date).map((row) => ({ ...row })),
-        machineRows: (activeMachineUsage()?.[period.building]?.[date] || []).map((row) => ({ ...row }))
+        machineRows: (activeMachineUsage()?.[period.building]?.[date] || []).map((row) => ({ ...row })),
+        includeExternalWorkers: actualEntries(item, date).some((row) => isExternalWorker(row.workerId))
       };
       $("#cellDialogTitle").textContent = `${period.building} · งวด ${period.no} · ${item.name}`;
       $("#cellDialogMeta").textContent = dateLabel(date);
@@ -5470,20 +5655,33 @@
       const ignore = { periodId: cellDraft.periodId, itemId: cellDraft.itemId, date: cellDraft.date };
       const draftWorkerIds = new Set(cellDraft.assignments.map((row) => row.workerId));
       const listMode = workerListMode();
-      const workerOptions = state.workers.map((worker) => {
+      const ownWorkerOptions = state.workers.map((worker) => {
         const assigned = workerAssignedInfo(worker.id, cellDraft.date, ignore);
         const borrowed = borrowedWorkerInfo(worker.id, cellDraft.date);
         const inDraft = draftWorkerIds.has(worker.id);
         if (listMode === "hide" && (assigned || inDraft || borrowed)) return "";
         return workerOption(worker, assigned, false, inDraft, inDraft ? "อยู่ในช่องนี้แล้ว" : "", borrowed);
       }).join("");
+      const externalWorkerOptions = cellDraft.includeExternalWorkers
+        ? (state.externalWorkerBuildings || []).map((building) => {
+            const options = (building.workers || []).map((worker) => {
+              const assigned = workerAssignedInfo(worker.id, cellDraft.date, ignore);
+              const inDraft = draftWorkerIds.has(worker.id);
+              if (listMode === "hide" && (assigned || inDraft)) return "";
+              return workerOption(worker, assigned, false, inDraft, inDraft ? "อยู่ในช่องนี้แล้ว" : "");
+            }).join("");
+            return options ? `<optgroup label="${esc(buildingLabel(building.name))}">${options}</optgroup>` : "";
+          }).join("")
+        : "";
+      const workerOptions = `${ownWorkerOptions ? `<optgroup label="คนงานของเรา">${ownWorkerOptions}</optgroup>` : ""}${externalWorkerOptions}`;
       const machineOptions = state.machines.map((machine) => `<option value="${machine.id}">${esc(machine.name)} · ${money(machine.dailyCost, 0)}</option>`).join("");
       const assignments = cellDraft.assignments.map((row, index) => {
         const worker = getWorker(row.workerId);
         const amount = laborAmount(row);
+        const source = externalWorkerSource(row.workerId);
         return `
           <tr>
-            <td>${worker ? `${esc(worker.code)} · ${esc(worker.name)}` : "ไม่พบคนงาน"} ${row.transferFrom ? `<span class="pill green">ย้ายจากงานเดิม</span>` : ""}</td>
+            <td>${worker ? `${esc(worker.code)} · ${esc(worker.name)}` : "ไม่พบคนงาน"} ${source ? `<span class="external-worker-source">${esc(buildingLabel(source))}</span>` : ""} ${row.transferFrom ? `<span class="pill green">ย้ายจากงานเดิม</span>` : ""}</td>
             <td>
               <select data-draft-worker-unit="${index}">
                 <option value="full" ${row.unit === "full" ? "selected" : ""}>เต็มวัน</option>
@@ -5522,8 +5720,12 @@
         <div class="panel">
           <div class="panel-head"><h3>คนงาน</h3></div>
           <div class="panel-body">
+            <label class="worker-source-toggle">
+              <span><strong>ยืมคนงานหลังอื่น</strong><span class="muted">เปิดเพื่อแสดงรายชื่อคนงานจากอาคารอื่น</span></span>
+              <input type="checkbox" data-cell-draft-toggle="includeExternalWorkers" ${cellDraft.includeExternalWorkers ? "checked" : ""}>
+            </label>
             <div class="form-grid" style="margin-bottom:10px">
-              <label><span>เลือกคนงาน</span><select id="draftWorkerSelect">${workerOptions}</select></label>
+              <label><span>เลือกคนงาน</span><select id="draftWorkerSelect">${workerOptions || `<option value="">ยังไม่มีรายชื่อที่เลือกได้</option>`}</select></label>
               <label><span>ประเภทเวลา</span><select id="draftWorkerUnit"><option value="full">เต็มวัน</option><option value="half">ครึ่งวัน</option><option value="hours">รายชั่วโมง</option></select></label>
               <label><span>ชั่วโมง</span><input type="number" min="0" step="0.5" id="draftWorkerHours" value="${esc(state.settings.dayHours)}"></label>
               <button data-action="add-draft-worker" class="primary">เพิ่มคนงาน</button>
@@ -6806,6 +7008,10 @@
       if (action === "delete-item") return deleteItem(button.dataset.periodId, button.dataset.itemId);
       if (action === "add-worker") return addWorker();
       if (action === "delete-worker") return deleteWorker(button.dataset.workerId);
+      if (action === "add-external-building") return addExternalBuilding();
+      if (action === "delete-external-building") return deleteExternalBuilding(button.dataset.buildingId);
+      if (action === "add-external-worker") return addExternalWorker(button.dataset.buildingId);
+      if (action === "delete-external-worker") return deleteExternalWorker(button.dataset.buildingId, button.dataset.workerId);
       if (action === "import-workers") return importWorkers();
       if (action === "download-worker-template") return downloadWorkerTemplate();
       if (action === "import-period-data") return importPeriodData();
@@ -6935,6 +7141,22 @@
           saveState();
         }
       }
+      if (target.dataset.externalBuildingField) {
+        const building = (state.externalWorkerBuildings || []).find((row) => row.id === target.dataset.buildingId);
+        if (building) {
+          building[target.dataset.externalBuildingField] = target.value;
+          saveState();
+        }
+      }
+      if (target.dataset.externalWorkerField) {
+        const building = (state.externalWorkerBuildings || []).find((row) => row.id === target.dataset.buildingId);
+        const worker = building?.workers?.find((row) => row.id === target.dataset.workerId);
+        if (worker) {
+          const key = target.dataset.externalWorkerField;
+          worker[key] = key === "dailyWage" ? n(target.value) : target.value;
+          saveState();
+        }
+      }
       if (target.dataset.machineField) {
         const machine = getMachine(target.dataset.machineId);
         if (machine) {
@@ -6973,6 +7195,10 @@
       const target = event.target;
       if (target.id === "mobileNav") return setActiveTab(target.value);
       if (target.dataset.borrowField) return updateBorrowDraftField(target);
+      if (target.dataset.cellDraftToggle && cellDraft) {
+        cellDraft[target.dataset.cellDraftToggle] = target.checked;
+        return renderCellDialog();
+      }
       if (target.id === "manualViewSelect") {
         state.ui.manualView = target.value;
         saveState();
@@ -7356,6 +7582,63 @@
       state.workers.push({ id: uid("w"), code, name, dailyWage: wage });
       saveState();
       renderWorkers();
+    }
+
+    function addExternalBuilding() {
+      const name = $("#externalBuildingName")?.value.trim() || "";
+      if (!name) return showToast("กรอกชื่ออาคารก่อน");
+      const duplicate = (state.externalWorkerBuildings || []).some((building) => building.name.toLowerCase() === name.toLowerCase());
+      if (duplicate) return showToast("มีอาคารชื่อนี้แล้ว");
+      const building = { id: uid("ewb"), name, workers: [] };
+      state.externalWorkerBuildings.push(building);
+      state.ui.externalWorkerBuildingId = building.id;
+      saveState();
+      renderExternalWorkers();
+      showToast(`เพิ่ม${buildingLabel(name)}แล้ว`);
+    }
+
+    function deleteExternalBuilding(id) {
+      const building = (state.externalWorkerBuildings || []).find((row) => row.id === id);
+      if (!building) return;
+      if ((building.workers || []).some((worker) => workerUsedInPlans(worker.id))) {
+        return showToast("ลบไม่ได้ เพราะมีคนงานจากอาคารนี้ถูกใช้ในแผนแล้ว");
+      }
+      if (!confirm(`ลบ${buildingLabel(building.name)}และรายชื่อคนงานทั้งหมด?`)) return;
+      state.externalWorkerBuildings = state.externalWorkerBuildings.filter((row) => row.id !== id);
+      saveState();
+      renderExternalWorkers();
+    }
+
+    function externalNewValue(buildingId, field) {
+      return $(`[data-external-new-field="${field}"][data-building-id="${buildingId}"]`)?.value.trim() || "";
+    }
+
+    function addExternalWorker(buildingId) {
+      const building = (state.externalWorkerBuildings || []).find((row) => row.id === buildingId);
+      if (!building) return;
+      const code = externalNewValue(buildingId, "code");
+      const name = externalNewValue(buildingId, "name");
+      const wage = n(externalNewValue(buildingId, "dailyWage"));
+      if (!code || !name) return showToast("กรอกรหัสและชื่อคนงานก่อน");
+      const duplicate = externalWorkerRecords().some(({ worker }) => worker.code.toLowerCase() === code.toLowerCase());
+      if (duplicate || state.workers.some((worker) => worker.code.toLowerCase() === code.toLowerCase())) {
+        return showToast("รหัสพนักงานนี้ถูกใช้แล้ว");
+      }
+      building.workers.push({ id: uid("ew"), code, name, dailyWage: wage });
+      saveState();
+      renderExternalWorkers();
+      showToast("เพิ่มคนงานหลังอื่นแล้ว");
+    }
+
+    function deleteExternalWorker(buildingId, workerId) {
+      const building = (state.externalWorkerBuildings || []).find((row) => row.id === buildingId);
+      const worker = building?.workers?.find((row) => row.id === workerId);
+      if (!building || !worker) return;
+      if (workerUsedInPlans(workerId)) return showToast("ลบไม่ได้ เพราะคนงานนี้ถูกใช้ในแผนแล้ว");
+      if (!confirm(`ลบ ${worker.code} · ${worker.name}?`)) return;
+      building.workers = building.workers.filter((row) => row.id !== workerId);
+      saveState();
+      renderExternalWorkers();
     }
 
     function deleteWorker(id) {
