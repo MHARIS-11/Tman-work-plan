@@ -281,6 +281,54 @@
       color: white;
       font-weight: 800;
     }
+    .workforce-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .workforce-tabs button {
+      min-height: 40px;
+      padding-inline: 16px;
+      background: var(--bg);
+    }
+    .workforce-tabs button[aria-pressed="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      font-weight: 900;
+    }
+    .workforce-subpanel {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+    .dashboard-scope-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .dashboard-scope-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+    }
+    .dashboard-scope-card span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .dashboard-scope-card strong {
+      font-size: 22px;
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+    }
     .table-wrap {
       overflow: auto;
       border: 1px solid var(--line);
@@ -2001,8 +2049,6 @@
       ["periods", "งวดงานทั้งหมด"],
       ["periodData", "ข้อมูลงวดงาน"],
       ["attendance", "วันมาทำงาน"],
-      ["borrow", "ยืมคนงาน"],
-      ["externalWorkers", "คนงานหลังอื่น"],
       ["workers", "คนงาน"],
       ["machines", "เครื่องจักร"],
       ["holidays", "วันหยุดบริษัท"],
@@ -2090,6 +2136,7 @@
           reportMode: "full",
           attendanceView: "ALL",
           attendanceExportMode: "full",
+          workerTab: "regular",
           borrowView: "ALL",
           borrowMonth: "",
           borrowDraft: {},
@@ -2396,6 +2443,8 @@
       const fallbackNo = String(index + 1);
       plan.id = plan.id || uid("wp");
       plan.claimNo = String(plan.claimNo || fallbackNo);
+      plan.planType = ["continuation", "new"].includes(plan.planType) ? plan.planType : (String(plan.claimNo || "").includes(".") ? "continuation" : "new");
+      plan.parentClaimNo = String(plan.parentClaimNo || (plan.planType === "continuation" ? claimGroupNo(plan) : "")).trim();
       plan.status = plan.status || "กำลังทำ";
       plan.startDate = plan.startDate || next.settings.startDate || "2026-05-26";
       plan.endDate = plan.endDate || next.settings.endDate || "2026-07-31";
@@ -2521,6 +2570,8 @@
         next.workPlans = [{
           id: firstId,
           claimNo: "1",
+          planType: "new",
+          parentClaimNo: "",
           status: "กำลังทำ",
           startDate: next.settings.startDate || "2026-05-26",
           endDate: next.settings.endDate || "2026-07-31",
@@ -2549,6 +2600,7 @@
       if (!viewOptions.includes(next.ui.attendanceView)) next.ui.attendanceView = fallbackCombined;
       if (!viewOptions.includes(next.ui.borrowView) && next.ui.borrowView !== "ALL") next.ui.borrowView = fallbackCombined;
       if (!["full", "noWage"].includes(next.ui.attendanceExportMode)) next.ui.attendanceExportMode = "full";
+      if (!["regular", "inbound", "outbound"].includes(next.ui.workerTab)) next.ui.workerTab = "regular";
       next.ui.borrowDraft = next.ui.borrowDraft && typeof next.ui.borrowDraft === "object" ? next.ui.borrowDraft : {};
       next.ui.borrowMonth = next.ui.borrowMonth || "";
       if (!next.externalWorkerBuildings.some((building) => building.id === next.ui.externalWorkerBuildingId)) {
@@ -3484,6 +3536,146 @@
       return [...groups.values()].reduce((sum, group) => sum + (n(group.mainValue) || n(group.subValue)), 0);
     }
 
+    function claimGroupNo(plan = activeWorkPlan()) {
+      const raw = String(plan?.claimNo || "").trim();
+      const match = raw.match(/^\d+/);
+      return match ? match[0] : (raw || "1");
+    }
+
+    function isContinuationPlan(plan = activeWorkPlan()) {
+      return Boolean(plan?.planType === "continuation" || String(plan?.claimNo || "").includes("."));
+    }
+
+    function planTypeLabel(plan = activeWorkPlan()) {
+      return isContinuationPlan(plan) ? "แผนต่อ" : "แผนเบิกงวดใหม่";
+    }
+
+    function plansForScope(scope, plan = activeWorkPlan()) {
+      const plans = state.workPlans || [];
+      if (scope === "project") return plans;
+      if (scope === "claim") {
+        const groupNo = claimGroupNo(plan);
+        return plans.filter((row) => claimGroupNo(row) === groupNo);
+      }
+      return plan ? [plan] : [];
+    }
+
+    function planPeriodsForView(plan, view) {
+      const selected = new Set(plan?.periodIds || []);
+      const buildings = buildingsForView(view);
+      return state.periods.filter((period) => buildings.includes(period.building) && selected.has(period.id));
+    }
+
+    function planDateRange(plan) {
+      return getDates(planStartDate(plan), planEndDate(plan)).filter((date) => date <= planUpdateDate(plan));
+    }
+
+    function planActualEntries(plan, item, date) {
+      if (!plan || !item?.id) return [];
+      return plan.itemData?.[item.id]?.actual?.[date] || [];
+    }
+
+    function scopedPeriodValue(view, plans, includeClaimKey = false) {
+      const groups = new Map();
+      plans.forEach((plan) => {
+        planPeriodsForView(plan, view).forEach((period) => {
+          const key = `${includeClaimKey ? `${claimGroupNo(plan)}|` : ""}${periodMainKey(period)}`;
+          const current = groups.get(key) || { mainValue: n(period.mainValue), subValue: 0 };
+          current.mainValue = n(period.mainValue) || current.mainValue;
+          current.subValue += n(period.periodValue);
+          groups.set(key, current);
+        });
+      });
+      return [...groups.values()].reduce((sum, group) => sum + (n(group.mainValue) || n(group.subValue)), 0);
+    }
+
+    function scopedLaborValue(view, plans, includeClaimKey = false) {
+      const seen = new Set();
+      let total = 0;
+      plans.forEach((plan) => {
+        planPeriodsForView(plan, view).forEach((period) => {
+          (period.items || []).forEach((item) => {
+            const key = `${includeClaimKey ? `${claimGroupNo(plan)}|` : ""}${item.id}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            total += n(item.laborValue);
+          });
+        });
+      });
+      return total;
+    }
+
+    function scopedActuals(view, plans) {
+      const laborSeen = new Set();
+      const machineSeen = new Set();
+      let laborActual = 0;
+      let machineActual = 0;
+      plans.forEach((plan) => {
+        const claimKey = claimGroupNo(plan);
+        const dates = planDateRange(plan);
+        const dateSet = new Set(dates);
+        planPeriodsForView(plan, view).forEach((period) => {
+          (period.items || []).forEach((item) => {
+            dates.forEach((date) => {
+              planActualEntries(plan, item, date).forEach((entry, index) => {
+                const key = `${claimKey}|${item.id}|${date}|${entry.workerId || ""}|${entry.unit || ""}|${entry.hours || ""}|${n(entry.amount)}|${index}`;
+                if (laborSeen.has(key)) return;
+                laborSeen.add(key);
+                laborActual += laborAmount(entry);
+              });
+            });
+          });
+        });
+        buildingsForView(view).forEach((building) => {
+          const usage = plan.machineUsage?.[building] || {};
+          Object.entries(usage).forEach(([date, rows]) => {
+            if (!dateSet.has(date)) return;
+            (rows || []).forEach((row, index) => {
+              const key = `${claimKey}|${building}|${date}|${row.id || index}|${row.machineId || ""}|${n(row.amount)}`;
+              if (machineSeen.has(key)) return;
+              machineSeen.add(key);
+              machineActual += n(row.amount);
+            });
+          });
+        });
+      });
+      return { laborActual, machineActual };
+    }
+
+    function scopedSummaryFor(view, scope = "plan", plan = activeWorkPlan()) {
+      const plans = plansForScope(scope, plan);
+      const includeClaimKey = scope === "project";
+      const periodValue = scopedPeriodValue(view, plans, includeClaimKey);
+      const laborValue = scopedLaborValue(view, plans, includeClaimKey);
+      const { laborActual, machineActual } = scopedActuals(view, plans);
+      const total = laborActual + machineActual;
+      const control = laborValue * n(state.settings.controlPercent) / 100;
+      const manual = accumulatedTotalsFor(view, plan);
+      return {
+        view,
+        scope,
+        periodValue,
+        laborValue,
+        control,
+        laborActual,
+        machineActual,
+        total,
+        balance: control - total,
+        costRatio: control ? total / control : 0,
+        currentRatio: laborValue ? total / laborValue : 0,
+        manual,
+        manualRatio: n(manual.contractLaborCost) ? n(manual.costToUpdate) / n(manual.contractLaborCost) : 0
+      };
+    }
+
+    function projectSummaryFor(view) {
+      return scopedSummaryFor(view, "project");
+    }
+
+    function claimSummaryFor(view, plan = activeWorkPlan()) {
+      return scopedSummaryFor(view, "claim", plan);
+    }
+
     function costStatus(ratio) {
       if (ratio >= 1) return "danger";
       if (ratio >= 0.85) return "warning";
@@ -3749,6 +3941,14 @@
     }
 
     function setActiveTab(tab) {
+      if (tab === "borrow") {
+        state.ui.workerTab = "outbound";
+        tab = "workers";
+      }
+      if (tab === "externalWorkers") {
+        state.ui.workerTab = "inbound";
+        tab = "workers";
+      }
       activeTab = tab;
       $$(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${tab}`));
       renderNav();
@@ -3761,8 +3961,6 @@
       if (activeTab === "periods") renderPeriods();
       if (activeTab === "periodData") renderPeriodData();
       if (activeTab === "attendance") renderAttendance();
-      if (activeTab === "borrow") renderBorrowedWorkers();
-      if (activeTab === "externalWorkers") renderExternalWorkers();
       if (activeTab === "workers") renderWorkers();
       if (activeTab === "machines") renderMachines();
       if (activeTab === "holidays") renderHolidays();
@@ -3775,7 +3973,10 @@
       const el = $("#tab-dashboard");
       const viewOptions = buildingViewOptions();
       const mainView = viewOptions.includes(combinedViewValue()) ? combinedViewValue() : (viewOptions[0] || "ALL");
-      const main = summaryFor(mainView);
+      const main = projectSummaryFor(mainView);
+      const claim = claimSummaryFor(mainView);
+      const currentPlanSummary = summaryFor(mainView);
+      const claimNo = claimGroupNo();
       const balanceClass = main.balance < 0 ? "danger" : "";
       const kpis = [
         ["มูลค่างวดงานรวม", money(main.periodValue, 0)],
@@ -3786,7 +3987,7 @@
         [main.balance < 0 ? "เกินงบควบคุม" : "คงเหลืองบควบคุม", money(Math.abs(main.balance), 0)]
       ];
       const comparison = viewOptions.map((view) => {
-        const s = summaryFor(view);
+        const s = projectSummaryFor(view);
         const label = viewLabel(view);
         const usedPct = s.laborValue ? s.total / s.laborValue * 100 : 0;
         const controlPct = s.laborValue ? s.control / s.laborValue * 100 : n(state.settings.controlPercent);
@@ -3815,6 +4016,25 @@
           </div>
         `;
       }).join("");
+      const scopeCards = `
+        <div class="dashboard-scope-cards">
+          <div class="dashboard-scope-card">
+            <span>ภาพรวมทั้งโครงการ</span>
+            <strong>${money(main.total, 0)} / ${money(main.control, 0)}</strong>
+            <small class="muted">ค่าแรงรวม ${money(main.laborValue, 0)} · ใช้แล้ว ${money(main.currentRatio * 100, 1)}%</small>
+          </div>
+          <div class="dashboard-scope-card">
+            <span>เฉพาะเบิกงวดครั้งที่ ${esc(claimNo)}</span>
+            <strong>${money(claim.total, 0)} / ${money(claim.control, 0)}</strong>
+            <small class="muted">รวมแผนต่อ และไม่คิดงวดซ้ำในเบิกงวดเดียวกัน</small>
+          </div>
+          <div class="dashboard-scope-card">
+            <span>แผนที่เปิดอยู่ · ${esc(planTypeLabel())}</span>
+            <strong>${money(currentPlanSummary.total, 0)} / ${money(currentPlanSummary.control, 0)}</strong>
+            <small class="muted">${esc(workPlanLabel())}</small>
+          </div>
+        </div>
+      `;
       const initialTotal = n(main.manual.initialLaborCost) + n(main.manual.initialMachineCost);
       const mixTotal = main.laborActual + main.machineActual + initialTotal;
       const mix = {
@@ -3889,6 +4109,8 @@
               `).join("")}
             </div>
           </div>
+
+          ${scopeCards}
 
           <div class="dashboard-grid">
             <div class="dashboard-card">
@@ -3993,7 +4215,7 @@
 
     function renderWorkPlanPanel() {
       const plan = activeWorkPlan();
-      const options = state.workPlans.map((row) => `<option value="${row.id}" ${row.id === plan?.id ? "selected" : ""}>${esc(workPlanLabel(row))} · ${esc(row.status || "กำลังทำ")}</option>`).join("");
+      const options = state.workPlans.map((row) => `<option value="${row.id}" ${row.id === plan?.id ? "selected" : ""}>${esc(workPlanLabel(row))} · ${esc(planTypeLabel(row))} · ${esc(row.status || "กำลังทำ")}</option>`).join("");
       const history = (plan?.claimDateHistory || []).slice().reverse();
       const historyHtml = history.length ? `
         <details class="claim-history">
@@ -4023,7 +4245,8 @@
             <label><span>วันจบแผน</span><input inputmode="numeric" data-work-plan-date="endDate" value="${esc(thaiDateInput(planEndDate()))}" placeholder="วัน/เดือน/พ.ศ."></label>
             <label><span>วันที่ Update</span><div class="inline-list"><input inputmode="numeric" data-work-plan-date="updateDate" value="${esc(thaiDateInput(planUpdateDate()))}" placeholder="วัน/เดือน/พ.ศ."><button type="button" data-action="set-update-today">วันนี้</button></div></label>
             <label><span>วันที่เบิกงวด</span><input inputmode="numeric" data-work-plan-date="claimDate" value="${esc(thaiDateInput(planClaimDate()))}" placeholder="วัน/เดือน/พ.ศ."></label>
-            <button class="primary" data-action="add-work-plan">เพิ่มแผนใหม่ว่าง</button>
+            <button data-action="add-continuation-work-plan">เพิ่มแผนต่อ</button>
+            <button class="primary" data-action="add-work-plan">เพิ่มเบิกงวดใหม่</button>
             <button data-action="open-claim-dialog">เลื่อนเบิกงวด</button>
             <button class="danger" data-action="delete-work-plan">ลบแผน</button>
             <button data-action="complete-work-plan">เสร็จสิ้นและเปิดแผนถัดไป</button>
@@ -4692,8 +4915,9 @@
       return periodTemplateForBuilding(building).find((period) => String(period.no) === key) || null;
     }
 
-    function renderExternalWorkers() {
-      const el = $("#tab-externalWorkers");
+    function renderExternalWorkers(target = null) {
+      const el = target || (activeTab === "workers" && workforceTab() === "inbound" ? $("#workerSubPanel") : $("#tab-externalWorkers"));
+      if (!el) return;
       const buildings = state.externalWorkerBuildings || [];
       const buildingCards = buildings.map((building) => `
         <div class="panel">
@@ -4754,8 +4978,9 @@
       `;
     }
 
-    function renderWorkers() {
-      const el = $("#tab-workers");
+    function renderRegularWorkers(target = null) {
+      const el = target || $("#tab-workers");
+      if (!el) return;
       el.innerHTML = `
         <div class="section">
           <div class="split">
@@ -4795,6 +5020,46 @@
           </div>
         </div>
       `;
+    }
+
+    function workforceTab() {
+      return ["regular", "inbound", "outbound"].includes(state.ui?.workerTab) ? state.ui.workerTab : "regular";
+    }
+
+    function renderWorkers() {
+      const el = $("#tab-workers");
+      const active = workforceTab();
+      const tabLabels = [
+        ["regular", "คนงานประจำ", `${money(state.workers.length, 0)} คน`],
+        ["inbound", "รับโอนแรงงาน", `${money(externalWorkerRecords().length, 0)} คน`],
+        ["outbound", "ส่งโอนแรงงาน", `${money((state.borrowedWorkers || []).length, 0)} รายการ`]
+      ];
+      el.innerHTML = `
+        <div class="section workforce-page">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>คนงาน</h2>
+                <p class="muted">จัดการคนงานประจำ รับโอนแรงงานจากหลังอื่น และส่งโอนแรงงานของเราไปช่วยหลังอื่น</p>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="workforce-tabs" role="tablist" aria-label="ประเภทคนงาน">
+                ${tabLabels.map(([id, label, count]) => `
+                  <button type="button" data-worker-tab="${id}" aria-pressed="${active === id}">
+                    ${esc(label)} <span class="pill">${esc(count)}</span>
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+          <div id="workerSubPanel" class="workforce-subpanel"></div>
+        </div>
+      `;
+      const panel = $("#workerSubPanel");
+      if (active === "inbound") return renderExternalWorkers(panel);
+      if (active === "outbound") return renderBorrowedWorkers(panel);
+      return renderRegularWorkers(panel);
     }
 
     function renderMachines() {
@@ -5000,8 +5265,9 @@
       requestAnimationFrame(() => drawAttendanceReport($("#attendanceCanvas"), view, monthKey, 1, variant));
     }
 
-    function renderBorrowedWorkers() {
-      const el = $("#tab-borrow");
+    function renderBorrowedWorkers(target = null) {
+      const el = target || (activeTab === "workers" && workforceTab() === "outbound" ? $("#workerSubPanel") : $("#tab-borrow"));
+      if (!el) return;
       const draft = borrowDraft();
       const view = borrowView();
       const monthKey = selectedBorrowMonth();
@@ -6938,6 +7204,11 @@
         saveState();
         return renderAttendance();
       }
+      if (button.dataset.workerTab) {
+        state.ui.workerTab = button.dataset.workerTab;
+        saveState();
+        return renderWorkers();
+      }
       const action = button.dataset.action;
       if (!action) return;
 
@@ -6948,6 +7219,7 @@
       if (action === "redo") return redo();
       if (action === "go-today") return goToToday();
       if (action === "add-work-plan") return addWorkPlan();
+      if (action === "add-continuation-work-plan") return addContinuationWorkPlan();
       if (action === "set-update-today") return setUpdateDateToday();
       if (action === "open-claim-dialog") return openClaimDialog();
       if (action === "delete-work-plan") return deleteWorkPlan();
@@ -7407,7 +7679,7 @@
     }
 
     function nextClaimNo() {
-      const nums = state.workPlans.map((plan) => Number(plan.claimNo)).filter((num) => Number.isFinite(num));
+      const nums = state.workPlans.map((plan) => Number(claimGroupNo(plan))).filter((num) => Number.isFinite(num));
       return String((nums.length ? Math.max(...nums) : 0) + 1);
     }
 
@@ -7423,17 +7695,29 @@
       return state.workPlans.slice(index + 1).find((plan) => plan.status !== "เสร็จสิ้น") || null;
     }
 
-    function createWorkPlan(claimNo = nextClaimNo()) {
+    function nextContinuationClaimNo(source = activeWorkPlan()) {
+      const baseNo = claimGroupNo(source);
+      const suffixes = (state.workPlans || [])
+        .filter((plan) => claimGroupNo(plan) === baseNo)
+        .map((plan) => String(plan.claimNo || "").split(".")[1])
+        .map((value) => Number(value))
+        .filter((value) => Number.isFinite(value));
+      return `${baseNo}.${(suffixes.length ? Math.max(...suffixes) : 0) + 1}`;
+    }
+
+    function createWorkPlan(claimNo = nextClaimNo(), overrides = {}) {
       return normalizeWorkPlan({
         id: uid("wp"),
         claimNo: String(claimNo || nextClaimNo()),
+        planType: overrides.planType || "new",
+        parentClaimNo: overrides.parentClaimNo || "",
         status: "กำลังทำ",
-        startDate: planStartDate(),
-        endDate: planEndDate(),
-        updateDate: planUpdateDate(),
-        claimDate: planClaimDate() || planEndDate(),
+        startDate: overrides.startDate || planStartDate(),
+        endDate: overrides.endDate || planEndDate(),
+        updateDate: overrides.updateDate || planUpdateDate(),
+        claimDate: overrides.claimDate || planClaimDate() || planEndDate(),
         claimDateHistory: [],
-        periodIds: [],
+        periodIds: Array.isArray(overrides.periodIds) ? [...overrides.periodIds] : [],
         itemData: {},
         machineUsage: {},
         manual: cloneManual()
@@ -7451,6 +7735,28 @@
       saveState();
       renderAll();
       showToast(`เพิ่ม${workPlanLabel(plan)}แล้ว`);
+    }
+
+    function addContinuationWorkPlan() {
+      const source = activeWorkPlan();
+      if (!source) return addWorkPlan();
+      const claimNo = nextContinuationClaimNo(source);
+      const plan = createWorkPlan(claimNo, {
+        planType: "continuation",
+        parentClaimNo: claimGroupNo(source),
+        startDate: source.startDate || planStartDate(),
+        endDate: source.endDate || planEndDate(),
+        updateDate: source.updateDate || planUpdateDate(),
+        claimDate: source.claimDate || planClaimDate(),
+        periodIds: source.periodIds || []
+      });
+      state.workPlans.push(plan);
+      state.ui.activeWorkPlanId = plan.id;
+      state.ui.selectedCell = null;
+      state.ui.selectedCells = [];
+      saveState();
+      renderAll();
+      showToast(`เพิ่มแผนต่อ ${workPlanLabel(plan)} แล้ว`);
     }
 
     function setUpdateDateToday() {
