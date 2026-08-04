@@ -1200,6 +1200,123 @@
     .attendance-table .col-code { left: 56px; width: 90px; }
     .attendance-table .col-name { left: 146px; width: 190px; }
     .attendance-table .day-col { width: 34px; }
+    .attendance-table .attendance-day-cell {
+      position: relative;
+    }
+    .attendance-table .attendance-day-cell.has-comment::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-top: 8px solid var(--danger);
+      border-left: 8px solid transparent;
+      pointer-events: none;
+    }
+    .attendance-table .attendance-day-cell.has-comment {
+      cursor: pointer;
+    }
+    .attendance-shell.comment-mode .attendance-day-cell {
+      cursor: cell;
+    }
+    .attendance-shell.comment-mode .attendance-day-cell:hover,
+    .attendance-table .attendance-day-cell:focus-visible {
+      outline: 2px solid var(--primary-2);
+      outline-offset: -2px;
+    }
+    .attendance-comment-toggle[aria-pressed="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      font-weight: 800;
+    }
+    .attendance-comment-popover {
+      --comment-arrow-left: 24px;
+      position: fixed;
+      z-index: 80;
+      width: min(330px, calc(100vw - 20px));
+      border: 1px solid oklch(0.72 0.09 95);
+      border-radius: 8px;
+      background: oklch(0.975 0.055 100);
+      color: var(--ink);
+      box-shadow: 0 6px 8px oklch(0.16 0.02 160 / 0.16);
+    }
+    .attendance-comment-popover::before,
+    .attendance-comment-popover::after {
+      content: "";
+      position: absolute;
+      left: var(--comment-arrow-left);
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+    }
+    .attendance-comment-popover[data-arrow="top"]::before {
+      top: -9px;
+      border-bottom: 9px solid oklch(0.72 0.09 95);
+    }
+    .attendance-comment-popover[data-arrow="top"]::after {
+      top: -7px;
+      border-bottom: 8px solid oklch(0.975 0.055 100);
+    }
+    .attendance-comment-popover[data-arrow="bottom"]::before {
+      bottom: -9px;
+      border-top: 9px solid oklch(0.72 0.09 95);
+    }
+    .attendance-comment-popover[data-arrow="bottom"]::after {
+      bottom: -7px;
+      border-top: 8px solid oklch(0.975 0.055 100);
+    }
+    .attendance-comment-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 10px 8px;
+      border-bottom: 1px solid oklch(0.82 0.055 95);
+    }
+    .attendance-comment-head strong,
+    .attendance-comment-head span {
+      display: block;
+    }
+    .attendance-comment-head span {
+      margin-top: 2px;
+      color: oklch(0.39 0.035 95);
+      font-size: 11px;
+    }
+    .attendance-comment-head button {
+      min-width: 32px;
+      min-height: 32px;
+      padding: 4px;
+      border-color: transparent;
+      background: transparent;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .attendance-comment-body {
+      padding: 10px;
+    }
+    .attendance-comment-body textarea {
+      min-height: 104px;
+      background: oklch(0.995 0.018 100);
+      border-color: oklch(0.72 0.09 95);
+    }
+    .attendance-comment-text {
+      min-height: 48px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.55;
+    }
+    .attendance-comment-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 10px 10px;
+    }
+    .attendance-comment-actions .danger {
+      margin-right: auto;
+    }
     .attendance-table .month-head {
       height: 26px;
       font-weight: 900;
@@ -1271,6 +1388,17 @@
       height: auto;
       background: white;
       border: 1px solid var(--line);
+    }
+    @media (max-width: 560px) {
+      .attendance-comment-popover {
+        width: calc(100vw - 16px);
+      }
+      .attendance-comment-actions button {
+        flex: 1 1 auto;
+      }
+      .attendance-comment-actions .danger {
+        margin-right: 0;
+      }
     }
     .borrow-shell {
       display: grid;
@@ -2252,6 +2380,12 @@
     let localDirtyAt = Number(localStorage.getItem(SYNC_DIRTY_KEY) || 0);
     let localDirtyHash = localStorage.getItem(SYNC_DIRTY_HASH_KEY) || "";
     let lastBusinessHash = "";
+    let attendanceCommentMode = false;
+    let attendanceCommentPopover = null;
+    let attendanceCommentAnchor = null;
+    let attendanceCommentHoverTimer = null;
+    let attendanceCommentPreviewCloseTimer = null;
+    let attendanceCommentInitialText = "";
 
     function makePlan() { return {}; }
     function makeActual() { return {}; }
@@ -2320,6 +2454,7 @@
         machines: [],
         holidays: [],
         borrowedWorkers: [],
+        attendanceComments: {},
         periods: [],
         periodTemplates: {},
         machineUsage: {}
@@ -2584,6 +2719,26 @@
       return cloned;
     }
 
+    function normalizeAttendanceComments(comments = {}) {
+      if (!comments || typeof comments !== "object" || Array.isArray(comments)) return {};
+      const normalized = {};
+      Object.entries(comments).forEach(([workerId, dates]) => {
+        if (!workerId || !dates || typeof dates !== "object" || Array.isArray(dates)) return;
+        const rows = {};
+        Object.entries(dates).forEach(([date, value]) => {
+          const rawText = typeof value === "string" ? value : value?.text;
+          const text = String(rawText || "").trim();
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !text) return;
+          rows[date] = {
+            text,
+            updatedAt: typeof value === "object" && value?.updatedAt ? String(value.updatedAt) : ""
+          };
+        });
+        if (Object.keys(rows).length) normalized[workerId] = rows;
+      });
+      return normalized;
+    }
+
     function legacyItemData(periods = []) {
       const itemData = {};
       periods.forEach((period) => {
@@ -2674,6 +2829,7 @@
         amount: n(row.amount),
         note: String(row.note || "")
       })).filter((row) => row.id) : [];
+      next.attendanceComments = normalizeAttendanceComments(next.attendanceComments);
       next.periods = Array.isArray(next.periods) ? next.periods : [];
       next.periods.forEach((period) => {
         period.building = String(period.building || "").trim();
@@ -4107,6 +4263,10 @@
         state.ui.workerTab = "inbound";
         tab = "workers";
       }
+      if (activeTab === "attendance" && tab !== "attendance") {
+        clearTimeout(attendanceCommentHoverTimer);
+        if (!exitAttendanceCommentMode()) return;
+      }
       activeTab = tab;
       $$(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${tab}`));
       renderNav();
@@ -5334,7 +5494,214 @@
       requestAnimationFrame(() => drawReport($("#reportCanvas"), view, 1, mode));
     }
 
+    function attendanceComment(workerId, date) {
+      return state.attendanceComments?.[workerId]?.[date] || null;
+    }
+
+    function attendanceCommentCellLabel(workerId, date, hasComment = false) {
+      const worker = getWorker(workerId);
+      const workerLabel = worker ? `${worker.code || ""} ${worker.name || ""}`.trim() : "คนงาน";
+      return `${workerLabel} วันที่ ${dateLabel(date)}${hasComment ? " มีคอมเมนต์" : ""}`;
+    }
+
+    function updateAttendanceCommentCellMarker(workerId, date) {
+      const hasComment = Boolean(attendanceComment(workerId, date)?.text);
+      $$("[data-attendance-comment-cell]").forEach((cell) => {
+        if (cell.dataset.workerId !== workerId || cell.dataset.date !== date) return;
+        cell.classList.toggle("has-comment", hasComment);
+        cell.dataset.hasComment = hasComment ? "true" : "false";
+        cell.setAttribute("aria-label", attendanceCommentCellLabel(workerId, date, hasComment));
+        if (!attendanceCommentMode) {
+          if (hasComment) {
+            cell.tabIndex = 0;
+            cell.setAttribute("role", "button");
+          } else {
+            cell.removeAttribute("tabindex");
+            cell.removeAttribute("role");
+          }
+        }
+      });
+    }
+
+    function syncAttendanceCommentModeUi() {
+      const shell = $("#tab-attendance .attendance-shell");
+      const toggle = $('[data-action="toggle-attendance-comments"]');
+      shell?.classList.toggle("comment-mode", attendanceCommentMode);
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", attendanceCommentMode ? "true" : "false");
+        toggle.title = attendanceCommentMode ? "ปิดโหมด Comment (Esc)" : "เปิดโหมด Comment";
+      }
+      $$("[data-attendance-comment-cell]").forEach((cell) => {
+        const interactive = attendanceCommentMode || cell.dataset.hasComment === "true";
+        if (interactive) {
+          cell.tabIndex = 0;
+          cell.setAttribute("role", "button");
+        } else {
+          cell.removeAttribute("tabindex");
+          cell.removeAttribute("role");
+        }
+      });
+    }
+
+    function positionAttendanceCommentPopover() {
+      if (!attendanceCommentPopover?.isConnected || !attendanceCommentAnchor?.isConnected) return;
+      const anchorRect = attendanceCommentAnchor.getBoundingClientRect();
+      const popRect = attendanceCommentPopover.getBoundingClientRect();
+      const margin = 10;
+      const gap = 10;
+      const roomBelow = window.innerHeight - anchorRect.bottom;
+      const placeAbove = roomBelow < popRect.height + gap + margin && anchorRect.top > popRect.height + gap + margin;
+      const top = placeAbove ? anchorRect.top - popRect.height - gap : anchorRect.bottom + gap;
+      const idealLeft = anchorRect.left + anchorRect.width / 2 - popRect.width / 2;
+      const left = Math.max(margin, Math.min(idealLeft, window.innerWidth - popRect.width - margin));
+      const anchorCenter = anchorRect.left + anchorRect.width / 2;
+      const arrowLeft = Math.max(12, Math.min(anchorCenter - left - 8, popRect.width - 28));
+      attendanceCommentPopover.style.top = `${Math.max(margin, top)}px`;
+      attendanceCommentPopover.style.left = `${left}px`;
+      attendanceCommentPopover.style.setProperty("--comment-arrow-left", `${arrowLeft}px`);
+      attendanceCommentPopover.dataset.arrow = placeAbove ? "bottom" : "top";
+    }
+
+    function attendanceCommentDraftChanged() {
+      const textarea = attendanceCommentPopover?.querySelector("textarea[data-attendance-comment-text]");
+      return Boolean(textarea && textarea.value !== attendanceCommentInitialText);
+    }
+
+    function closeAttendanceCommentPopover({ force = false } = {}) {
+      clearTimeout(attendanceCommentPreviewCloseTimer);
+      if (!attendanceCommentPopover) return true;
+      if (!force && attendanceCommentDraftChanged() && !confirm("ข้อความยังไม่ได้บันทึก ต้องการปิดและทิ้งข้อความนี้หรือไม่?")) return false;
+      attendanceCommentPopover.remove();
+      attendanceCommentPopover = null;
+      attendanceCommentAnchor = null;
+      attendanceCommentInitialText = "";
+      return true;
+    }
+
+    function exitAttendanceCommentMode({ force = false } = {}) {
+      if (!closeAttendanceCommentPopover({ force })) return false;
+      attendanceCommentMode = false;
+      syncAttendanceCommentModeUi();
+      return true;
+    }
+
+    function openAttendanceComment(cell, { preview = false } = {}) {
+      if (!cell?.dataset.workerId || !cell?.dataset.date) return;
+      const workerId = cell.dataset.workerId;
+      const date = cell.dataset.date;
+      const existing = attendanceComment(workerId, date);
+      if (preview && !existing?.text) return;
+      if (!closeAttendanceCommentPopover()) return;
+      const worker = getWorker(workerId);
+      const workerName = worker ? `${worker.code || ""} · ${worker.name || ""}` : "คนงาน";
+      const popover = document.createElement("section");
+      popover.className = "attendance-comment-popover";
+      popover.dataset.mode = preview ? "preview" : "edit";
+      popover.dataset.workerId = workerId;
+      popover.dataset.date = date;
+      popover.setAttribute("role", preview ? "tooltip" : "dialog");
+      popover.setAttribute("aria-label", `คอมเมนต์ ${workerName} วันที่ ${dateLabel(date)}`);
+      attendanceCommentInitialText = existing?.text || "";
+      popover.innerHTML = `
+        <div class="attendance-comment-head">
+          <div><strong>${esc(workerName)}</strong><span>${esc(dateLabel(date))}</span></div>
+          <button type="button" data-action="close-attendance-comment" aria-label="ปิด">×</button>
+        </div>
+        <div class="attendance-comment-body">
+          ${preview
+            ? `<div class="attendance-comment-text">${esc(existing?.text || "")}</div>`
+            : `<textarea data-attendance-comment-text aria-label="ข้อความคอมเมนต์" placeholder="บันทึกพฤติกรรมหรือเหตุการณ์ของคนงานในวันนี้">${esc(existing?.text || "")}</textarea>`}
+        </div>
+        ${preview ? "" : `
+          <div class="attendance-comment-actions">
+            ${existing?.text ? `<button type="button" class="danger" data-action="delete-attendance-comment">ลบคอมเมนต์</button>` : ""}
+            <button type="button" data-action="close-attendance-comment">ยกเลิก</button>
+            <button type="button" class="primary" data-action="save-attendance-comment">บันทึกคอมเมนต์</button>
+          </div>
+        `}
+      `;
+      document.body.appendChild(popover);
+      attendanceCommentPopover = popover;
+      attendanceCommentAnchor = cell;
+      popover.addEventListener("pointerenter", () => clearTimeout(attendanceCommentPreviewCloseTimer));
+      popover.addEventListener("pointerleave", () => {
+        if (popover.dataset.mode !== "preview") return;
+        attendanceCommentPreviewCloseTimer = setTimeout(() => closeAttendanceCommentPopover({ force: true }), 160);
+      });
+      positionAttendanceCommentPopover();
+      if (!preview) requestAnimationFrame(() => popover.querySelector("textarea")?.focus());
+    }
+
+    function saveAttendanceComment() {
+      if (!attendanceCommentPopover || attendanceCommentPopover.dataset.mode !== "edit") return;
+      const workerId = attendanceCommentPopover.dataset.workerId;
+      const date = attendanceCommentPopover.dataset.date;
+      const text = attendanceCommentPopover.querySelector("textarea[data-attendance-comment-text]")?.value.trim() || "";
+      recordHistory(text ? "บันทึกคอมเมนต์คนงาน" : "ลบคอมเมนต์คนงาน");
+      state.attendanceComments = state.attendanceComments || {};
+      if (text) {
+        state.attendanceComments[workerId] = state.attendanceComments[workerId] || {};
+        state.attendanceComments[workerId][date] = { text, updatedAt: new Date().toISOString() };
+      } else if (state.attendanceComments[workerId]) {
+        delete state.attendanceComments[workerId][date];
+        if (!Object.keys(state.attendanceComments[workerId]).length) delete state.attendanceComments[workerId];
+      }
+      saveState({ markDirty: true });
+      closeAttendanceCommentPopover({ force: true });
+      updateAttendanceCommentCellMarker(workerId, date);
+      showToast(text ? "บันทึกคอมเมนต์แล้ว" : "ลบคอมเมนต์แล้ว");
+    }
+
+    function deleteAttendanceComment() {
+      if (!attendanceCommentPopover || attendanceCommentPopover.dataset.mode !== "edit") return;
+      if (!confirm("ลบคอมเมนต์ของคนงานในวันนี้?")) return;
+      const workerId = attendanceCommentPopover.dataset.workerId;
+      const date = attendanceCommentPopover.dataset.date;
+      recordHistory("ลบคอมเมนต์คนงาน");
+      if (state.attendanceComments?.[workerId]) {
+        delete state.attendanceComments[workerId][date];
+        if (!Object.keys(state.attendanceComments[workerId]).length) delete state.attendanceComments[workerId];
+      }
+      saveState({ markDirty: true });
+      closeAttendanceCommentPopover({ force: true });
+      updateAttendanceCommentCellMarker(workerId, date);
+      showToast("ลบคอมเมนต์แล้ว");
+    }
+
+    function toggleAttendanceCommentMode() {
+      if (attendanceCommentMode) return exitAttendanceCommentMode();
+      closeAttendanceCommentPopover({ force: true });
+      attendanceCommentMode = true;
+      syncAttendanceCommentModeUi();
+      showToast("เปิดโหมด Comment แล้ว");
+    }
+
+    function scheduleAttendanceCommentPreviewClose() {
+      clearTimeout(attendanceCommentPreviewCloseTimer);
+      if (attendanceCommentPopover?.dataset.mode !== "preview") return;
+      attendanceCommentPreviewCloseTimer = setTimeout(() => closeAttendanceCommentPopover({ force: true }), 160);
+    }
+
+    function handleAttendanceCommentPointerOver(event) {
+      const cell = event.target.closest?.("[data-attendance-comment-cell]");
+      if (!cell || cell.dataset.hasComment !== "true" || attendanceCommentMode) return;
+      if (event.relatedTarget && cell.contains(event.relatedTarget)) return;
+      clearTimeout(attendanceCommentHoverTimer);
+      attendanceCommentHoverTimer = setTimeout(() => {
+        if (cell.isConnected && !attendanceCommentMode) openAttendanceComment(cell, { preview: true });
+      }, 2000);
+    }
+
+    function handleAttendanceCommentPointerOut(event) {
+      const cell = event.target.closest?.("[data-attendance-comment-cell]");
+      if (!cell || (event.relatedTarget && cell.contains(event.relatedTarget))) return;
+      clearTimeout(attendanceCommentHoverTimer);
+      if (event.relatedTarget?.closest?.(".attendance-comment-popover")) return;
+      scheduleAttendanceCommentPreviewClose();
+    }
+
     function renderAttendance() {
+      closeAttendanceCommentPopover({ force: true });
       const view = attendanceView();
       const monthKey = selectedAttendanceMonth();
       state.ui.attendanceMonth = monthKey;
@@ -5349,10 +5716,14 @@
         const inactive = row.workedCount === 0;
         const cells = data.dates.map((date) => {
           const mark = attendanceMark(row, date, data.cutoff);
-          if (mark === "holiday") return `<td class="holiday"></td>`;
+          const comment = attendanceComment(row.worker.id, date);
+          const hasComment = Boolean(comment?.text);
+          const classes = ["attendance-day-cell", mark === "holiday" ? "holiday" : "", hasComment ? "has-comment" : ""].filter(Boolean).join(" ");
+          const attrs = `class="${classes}" data-attendance-comment-cell data-worker-id="${esc(row.worker.id)}" data-date="${esc(date)}" data-has-comment="${hasComment ? "true" : "false"}" aria-label="${esc(attendanceCommentCellLabel(row.worker.id, date, hasComment))}" ${(attendanceCommentMode || hasComment) ? `tabindex="0" role="button"` : ""}`;
+          if (mark === "holiday") return `<td ${attrs}></td>`;
           const meta = attendanceMarkMeta(mark);
-          if (meta.text) return `<td><span class="mark ${esc(meta.className)}">${esc(meta.text)}</span></td>`;
-          return `<td></td>`;
+          if (meta.text) return `<td ${attrs}><span class="mark ${esc(meta.className)}">${esc(meta.text)}</span></td>`;
+          return `<td ${attrs}></td>`;
         }).join("");
         return `
           <tr class="${inactive ? "inactive" : ""}">
@@ -5369,7 +5740,7 @@
       const countRow = data.dates.map((date) => `<td class="${isHoliday(date) ? "holiday" : ""}">${data.dayWorkers.get(date)?.size || 0}</td>`).join("");
       const costRow = data.dates.map((date) => `<td class="num ${isHoliday(date) ? "holiday" : ""}">${money(data.dayCosts.get(date) || 0, 0)}</td>`).join("");
       el.innerHTML = `
-        <div class="attendance-shell">
+        <div class="attendance-shell ${attendanceCommentMode ? "comment-mode" : ""}">
           <div class="attendance-toolbar">
             <div class="inline-list">
               <label><span>เดือน</span><select id="attendanceMonthSelect">${monthOptions}</select></label>
@@ -5380,6 +5751,7 @@
               <div class="segmented" aria-label="ตัวกรองอาคาร">
                 ${viewOptions.map((v) => `<button data-attendance-view="${esc(v)}" aria-pressed="${view === v}">${esc(attendanceViewLabel(v))}</button>`).join("")}
               </div>
+              <button class="attendance-comment-toggle" data-action="toggle-attendance-comments" aria-pressed="${attendanceCommentMode ? "true" : "false"}" title="${attendanceCommentMode ? "ปิดโหมด Comment (Esc)" : "เปิดโหมด Comment"}">Comment</button>
             </div>
             <div class="inline-list">
               <button class="primary" data-action="download-attendance-png">Export PNG</button>
@@ -7362,6 +7734,15 @@
     }
 
     function handleClick(event) {
+      const attendanceCell = event.target.closest?.("[data-attendance-comment-cell]");
+      if (attendanceCell) {
+        clearTimeout(attendanceCommentHoverTimer);
+        if (attendanceCommentMode || attendanceCell.dataset.hasComment === "true") {
+          event.preventDefault();
+          return openAttendanceComment(attendanceCell);
+        }
+        return;
+      }
       const button = event.target.closest("button");
       if (!button) {
         if (event.target.closest("input, select, textarea, label, a")) return;
@@ -7485,6 +7866,10 @@
       if (action === "download-report-pdf") return downloadReportPdf();
       if (action === "download-attendance-png") return downloadAttendancePng();
       if (action === "download-attendance-pdf") return downloadAttendancePdf();
+      if (action === "toggle-attendance-comments") return toggleAttendanceCommentMode();
+      if (action === "save-attendance-comment") return saveAttendanceComment();
+      if (action === "delete-attendance-comment") return deleteAttendanceComment();
+      if (action === "close-attendance-comment") return closeAttendanceCommentPopover();
       if (action === "add-borrowed-worker") return addBorrowedWorker();
       if (action === "delete-borrowed-worker") return deleteBorrowedWorker(button.dataset.borrowId);
     }
@@ -7758,6 +8143,18 @@
     }
 
     function handleKeyDown(event) {
+      if (activeTab === "attendance") {
+        if (event.key === "Escape" && (attendanceCommentMode || attendanceCommentPopover)) {
+          event.preventDefault();
+          return attendanceCommentMode ? exitAttendanceCommentMode() : closeAttendanceCommentPopover();
+        }
+        const attendanceCell = event.target?.closest?.("[data-attendance-comment-cell]");
+        if (attendanceCell && (event.key === "Enter" || event.key === " ")) {
+          if (!attendanceCommentMode && attendanceCell.dataset.hasComment !== "true") return;
+          event.preventDefault();
+          return openAttendanceComment(attendanceCell);
+        }
+      }
       const mainRow = event.target?.closest?.("[data-period-main-row]");
       if (mainRow && (event.key === "Enter" || event.key === " ")) {
         event.preventDefault();
@@ -9052,8 +9449,12 @@
     document.addEventListener("pointermove", handlePointerMove);
     document.addEventListener("pointerup", handlePointerUp);
     document.addEventListener("pointercancel", handlePointerUp);
+    document.addEventListener("pointerover", handleAttendanceCommentPointerOver);
+    document.addEventListener("pointerout", handleAttendanceCommentPointerOut);
     document.addEventListener("dblclick", handleDoubleClick);
     document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", positionAttendanceCommentPopover);
+    window.addEventListener("scroll", positionAttendanceCommentPopover, true);
     $("#saveCellBtn").addEventListener("click", saveCellDraft);
     $("#clearCellBtn").addEventListener("click", clearCellDraft);
     $("#saveClaimBtn").addEventListener("click", saveClaimDateChange);
