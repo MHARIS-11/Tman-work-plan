@@ -1497,6 +1497,157 @@
     .external-building-list td:nth-child(3) {
       width: 150px;
     }
+    .external-worker-manager {
+      display: grid;
+      gap: 12px;
+    }
+    .external-manager-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .external-manager-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .external-manager-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      min-height: 430px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .external-building-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      border-right: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .external-building-nav {
+      display: grid;
+      gap: 6px;
+    }
+    .external-building-option {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+    }
+    .external-building-option:hover {
+      border-color: var(--line);
+      background: var(--bg);
+    }
+    .external-building-option.is-selected {
+      border-color: oklch(0.72 0.08 160);
+      background: var(--primary-soft);
+      color: var(--brand);
+    }
+    .external-building-option strong,
+    .external-building-option small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .external-building-option small {
+      margin-top: 2px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .external-detail-pane {
+      min-width: 0;
+      background: var(--bg);
+    }
+    .external-detail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+    .external-detail-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .external-detail-title h3 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .external-detail-body {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+    .external-detail-tools {
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) auto;
+      align-items: end;
+      gap: 10px;
+    }
+    .external-add-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: var(--surface);
+    }
+    .external-inline-form {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+      gap: 10px;
+      align-items: end;
+    }
+    .external-worker-table {
+      min-width: 680px;
+    }
+    .external-worker-table td,
+    .external-worker-table th {
+      vertical-align: middle;
+    }
+    .external-worker-table .worker-actions {
+      width: 120px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .external-empty-state {
+      display: grid;
+      place-items: center;
+      min-height: 260px;
+      padding: 28px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .external-empty-state strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 17px;
+    }
+    .external-mobile-building {
+      display: none;
+    }
+    .is-filtered-out {
+      display: none !important;
+    }
     .item-list {
       display: grid;
       gap: 10px;
@@ -2126,6 +2277,11 @@
       .topbar { display: grid; align-items: stretch; }
       .mobile-tabs { display: block; }
       .content { padding: 12px; }
+      .external-manager-grid { grid-template-columns: 1fr; }
+      .external-building-pane { display: none; }
+      .external-mobile-building { display: block; }
+      .external-detail-tools { grid-template-columns: 1fr; }
+      .external-inline-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .dashboard-grid { grid-template-columns: 1fr; }
       .dashboard-hero { padding: 12px; }
       .attendance-grid { max-height: calc(100vh - 285px); }
@@ -2159,6 +2315,16 @@
       .topbar { padding: 10px 12px; }
       .split, .metric-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
+      .external-manager-toolbar,
+      .external-detail-head {
+        align-items: stretch;
+      }
+      .external-manager-toolbar > button,
+      .external-detail-head > .inline-list,
+      .external-detail-head > .inline-list button {
+        width: 100%;
+      }
+      .external-inline-form { grid-template-columns: 1fr; }
       .period-filter-row,
       .new-period-primary,
       .sub-period-fields {
@@ -5254,64 +5420,146 @@
       return periodTemplateForBuilding(building).find((period) => String(period.no) === key) || null;
     }
 
+    function externalBuildingLabel(name) {
+      const value = String(name || "").trim();
+      if (!value) return "ยังไม่ตั้งชื่ออาคาร";
+      return /^(หลัง|อาคาร)\s*/.test(value) ? value : buildingLabel(value);
+    }
+
     function renderExternalWorkers(target = null) {
       const el = target || (activeTab === "workers" && workforceTab() === "inbound" ? $("#workerSubPanel") : $("#tab-externalWorkers"));
       if (!el) return;
       const buildings = state.externalWorkerBuildings || [];
-      const buildingCards = buildings.map((building) => `
-        <div class="panel">
-          <div class="panel-head external-building-head">
-            <label style="min-width:min(100%,320px)">
-              <span>ชื่ออาคาร</span>
-              <input data-external-building-field="name" data-building-id="${esc(building.id)}" value="${esc(building.name)}" placeholder="เช่น หลัง B">
-            </label>
-            <div class="inline-list">
-              <span class="pill">${money((building.workers || []).length, 0)} คน</span>
-              <button class="danger" data-action="delete-external-building" data-building-id="${esc(building.id)}">ลบอาคาร</button>
-            </div>
-          </div>
-          <div class="panel-body">
-            <div class="form-grid" style="margin-bottom:10px">
-              <label><span>รหัสพนักงาน</span><input data-external-new-field="code" data-building-id="${esc(building.id)}" placeholder="B001"></label>
-              <label><span>ชื่อ-สกุล</span><input data-external-new-field="name" data-building-id="${esc(building.id)}"></label>
-              <label><span>ค่าแรงเต็มวัน</span><input type="number" min="0" step="0.01" data-external-new-field="dailyWage" data-building-id="${esc(building.id)}"></label>
-              <button class="primary" data-action="add-external-worker" data-building-id="${esc(building.id)}">เพิ่มคนงาน</button>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th class="num">ค่าแรงเต็มวัน</th><th class="num">ต่อชั่วโมง</th><th></th></tr></thead>
-                <tbody>
-                  ${(building.workers || []).map((worker) => `
-                    <tr>
-                      <td><input data-external-worker-field="code" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}" value="${esc(worker.code)}"></td>
-                      <td><input data-external-worker-field="name" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}" value="${esc(worker.name)}"></td>
-                      <td><input class="num" type="number" min="0" step="0.01" data-external-worker-field="dailyWage" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}" value="${esc(worker.dailyWage)}"></td>
-                      <td class="num">${money(n(worker.dailyWage) / n(state.settings.dayHours), 0)}</td>
-                      <td><button class="danger" data-action="delete-external-worker" data-worker-id="${esc(worker.id)}" data-building-id="${esc(building.id)}">ลบ</button></td>
-                    </tr>
-                  `).join("") || `<tr><td colspan="5" class="muted">ยังไม่มีคนงานของอาคารนี้</td></tr>`}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      const selected = buildings.find((building) => building.id === state.ui.externalWorkerBuildingId) || buildings[0] || null;
+      state.ui.externalWorkerBuildingId = selected?.id || "";
+      const workers = selected?.workers || [];
+      const totalWorkers = buildings.reduce((sum, building) => sum + (building.workers || []).length, 0);
+      const addingBuilding = Boolean(state.ui.externalBuildingAdding);
+      const addingWorker = state.ui.externalWorkerAddingBuildingId === selected?.id;
+      const editingBuilding = state.ui.externalBuildingEditingId === selected?.id;
+      const editingWorkerId = state.ui.externalEditingWorkerId || "";
+      const averageWage = workers.length ? workers.reduce((sum, worker) => sum + n(worker.dailyWage), 0) / workers.length : 0;
+      const buildingOptions = buildings.map((building) => `
+        <button type="button" class="external-building-option ${building.id === selected?.id ? "is-selected" : ""}"
+          data-action="select-external-building" data-building-id="${esc(building.id)}"
+          data-filter-text="${esc(`${building.name} ${externalBuildingLabel(building.name)}`.toLowerCase())}">
+          <span>
+            <strong>${esc(externalBuildingLabel(building.name))}</strong>
+            <small>${money((building.workers || []).length, 0)} คนงาน</small>
+          </span>
+          <span aria-hidden="true">›</span>
+        </button>
       `).join("");
+      const workerRows = workers.map((worker, index) => {
+        const editing = editingWorkerId === worker.id;
+        return `
+          <tr data-external-worker-row data-filter-text="${esc(`${worker.code} ${worker.name}`.toLowerCase())}">
+            <td>${money(index + 1, 0)}</td>
+            <td>${editing
+              ? `<input data-external-worker-field="code" data-worker-id="${esc(worker.id)}" data-building-id="${esc(selected.id)}" value="${esc(worker.code)}">`
+              : `<strong>${esc(worker.code)}</strong>`}</td>
+            <td>${editing
+              ? `<input data-external-worker-field="name" data-worker-id="${esc(worker.id)}" data-building-id="${esc(selected.id)}" value="${esc(worker.name)}">`
+              : esc(worker.name)}</td>
+            <td class="num">${editing
+              ? `<input class="num" type="number" min="0" step="0.01" data-external-worker-field="dailyWage" data-worker-id="${esc(worker.id)}" data-building-id="${esc(selected.id)}" value="${esc(worker.dailyWage)}">`
+              : money(worker.dailyWage, 0)}</td>
+            <td class="num">${money(n(worker.dailyWage) / n(state.settings.dayHours), 0)}</td>
+            <td class="worker-actions">
+              <button data-action="${editing ? "finish-external-worker-edit" : "edit-external-worker"}" data-worker-id="${esc(worker.id)}">${editing ? "เสร็จ" : "แก้ไข"}</button>
+              <button class="danger" data-action="delete-external-worker" data-worker-id="${esc(worker.id)}" data-building-id="${esc(selected.id)}">ลบ</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
       el.innerHTML = `
-        <div class="section external-worker-shell">
+        <div class="section external-worker-manager">
           <div class="panel">
-            <div class="panel-head">
+            <div class="panel-head external-manager-toolbar">
               <div>
-                <h2>คนงานหลังอื่น</h2>
-                <p class="muted">เก็บรายชื่อคนงานที่ยืมมาจากอาคารอื่น เพื่อเลือกใช้ในแผนงวดงาน</p>
+                <h2>รับโอนแรงงาน</h2>
+                <p class="muted">จัดเก็บคนงานจากอาคารอื่น เพื่อเรียกใช้ในแผนงวดงานเมื่อต้องการ</p>
+              </div>
+              <div class="external-manager-summary">
+                <span class="pill">${money(buildings.length, 0)} อาคาร</span>
+                <span class="pill">${money(totalWorkers, 0)} คนงาน</span>
+                <button class="primary" data-action="toggle-external-building-add">${addingBuilding ? "ปิด" : "เพิ่มอาคาร"}</button>
               </div>
             </div>
-            <div class="panel-body form-grid">
-              <label><span>ชื่ออาคาร</span><input id="externalBuildingName" placeholder="เช่น B"></label>
-              <button class="primary" data-action="add-external-building">เพิ่มอาคาร</button>
-            </div>
+            ${addingBuilding ? `
+              <div class="panel-body external-add-panel" style="margin:12px">
+                <div class="external-inline-form" style="grid-template-columns:minmax(180px,1fr) auto">
+                  <label><span>ชื่ออาคาร</span><input id="externalBuildingName" placeholder="เช่น B" autofocus></label>
+                  <button class="primary" data-action="add-external-building">บันทึกอาคาร</button>
+                </div>
+              </div>
+            ` : ""}
           </div>
-          <div class="external-building-list">
-            ${buildingCards || `<div class="panel"><div class="panel-body muted">ยังไม่มีอาคารอื่น กดเพิ่มอาคารเพื่อเริ่มบันทึกรายชื่อคนงาน</div></div>`}
+
+          <label class="external-mobile-building">
+            <span>เลือกอาคาร</span>
+            <select id="externalBuildingSelect">
+              ${buildings.map((building) => `<option value="${esc(building.id)}" ${building.id === selected?.id ? "selected" : ""}>${esc(externalBuildingLabel(building.name))} · ${(building.workers || []).length} คน</option>`).join("")}
+            </select>
+          </label>
+
+          <div class="external-manager-grid">
+            <aside class="external-building-pane" aria-label="รายชื่ออาคาร">
+              <label><span>ค้นหาอาคาร</span><input id="externalBuildingSearch" type="search" placeholder="พิมพ์ชื่ออาคาร"></label>
+              <div class="external-building-nav">
+                ${buildingOptions || `<div class="muted">ยังไม่มีอาคาร</div>`}
+              </div>
+            </aside>
+
+            <section class="external-detail-pane">
+              ${selected ? `
+                <div class="external-detail-head">
+                  <div class="external-detail-title">
+                    ${editingBuilding
+                      ? `<input data-external-building-field="name" data-building-id="${esc(selected.id)}" value="${esc(selected.name)}" aria-label="ชื่ออาคาร">`
+                      : `<h3>${esc(externalBuildingLabel(selected.name))}</h3>`}
+                    <span class="pill">${money(workers.length, 0)} คน</span>
+                  </div>
+                  <div class="inline-list">
+                    <button data-action="toggle-external-building-edit" data-building-id="${esc(selected.id)}">${editingBuilding ? "เสร็จ" : "แก้ชื่อ"}</button>
+                    <button class="danger" data-action="delete-external-building" data-building-id="${esc(selected.id)}">ลบอาคาร</button>
+                    <button class="primary" data-action="toggle-external-worker-add" data-building-id="${esc(selected.id)}">${addingWorker ? "ปิด" : "เพิ่มคนงาน"}</button>
+                  </div>
+                </div>
+                <div class="external-detail-body">
+                  ${addingWorker ? `
+                    <div class="external-add-panel">
+                      <div class="external-inline-form">
+                        <label><span>รหัสพนักงาน</span><input data-external-new-field="code" data-building-id="${esc(selected.id)}" placeholder="B001"></label>
+                        <label><span>ชื่อ-สกุล</span><input data-external-new-field="name" data-building-id="${esc(selected.id)}"></label>
+                        <label><span>ค่าแรงเต็มวัน</span><input type="number" min="0" step="0.01" data-external-new-field="dailyWage" data-building-id="${esc(selected.id)}"></label>
+                        <button class="primary" data-action="add-external-worker" data-building-id="${esc(selected.id)}">บันทึกคนงาน</button>
+                      </div>
+                    </div>
+                  ` : ""}
+                  <div class="external-detail-tools">
+                    <label><span>ค้นหาคนงาน</span><input id="externalWorkerSearch" type="search" placeholder="ค้นหารหัสหรือชื่อ"></label>
+                    <div class="metric" style="padding:9px 12px"><span>ค่าแรงเฉลี่ย</span><strong style="font-size:17px">${money(averageWage, 0)} บาท/วัน</strong></div>
+                  </div>
+                  ${workers.length ? `
+                    <div class="table-wrap">
+                      <table class="external-worker-table">
+                        <thead><tr><th>#</th><th>รหัส</th><th>ชื่อ-สกุล</th><th class="num">ค่าแรงเต็มวัน</th><th class="num">ต่อชั่วโมง</th><th></th></tr></thead>
+                        <tbody>${workerRows}</tbody>
+                      </table>
+                    </div>
+                  ` : `
+                    <div class="external-empty-state">
+                      <div><strong>ยังไม่มีคนงานใน${esc(externalBuildingLabel(selected.name))}</strong><span>กด “เพิ่มคนงาน” เพื่อบันทึกรายชื่อแรก</span></div>
+                    </div>
+                  `}
+                </div>
+              ` : `
+                <div class="external-empty-state">
+                  <div><strong>เริ่มจากเพิ่มอาคาร</strong><span>จากนั้นจึงบันทึกรายชื่อคนงานของอาคารนั้น</span></div>
+                </div>
+              `}
+            </section>
           </div>
         </div>
       `;
@@ -7840,6 +8088,37 @@
       if (action === "delete-item") return deleteItem(button.dataset.periodId, button.dataset.itemId);
       if (action === "add-worker") return addWorker();
       if (action === "delete-worker") return deleteWorker(button.dataset.workerId);
+      if (action === "toggle-external-building-add") {
+        state.ui.externalBuildingAdding = !state.ui.externalBuildingAdding;
+        return renderExternalWorkers();
+      }
+      if (action === "select-external-building") {
+        state.ui.externalWorkerBuildingId = button.dataset.buildingId || "";
+        state.ui.externalWorkerAddingBuildingId = "";
+        state.ui.externalBuildingEditingId = "";
+        state.ui.externalEditingWorkerId = "";
+        saveState();
+        return renderExternalWorkers();
+      }
+      if (action === "toggle-external-building-edit") {
+        const id = button.dataset.buildingId || "";
+        state.ui.externalBuildingEditingId = state.ui.externalBuildingEditingId === id ? "" : id;
+        return renderExternalWorkers();
+      }
+      if (action === "toggle-external-worker-add") {
+        const id = button.dataset.buildingId || "";
+        state.ui.externalWorkerAddingBuildingId = state.ui.externalWorkerAddingBuildingId === id ? "" : id;
+        return renderExternalWorkers();
+      }
+      if (action === "edit-external-worker") {
+        state.ui.externalEditingWorkerId = button.dataset.workerId || "";
+        return renderExternalWorkers();
+      }
+      if (action === "finish-external-worker-edit") {
+        state.ui.externalEditingWorkerId = "";
+        saveState();
+        return renderExternalWorkers();
+      }
       if (action === "add-external-building") return addExternalBuilding();
       if (action === "delete-external-building") return deleteExternalBuilding(button.dataset.buildingId);
       if (action === "add-external-worker") return addExternalWorker(button.dataset.buildingId);
@@ -7876,6 +8155,20 @@
 
     function handleInput(event) {
       const target = event.target;
+      if (target.id === "externalBuildingSearch") {
+        const query = target.value.trim().toLowerCase();
+        target.closest(".external-building-pane")?.querySelectorAll(".external-building-option").forEach((row) => {
+          row.classList.toggle("is-filtered-out", !String(row.dataset.filterText || "").includes(query));
+        });
+        return;
+      }
+      if (target.id === "externalWorkerSearch") {
+        const query = target.value.trim().toLowerCase();
+        target.closest(".external-detail-body")?.querySelectorAll("[data-external-worker-row]").forEach((row) => {
+          row.classList.toggle("is-filtered-out", !String(row.dataset.filterText || "").includes(query));
+        });
+        return;
+      }
       if (target.dataset.splitField) return updateSplitDraftField(target);
       if (target.dataset.accumField) return refreshAccumDialogTotals();
       if (target.dataset.borrowField) return updateBorrowDraftField(target);
@@ -8030,6 +8323,14 @@
     function handleChange(event) {
       const target = event.target;
       if (target.id === "mobileNav") return setActiveTab(target.value);
+      if (target.id === "externalBuildingSelect") {
+        state.ui.externalWorkerBuildingId = target.value;
+        state.ui.externalWorkerAddingBuildingId = "";
+        state.ui.externalBuildingEditingId = "";
+        state.ui.externalEditingWorkerId = "";
+        saveState();
+        return renderExternalWorkers();
+      }
       if (target.dataset.borrowField) return updateBorrowDraftField(target);
       if (target.dataset.cellDraftToggle && cellDraft) {
         cellDraft[target.dataset.cellDraftToggle] = target.checked;
@@ -8474,6 +8775,7 @@
       const building = { id: uid("ewb"), name, workers: [] };
       state.externalWorkerBuildings.push(building);
       state.ui.externalWorkerBuildingId = building.id;
+      state.ui.externalBuildingAdding = false;
       saveState();
       renderExternalWorkers();
       showToast(`เพิ่ม${buildingLabel(name)}แล้ว`);
@@ -8487,6 +8789,10 @@
       }
       if (!confirm(`ลบ${buildingLabel(building.name)}และรายชื่อคนงานทั้งหมด?`)) return;
       state.externalWorkerBuildings = state.externalWorkerBuildings.filter((row) => row.id !== id);
+      state.ui.externalWorkerBuildingId = state.externalWorkerBuildings[0]?.id || "";
+      state.ui.externalBuildingEditingId = "";
+      state.ui.externalWorkerAddingBuildingId = "";
+      state.ui.externalEditingWorkerId = "";
       saveState();
       renderExternalWorkers();
     }
@@ -8507,8 +8813,9 @@
         return showToast("รหัสพนักงานนี้ถูกใช้แล้ว");
       }
       building.workers.push({ id: uid("ew"), code, name, dailyWage: wage });
+      state.ui.externalWorkerAddingBuildingId = "";
       saveState();
-      renderExternalWorkers();
+      renderWorkers();
       showToast("เพิ่มคนงานหลังอื่นแล้ว");
     }
 
@@ -8519,8 +8826,9 @@
       if (workerUsedInPlans(workerId)) return showToast("ลบไม่ได้ เพราะคนงานนี้ถูกใช้ในแผนแล้ว");
       if (!confirm(`ลบ ${worker.code} · ${worker.name}?`)) return;
       building.workers = building.workers.filter((row) => row.id !== workerId);
+      if (state.ui.externalEditingWorkerId === workerId) state.ui.externalEditingWorkerId = "";
       saveState();
-      renderExternalWorkers();
+      renderWorkers();
     }
 
     function deleteWorker(id) {
