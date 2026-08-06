@@ -1348,6 +1348,9 @@
       font-weight: 900;
       background: var(--borrow-soft);
     }
+    .attendance-table .other-building {
+      background: #dcfce7 !important;
+    }
     .attendance-table .holiday,
     .attendance-table .holiday .sticky {
       background: var(--holiday) !important;
@@ -3966,6 +3969,7 @@
       if (mark === "half") return { text: "½", className: "partial", color: "#b45309", bg: "#fff7ed" };
       if (isHourlyMark(mark)) return { text: `${hourlyMarkLabel(mark)}h`, className: "partial", color: "#b45309", bg: "#fff7ed" };
       if (isBorrowedMark(mark)) return { text: borrowedMarkLabel(mark), className: "borrowed", color: "#075985", bg: "#dbeafe" };
+      if (mark === "other-building") return { text: "", className: "other-building", color: "#00543a", bg: "#dcfce7" };
       if (mark === "absent") return { text: "×", className: "absent", color: "#b3261e", bg: "" };
       return { text: "", className: "", color: "#111", bg: "" };
     }
@@ -4473,6 +4477,7 @@
       const manual = accumulatedTotalsFor(view, plan);
       const effectiveTotal = chainActuals.laborActual + chainActuals.machineActual;
       const projectLaborValue = projectLaborValueFor(view);
+      const manualRatioLaborValue = laborValue;
       return {
         view,
         periodValue,
@@ -4488,7 +4493,7 @@
         currentRatio: laborValue ? effectiveTotal / laborValue : 0,
         manual,
         projectLaborValue,
-        manualRatio: projectLaborValue ? n(manual.costToUpdate) / projectLaborValue : 0
+        manualRatio: manualRatioLaborValue ? n(manual.costToUpdate) / manualRatioLaborValue : 0
       };
     }
 
@@ -4872,8 +4877,26 @@
       const inboundAssignments = inboundAttendanceForMonth(monthKey);
       const combined = buildingsForView(view).length > 1;
       const workerDayMap = new Map();
+      const allBuildingDayMap = new Map();
       const dayWorkers = new Map(dates.map((date) => [date, new Set()]));
       const dayCosts = new Map(dates.map((date) => [date, 0]));
+      if (!combined) {
+        periodsForView(combinedViewValue()).forEach((period) => {
+          period.items.forEach((item) => {
+            const actual = ensurePlanItemData(item).actual || {};
+            Object.entries(actual).forEach(([date, entries]) => {
+              if (!dateSet.has(date)) return;
+              (entries || []).forEach((entry) => {
+                if (!entry.workerId || !getWorker(entry.workerId)) return;
+                if (isExternalWorker(entry.workerId) && !dateWithinInboundAssignment(date, inboundAssignments[entry.workerId])) return;
+                const workerDates = allBuildingDayMap.get(entry.workerId) || new Set();
+                workerDates.add(date);
+                allBuildingDayMap.set(entry.workerId, workerDates);
+              });
+            });
+          });
+        });
+      }
       periodsForView(view).forEach((period) => {
         period.items.forEach((item) => {
           const actual = ensurePlanItemData(item).actual || {};
@@ -4919,18 +4942,21 @@
         .sort((a, b) => naturalSort(a.code, b.code) || naturalSort(a.name, b.name))
         .map((worker) => {
           const days = workerDayMap.get(worker.id) || new Map();
+          const otherBuildingDates = new Set([...(allBuildingDayMap.get(worker.id) || [])].filter((date) => !days.has(date)));
+          const attendanceActive = days.size > 0 || otherBuildingDates.size > 0;
           const workedDays = dates.filter((date) => days.has(date) && date <= cutoff).length;
-          const absentDays = dates.filter((date) => !isHoliday(date) && date <= cutoff && !days.has(date)).length;
+          const absentDays = dates.filter((date) => !isHoliday(date) && date <= cutoff && !days.has(date) && !otherBuildingDates.has(date)).length;
           return {
             worker,
             days,
-            attendanceActive: days.size > 0,
+            otherBuildingDates,
+            attendanceActive,
             eligibleDates: null,
             isExternal: false,
             sourceBuilding: "",
             workedCount: days.size,
             workedDays,
-            absentDays: days.size ? absentDays : 0,
+            absentDays: attendanceActive ? absentDays : 0,
             monthCost: [...days.values()].reduce((sum, row) => sum + row.cost, 0)
           };
         });
@@ -4940,14 +4966,16 @@
         .map(({ worker, buildingName }) => {
           const assignment = inboundAssignments[worker.id];
           const days = workerDayMap.get(worker.id) || new Map();
+          const otherBuildingDates = new Set([...(allBuildingDayMap.get(worker.id) || [])].filter((date) => !days.has(date)));
           const eligibleDates = new Set(combined
             ? dates.filter((date) => dateWithinInboundAssignment(date, assignment))
-            : dates.filter((date) => days.has(date)));
+            : dates.filter((date) => days.has(date) || otherBuildingDates.has(date)));
           const workedDays = dates.filter((date) => eligibleDates.has(date) && days.has(date) && date <= cutoff).length;
-          const absentDays = dates.filter((date) => eligibleDates.has(date) && !isHoliday(date) && date <= cutoff && !days.has(date)).length;
+          const absentDays = dates.filter((date) => eligibleDates.has(date) && !isHoliday(date) && date <= cutoff && !days.has(date) && !otherBuildingDates.has(date)).length;
           return {
             worker,
             days,
+            otherBuildingDates,
             assignment,
             attendanceActive: true,
             eligibleDates,
@@ -4959,7 +4987,7 @@
             monthCost: [...days.values()].reduce((sum, row) => sum + row.cost, 0)
           };
         })
-        .filter((row) => combined || row.workedCount > 0);
+        .filter((row) => combined || row.workedCount > 0 || row.otherBuildingDates.size > 0);
       const rows = [...ownRows, ...externalRows];
       return {
         view,
@@ -4986,6 +5014,7 @@
         const hours = units * n(state.settings.dayHours || 9);
         return `hours:${qty(hours) || "0"}`;
       }
+      if (row.otherBuildingDates?.has(date)) return "other-building";
       if (!row.attendanceActive) return "inactive";
       if (date <= cutoff) return "absent";
       return "blank";
@@ -6053,6 +6082,7 @@
             <td class="worker-actions">
               <button data-action="${editing ? "finish-external-worker-edit" : "edit-external-worker"}" data-worker-id="${esc(worker.id)}">${editing ? "เสร็จ" : "แก้ไข"}</button>
               <button class="danger" data-action="delete-external-worker" data-worker-id="${esc(worker.id)}" data-building-id="${esc(selected.id)}">ลบ</button>
+              <button data-action="copy-worker" data-worker-id="${esc(worker.id)}" title="คัดลอกรหัส ชื่อ และค่าแรง">คัดลอก</button>
             </td>
           </tr>
         `;
@@ -6184,7 +6214,10 @@
                     <td><input data-worker-field="name" data-worker-id="${worker.id}" value="${esc(worker.name)}"></td>
                     <td><input class="num" type="number" data-worker-field="dailyWage" data-worker-id="${worker.id}" value="${esc(worker.dailyWage)}"></td>
                     <td class="num">${money(n(worker.dailyWage) / n(state.settings.dayHours), 0)}</td>
-                    <td><button class="danger" data-action="delete-worker" data-worker-id="${worker.id}">ลบ</button></td>
+                    <td class="worker-actions">
+                      <button class="danger" data-action="delete-worker" data-worker-id="${worker.id}">ลบ</button>
+                      <button data-action="copy-worker" data-worker-id="${worker.id}" title="คัดลอกรหัส ชื่อ และค่าแรง">คัดลอก</button>
+                    </td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -6551,7 +6584,7 @@
           const mark = attendanceMark(row, date, data.cutoff);
           const comment = attendanceComment(row.worker.id, date);
           const hasComment = Boolean(comment?.text);
-          const classes = ["attendance-day-cell", mark === "holiday" ? "holiday" : "", mark === "outside-range" ? "outside-range" : "", hasComment ? "has-comment" : ""].filter(Boolean).join(" ");
+          const classes = ["attendance-day-cell", mark === "holiday" ? "holiday" : "", mark === "outside-range" ? "outside-range" : "", mark === "other-building" ? "other-building" : "", hasComment ? "has-comment" : ""].filter(Boolean).join(" ");
           const attrs = `class="${classes}" data-attendance-comment-cell data-worker-id="${esc(row.worker.id)}" data-date="${esc(date)}" data-has-comment="${hasComment ? "true" : "false"}" aria-label="${esc(attendanceCommentCellLabel(row.worker.id, date, hasComment))}" ${(attendanceCommentMode || hasComment) ? `tabindex="0" role="button"` : ""}`;
           if (mark === "holiday") return `<td ${attrs}></td>`;
           const meta = attendanceMarkMeta(mark);
@@ -8675,6 +8708,7 @@
       if (action === "delete-item") return deleteItem(button.dataset.periodId, button.dataset.itemId);
       if (action === "add-worker") return addWorker();
       if (action === "delete-worker") return deleteWorker(button.dataset.workerId);
+      if (action === "copy-worker") return copyWorker(button.dataset.workerId);
       if (action === "toggle-external-building-add") {
         state.ui.externalBuildingAdding = !state.ui.externalBuildingAdding;
         return renderExternalWorkers();
@@ -9437,6 +9471,39 @@
       renderWorkers();
     }
 
+    async function writeClipboardText(text) {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (error) {
+        console.warn("Clipboard API unavailable, using fallback", error);
+      }
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      let copied = false;
+      try {
+        copied = document.execCommand("copy");
+      } finally {
+        textarea.remove();
+      }
+      return copied;
+    }
+
+    async function copyWorker(workerId) {
+      const worker = getWorker(workerId);
+      if (!worker) return showToast("ไม่พบข้อมูลคนงาน");
+      const text = [worker.code || "", worker.name || "", String(n(worker.dailyWage))].join("\t");
+      const copied = await writeClipboardText(text);
+      showToast(copied ? "คัดลอกข้อมูลคนงานแล้ว" : "คัดลอกข้อมูลคนงานไม่สำเร็จ");
+    }
+
     async function importPeriodData() {
       const building = $("#periodDataBuildingInput")?.value.trim();
       const file = $("#periodDataImportFile")?.files?.[0];
@@ -10084,9 +10151,9 @@
           if (mark === "outside-range") bg = "#e5e7eb";
           if (mark !== "holiday") {
             const meta = attendanceMarkMeta(mark);
+            bg = meta.bg || bg;
             if (meta.text) {
               text = meta.text;
-              bg = meta.bg || bg;
               color = meta.color;
               bold = true;
             }
