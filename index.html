@@ -4097,9 +4097,9 @@
       return { firstDate, labor, machine };
     }
 
-    function accumulatedTotalsFor(view, plan = activeWorkPlan()) {
+    function accumulatedTotalsFor(view, plan = activeWorkPlan(), cutoff = planUpdateDate(plan)) {
       const manual = manualSettingsFor(view, plan);
-      const app = appAccumulatedActuals(view, planUpdateDate(plan));
+      const app = appAccumulatedActuals(view, cutoff);
       const laborTotal = app.labor + n(manual.initialLaborCost);
       const costToUpdate = laborTotal + app.machine + n(manual.initialMachineCost);
       return {
@@ -10478,12 +10478,18 @@
 
       const rx = sx + summaryW + valueW + 120 * scale;
       y -= summary.length * rowH;
+      const cumulativeManual = monthlyCycle
+        ? accumulatedTotalsFor(view, activeWorkPlan(), monthlyCycle.end)
+        : s.manual;
+      const cumulativeRatio = s.laborValue
+        ? n(cumulativeManual.costToUpdate) / s.laborValue
+        : 0;
       const manualRows = [
-        [monthlyCycle ? "ค่าแรงต้นทุนของรอบรายเดือน" : "ค่าแรงต้นทุนสะสมถึงงวดปัจจุบัน", money(s.manual.contractLaborCost, 0), "#d9e6f7"],
-        [monthlyCycle ? "ค่าแรง+ค่าเครื่องจักรของรอบรายเดือน" : "ค่าแรง+ค่าเครื่องจักรสะสมถึงวัน update", money(s.manual.costToUpdate, 0), "#fff0a8"],
-        [monthlyCycle ? "สรุปค่าแรงของรอบรายเดือน" : "สรุปค่าแรงทั้งโครงการ(ถ้าอนุมัติ ณ วันupdate)", projectPlan ? "" : pct(s.manualRatio), "#ff9f9f"],
-        ["วันที่ Update", projectPlan ? "" : dateLabel(planUpdateDate()), "#e8e8e8"],
-        ["หมายเหตุ", projectPlan ? "" : (s.manual.note || ""), "#c8e0b8"]
+        ["ค่าแรงต้นทุนสะสมถึงงวดปัจจุบัน", money(cumulativeManual.contractLaborCost, 0), "#d9e6f7"],
+        ["ค่าแรง+ค่าเครื่องจักรสะสมถึงวัน update", money(cumulativeManual.costToUpdate, 0), "#fff0a8"],
+        ["สรุปค่าแรงทั้งโครงการ(ถ้าอนุมัติ ณ วันupdate)", projectPlan ? "" : pct(cumulativeRatio), "#ff9f9f"],
+        ["วันที่ Update", projectPlan ? "" : dateLabel(monthlyCycle?.end || planUpdateDate()), "#e8e8e8"],
+        ["หมายเหตุ", projectPlan ? "" : (cumulativeManual.note || ""), "#c8e0b8"]
       ];
       manualRows.forEach((row) => {
         drawCell(ctx, rx, y, 360 * scale, rowH, row[0], false, row[2], "#111", "left", true);
