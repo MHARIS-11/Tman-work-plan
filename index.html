@@ -1454,6 +1454,112 @@
     .attendance-inbound-worker.is-selected {
       background: oklch(0.97 0.02 165);
     }
+    .thai-date-field {
+      width: 100%;
+      min-height: 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 34px;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 4px 3px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+    }
+    .thai-date-field:hover:not(:disabled),
+    .thai-date-field:focus-visible {
+      border-color: var(--brand);
+      outline: 2px solid color-mix(in srgb, var(--brand) 18%, transparent);
+      outline-offset: 0;
+    }
+    .thai-date-field:disabled {
+      opacity: 0.52;
+      cursor: not-allowed;
+    }
+    .thai-date-field-value {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .thai-date-field-icon {
+      display: grid;
+      place-items: center;
+      min-height: 30px;
+      border-left: 1px solid var(--line);
+      font-size: 17px;
+      line-height: 1;
+    }
+    .thai-date-popover {
+      position: absolute;
+      z-index: 4;
+      width: min(320px, calc(100vw - 24px));
+      padding: 10px;
+      border: 1px solid var(--line-strong, var(--line));
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
+    }
+    .thai-date-popover[hidden] {
+      display: none;
+    }
+    .thai-date-popover-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 36px;
+      margin-bottom: 6px;
+      padding-left: 4px;
+    }
+    .thai-date-popover-head strong {
+      font-size: 15px;
+    }
+    .thai-date-popover-head button {
+      width: 32px;
+      min-height: 32px;
+      padding: 0;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .thai-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 3px;
+    }
+    .thai-calendar-weekday {
+      display: grid;
+      place-items: center;
+      min-height: 28px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .thai-calendar-day {
+      min-width: 0;
+      min-height: 34px;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .thai-calendar-day:hover,
+    .thai-calendar-day:focus-visible {
+      border-color: var(--brand);
+      background: var(--surface-2);
+    }
+    .thai-calendar-day.is-today {
+      border-color: var(--brand);
+    }
+    .thai-calendar-day.is-selected {
+      background: var(--brand);
+      color: #fff;
+      font-weight: 900;
+    }
     .attendance-inbound-identity {
       display: flex;
       align-items: center;
@@ -1502,6 +1608,11 @@
       }
       .attendance-inbound-identity {
         grid-column: 1 / -1;
+      }
+      .thai-date-popover {
+        left: 12px !important;
+        right: 12px;
+        width: auto;
       }
     }
     .borrow-shell {
@@ -2586,6 +2697,7 @@
       <button type="button" class="ghost" data-action="close-attendance-inbound-dialog" aria-label="ปิด">ปิด</button>
     </div>
     <div class="dialog-body" id="attendanceInboundDialogBody"></div>
+    <div id="inboundDatePicker" class="thai-date-popover" hidden></div>
     <div class="dialog-actions">
       <button type="button" class="ghost" data-action="close-attendance-inbound-dialog">ยกเลิก</button>
       <button type="button" class="primary" data-action="save-attendance-inbound-dialog">บันทึกคนงานเดือนนี้</button>
@@ -2672,6 +2784,7 @@
     let attendanceCommentPreviewCloseTimer = null;
     let attendanceCommentInitialText = "";
     let attendanceInboundDraft = null;
+    let inboundDatePickerState = null;
 
     function makePlan() { return {}; }
     function makeActual() { return {}; }
@@ -3918,16 +4031,24 @@
     function appAccumulatedActuals(view, cutoff = planUpdateDate()) {
       const buildings = new Set(buildingsForView(view));
       const itemBuildings = itemBuildingLookup();
+      const laborSeen = new Set();
+      const machineSeen = new Set();
       const dates = [];
       let labor = 0;
       let machine = 0;
       (state.workPlans || []).forEach((plan) => {
+        const claimKey = claimGroupNo(plan);
         Object.entries(plan.itemData || {}).forEach(([itemId, data]) => {
           if (!buildings.has(itemBuildings.get(itemId))) return;
           Object.entries(data?.actual || {}).forEach(([date, entries]) => {
             if (date > cutoff) return;
             let dayLabor = 0;
-            (entries || []).forEach((entry) => { dayLabor += laborAmount(entry); });
+            (entries || []).forEach((entry, index) => {
+              const key = `${claimKey}|${itemId}|${date}|${entry.workerId || ""}|${entry.unit || ""}|${entry.hours || ""}|${n(entry.amount)}|${index}`;
+              if (laborSeen.has(key)) return;
+              laborSeen.add(key);
+              dayLabor += laborAmount(entry);
+            });
             if (dayLabor > 0) {
               labor += dayLabor;
               dates.push(date);
@@ -3938,7 +4059,12 @@
         buildings.forEach((building) => {
           Object.entries(usage[building] || {}).forEach(([date, rows]) => {
             if (date > cutoff) return;
-            const dayMachine = (rows || []).reduce((sum, row) => sum + n(row.amount), 0);
+            const dayMachine = (rows || []).reduce((sum, row, index) => {
+              const key = `${claimKey}|${building}|${date}|${row.id || index}|${row.machineId || ""}|${n(row.amount)}`;
+              if (machineSeen.has(key)) return sum;
+              machineSeen.add(key);
+              return sum + n(row.amount);
+            }, 0);
             if (dayMachine > 0) {
               machine += dayMachine;
               dates.push(date);
@@ -4267,6 +4393,30 @@
       return { laborActual, machineActual };
     }
 
+    function priorPlansInClaim(plan = activeWorkPlan()) {
+      if (!plan) return [];
+      const index = (state.workPlans || []).findIndex((row) => row.id === plan.id);
+      if (index <= 0) return [];
+      const groupNo = claimGroupNo(plan);
+      return state.workPlans.slice(0, index).filter((row) => claimGroupNo(row) === groupNo);
+    }
+
+    function continuationCarryFor(view, plan = activeWorkPlan()) {
+      if (!isContinuationPlan(plan)) return { laborActual: 0, machineActual: 0, total: 0, planCount: 0 };
+      const plans = priorPlansInClaim(plan);
+      const { laborActual, machineActual } = scopedActuals(view, plans);
+      return {
+        laborActual,
+        machineActual,
+        total: laborActual + machineActual,
+        planCount: plans.length
+      };
+    }
+
+    function projectLaborValueFor(view) {
+      return scopedLaborValue(view, state.workPlans || [], true);
+    }
+
     function scopedSummaryFor(view, scope = "plan", plan = activeWorkPlan()) {
       const plans = plansForScope(scope, plan);
       const includeClaimKey = scope === "project";
@@ -4276,6 +4426,7 @@
       const total = laborActual + machineActual;
       const control = laborValue * n(state.settings.controlPercent) / 100;
       const manual = accumulatedTotalsFor(view, plan);
+      const projectLaborValue = projectLaborValueFor(view);
       return {
         view,
         scope,
@@ -4289,7 +4440,8 @@
         costRatio: control ? total / control : 0,
         currentRatio: laborValue ? total / laborValue : 0,
         manual,
-        manualRatio: n(manual.contractLaborCost) ? n(manual.costToUpdate) / n(manual.contractLaborCost) : 0
+        projectLaborValue,
+        manualRatio: projectLaborValue ? n(manual.costToUpdate) / projectLaborValue : 0
       };
     }
 
@@ -4308,15 +4460,19 @@
     }
 
     function summaryFor(view) {
-      const dates = getDates().filter((date) => date <= planUpdateDate());
-      const periodValue = totalPeriodValue(view);
-      const laborValue = totalLaborValue(view);
-      const laborActual = dates.reduce((sum, date) => sum + totalLaborCost(view, date), 0);
-      const machineActual = dates.reduce((sum, date) => sum + totalMachineCost(view, date), 0);
+      const plan = activeWorkPlan();
+      const periodValue = scopedPeriodValue(view, plan ? [plan] : []);
+      const laborValue = scopedLaborValue(view, plan ? [plan] : []);
+      const carry = continuationCarryFor(view, plan);
+      const chainPlans = isContinuationPlan(plan) ? [...priorPlansInClaim(plan), plan] : (plan ? [plan] : []);
+      const chainActuals = scopedActuals(view, chainPlans);
+      const laborActual = Math.max(0, chainActuals.laborActual - carry.laborActual);
+      const machineActual = Math.max(0, chainActuals.machineActual - carry.machineActual);
       const total = laborActual + machineActual;
       const control = laborValue * n(state.settings.controlPercent) / 100;
-      const plan = activeWorkPlan();
       const manual = accumulatedTotalsFor(view, plan);
+      const effectiveTotal = chainActuals.laborActual + chainActuals.machineActual;
+      const projectLaborValue = projectLaborValueFor(view);
       return {
         view,
         periodValue,
@@ -4325,11 +4481,14 @@
         laborActual,
         machineActual,
         total,
+        carry,
+        effectiveTotal,
         balance: control - total,
         costRatio: control ? total / control : 0,
-        currentRatio: laborValue ? total / laborValue : 0,
+        currentRatio: laborValue ? effectiveTotal / laborValue : 0,
         manual,
-        manualRatio: n(manual.contractLaborCost) ? n(manual.costToUpdate) / n(manual.contractLaborCost) : 0
+        projectLaborValue,
+        manualRatio: projectLaborValue ? n(manual.costToUpdate) / projectLaborValue : 0
       };
     }
 
@@ -4526,8 +4685,89 @@
     }
 
     function closeAttendanceInboundDialog() {
+      closeInboundDatePicker();
       $("#attendanceInboundDialog")?.close();
       attendanceInboundDraft = null;
+    }
+
+    function closeInboundDatePicker() {
+      const picker = $("#inboundDatePicker");
+      if (picker) picker.hidden = true;
+      inboundDatePickerState = null;
+    }
+
+    function positionInboundDatePicker() {
+      if (!inboundDatePickerState) return;
+      const picker = $("#inboundDatePicker");
+      const dialog = $("#attendanceInboundDialog");
+      const anchor = document.querySelector(`[data-action="open-inbound-date-picker"][data-worker-id="${CSS.escape(inboundDatePickerState.workerId)}"][data-inbound-date="${CSS.escape(inboundDatePickerState.field)}"]`);
+      if (!picker || picker.hidden || !anchor || !dialog?.open) return;
+      const rect = anchor.getBoundingClientRect();
+      const dialogRect = dialog.getBoundingClientRect();
+      const pickerRect = picker.getBoundingClientRect();
+      const margin = 12;
+      let left = Math.min(rect.left - dialogRect.left, dialogRect.width - pickerRect.width - margin);
+      left = Math.max(margin, left);
+      let top = rect.bottom - dialogRect.top + 6;
+      if (top + pickerRect.height > dialogRect.height - margin) top = rect.top - dialogRect.top - pickerRect.height - 6;
+      top = Math.max(margin, Math.min(top, dialogRect.height - pickerRect.height - margin));
+      picker.style.left = `${left}px`;
+      picker.style.top = `${top}px`;
+    }
+
+    function renderInboundDatePicker() {
+      if (!attendanceInboundDraft || !inboundDatePickerState) return closeInboundDatePicker();
+      const picker = $("#inboundDatePicker");
+      if (!picker) return;
+      const { workerId, field } = inboundDatePickerState;
+      const row = attendanceInboundDraft.rows[workerId];
+      if (!row?.selected) return closeInboundDatePicker();
+      const monthKey = attendanceInboundDraft.monthKey;
+      const [year, month] = monthKey.split("-").map(Number);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const firstWeekday = new Date(year, month - 1, 1).getDay();
+      const today = localISODate(new Date());
+      const weekdayLabels = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+      const blanks = Array.from({ length: firstWeekday }, () => `<span aria-hidden="true"></span>`).join("");
+      const days = Array.from({ length: daysInMonth }, (_, index) => {
+        const day = index + 1;
+        const date = `${monthKey}-${String(day).padStart(2, "0")}`;
+        const classes = [date === row[field] ? "is-selected" : "", date === today ? "is-today" : ""].filter(Boolean).join(" ");
+        return `<button type="button" class="thai-calendar-day ${classes}" data-action="select-inbound-date" data-date="${date}" aria-label="${esc(thaiDateInput(date))}" aria-pressed="${date === row[field]}">${day}</button>`;
+      }).join("");
+      picker.innerHTML = `
+        <div class="thai-date-popover-head">
+          <strong>${esc(monthYearLabel(`${monthKey}-01`))}</strong>
+          <button type="button" class="ghost" data-action="close-inbound-date-picker" aria-label="ปิดปฏิทิน">×</button>
+        </div>
+        <div class="thai-calendar-grid" role="grid" aria-label="เลือกวันที่ ${esc(monthYearLabel(`${monthKey}-01`))}">
+          ${weekdayLabels.map((label) => `<span class="thai-calendar-weekday" role="columnheader">${label}</span>`).join("")}
+          ${blanks}${days}
+        </div>
+      `;
+      picker.hidden = false;
+      requestAnimationFrame(positionInboundDatePicker);
+    }
+
+    function openInboundDatePicker(button) {
+      if (!attendanceInboundDraft) return;
+      const workerId = button.dataset.workerId;
+      const field = button.dataset.inboundDate;
+      if (!attendanceInboundDraft.rows[workerId]?.selected || !["startDate", "endDate"].includes(field)) return;
+      inboundDatePickerState = { workerId, field };
+      renderInboundDatePicker();
+    }
+
+    function selectInboundDate(date) {
+      if (!attendanceInboundDraft || !inboundDatePickerState || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+      const { workerId, field } = inboundDatePickerState;
+      const row = attendanceInboundDraft.rows[workerId];
+      if (!row?.selected || !date.startsWith(`${attendanceInboundDraft.monthKey}-`)) return;
+      row[field] = date;
+      if (field === "startDate" && row.endDate < date) row.endDate = date;
+      if (field === "endDate" && row.startDate > date) row.startDate = date;
+      closeInboundDatePicker();
+      renderAttendanceInboundDialog();
     }
 
     function renderAttendanceInboundDialog() {
@@ -4564,8 +4804,8 @@
                       <input type="checkbox" data-inbound-worker-toggle="${esc(worker.id)}" ${row.selected ? "checked" : ""}>
                       <span><strong>${esc(worker.code)} · ${esc(worker.name)}</strong><span>ค่าแรง ${money(worker.dailyWage, 0)} บาท/วัน</span></span>
                     </label>
-                    <label><span>เริ่มทำงาน</span><input type="date" min="${bounds.startDate}" max="${bounds.endDate}" data-inbound-date="startDate" data-worker-id="${esc(worker.id)}" value="${esc(row.startDate)}" ${row.selected ? "" : "disabled"}></label>
-                    <label><span>สิ้นสุด</span><input type="date" min="${bounds.startDate}" max="${bounds.endDate}" data-inbound-date="endDate" data-worker-id="${esc(worker.id)}" value="${esc(row.endDate)}" ${row.selected ? "" : "disabled"}></label>
+                    <label><span>เริ่มทำงาน</span><button type="button" class="thai-date-field" data-action="open-inbound-date-picker" data-inbound-date="startDate" data-worker-id="${esc(worker.id)}" ${row.selected ? "" : "disabled"}><span class="thai-date-field-value">${esc(thaiDateInput(row.startDate))}</span><span class="thai-date-field-icon" aria-hidden="true">▦</span></button></label>
+                    <label><span>สิ้นสุด</span><button type="button" class="thai-date-field" data-action="open-inbound-date-picker" data-inbound-date="endDate" data-worker-id="${esc(worker.id)}" ${row.selected ? "" : "disabled"}><span class="thai-date-field-value">${esc(thaiDateInput(row.endDate))}</span><span class="thai-date-field-icon" aria-hidden="true">▦</span></button></label>
                   </div>
                 `;
               }).join("") || `<p class="attendance-inbound-empty">ยังไม่มีรายชื่อคนงานของอาคารนี้</p>`}
@@ -4580,8 +4820,10 @@
       const workerId = target.dataset.inboundWorkerToggle || target.dataset.workerId;
       const row = attendanceInboundDraft.rows[workerId];
       if (!row) return;
-      if (target.dataset.inboundWorkerToggle) row.selected = target.checked;
-      if (target.dataset.inboundDate) row[target.dataset.inboundDate] = target.value;
+      if (target.dataset.inboundWorkerToggle) {
+        row.selected = target.checked;
+        closeInboundDatePicker();
+      }
       renderAttendanceInboundDialog();
     }
 
@@ -8326,6 +8568,7 @@
     }
 
     function handleClick(event) {
+      if (inboundDatePickerState && !event.target.closest?.("#inboundDatePicker, [data-action='open-inbound-date-picker']")) closeInboundDatePicker();
       const attendanceCell = event.target.closest?.("[data-attendance-comment-cell]");
       if (attendanceCell) {
         clearTimeout(attendanceCommentHoverTimer);
@@ -8492,6 +8735,9 @@
       if (action === "open-attendance-inbound-dialog") return openAttendanceInboundDialog();
       if (action === "close-attendance-inbound-dialog") return closeAttendanceInboundDialog();
       if (action === "save-attendance-inbound-dialog") return saveAttendanceInboundDialog();
+      if (action === "open-inbound-date-picker") return openInboundDatePicker(button);
+      if (action === "close-inbound-date-picker") return closeInboundDatePicker();
+      if (action === "select-inbound-date") return selectInboundDate(button.dataset.date || "");
       if (action === "toggle-attendance-comments") return toggleAttendanceCommentMode();
       if (action === "save-attendance-comment") return saveAttendanceComment();
       if (action === "delete-attendance-comment") return deleteAttendanceComment();
@@ -8670,7 +8916,7 @@
     function handleChange(event) {
       const target = event.target;
       if (target.id === "mobileNav") return setActiveTab(target.value);
-      if (target.dataset.inboundWorkerToggle || target.dataset.inboundDate) return updateAttendanceInboundDraft(target);
+      if (target.dataset.inboundWorkerToggle) return updateAttendanceInboundDraft(target);
       if (target.id === "externalBuildingSelect") {
         state.ui.externalWorkerBuildingId = target.value;
         state.ui.externalWorkerAddingBuildingId = "";
@@ -8792,6 +9038,11 @@
     }
 
     function handleKeyDown(event) {
+      if (event.key === "Escape" && inboundDatePickerState) {
+        event.preventDefault();
+        event.stopPropagation();
+        return closeInboundDatePicker();
+      }
       if (activeTab === "attendance") {
         if (event.key === "Escape" && (attendanceCommentMode || attendanceCommentPopover)) {
           event.preventDefault();
@@ -10042,18 +10293,24 @@
       const summaryW = 580 * scale;
       const valueW = 160 * scale;
       const sx = x0;
-      const colors = ["#d9e6f7", "#ff9f9f", "#fff0a8", "#b790dc", "#ff9f9f", "#c8e0b8"];
       const summary = [
-        ["มูลค่าค่าแรง", money(s.laborValue, 0)],
-        [`ค่าแรงควบคุมที่ ${money(state.settings.controlPercent, 0)}%`, money(s.control, 0)],
-        ["ค่าแรงสะสม ณ.ปัจจุบัน (A)", money(s.laborActual, 0)],
-        ["ค่าเครื่องจักรสะสม ณ.ปัจจุบัน (B)", money(s.machineActual, 0)],
-        ["(A) + (B)", money(s.total, 0)],
-        ["สรุปค่าแรง ณ.ปัจจุบัน", pct(s.currentRatio)]
+        ["มูลค่าค่าแรง", money(s.laborValue, 0), "#d9e6f7"],
+        [`ค่าแรงควบคุมที่ ${money(state.settings.controlPercent, 0)}%`, money(s.control, 0), "#ff9f9f"],
+        ["ค่าแรงสะสม ณ.ปัจจุบัน (A)", money(s.laborActual, 0), "#fff0a8"],
+        ["ค่าเครื่องจักรสะสม ณ.ปัจจุบัน (B)", money(s.machineActual, 0), "#b790dc"],
+        ["(A) + (B)", money(s.total, 0), "#ff9f9f"]
       ];
-      summary.forEach((row, i) => {
-        drawCell(ctx, sx, y, summaryW, rowH, row[0], false, colors[i], "#111", "right", true);
-        drawCell(ctx, sx + summaryW, y, valueW, rowH, row[1], false, colors[i], "#111", "right", true);
+      if (isContinuationPlan()) {
+        summary.push([
+          `ค่าใช้จ่ายสะสมจากแผนก่อนหน้า (แผนเบิกงวดครั้งที่ ${claimGroupNo()})`,
+          money(s.carry.total, 0),
+          "#d9e6f7"
+        ]);
+      }
+      summary.push(["สรุปค่าแรง ณ.ปัจจุบัน", pct(s.currentRatio), "#c8e0b8"]);
+      summary.forEach((row) => {
+        drawCell(ctx, sx, y, summaryW, rowH, row[0], false, row[2], "#111", "right", true);
+        drawCell(ctx, sx + summaryW, y, valueW, rowH, row[1], false, row[2], "#111", "right", true);
         y += rowH;
       });
 
@@ -10113,6 +10370,8 @@
     document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", positionAttendanceCommentPopover);
     window.addEventListener("scroll", positionAttendanceCommentPopover, true);
+    window.addEventListener("resize", positionInboundDatePicker);
+    window.addEventListener("scroll", positionInboundDatePicker, true);
     $("#saveCellBtn").addEventListener("click", saveCellDraft);
     $("#clearCellBtn").addEventListener("click", clearCellDraft);
     $("#saveClaimBtn").addEventListener("click", saveClaimDateChange);
@@ -10126,6 +10385,7 @@
       if (event.target?.id === "accumDialog") closeAccumDialog();
     });
     $("#attendanceInboundDialog").addEventListener("close", () => {
+      closeInboundDatePicker();
       attendanceInboundDraft = null;
     });
     $("#attendanceInboundDialog").addEventListener("click", (event) => {
