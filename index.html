@@ -2828,6 +2828,7 @@
           manualView: "ALL",
           reportView: "ALL",
           reportMode: "full",
+          reportMonthlyCycle: "",
           attendanceView: "ALL",
           attendanceExportMode: "full",
           workerTab: "regular",
@@ -3337,7 +3338,8 @@
       if (!planViewOptions.includes(next.ui.planView)) next.ui.planView = planViewOptions[0] || fallbackView;
       if (!viewOptions.includes(next.ui.manualView)) next.ui.manualView = fallbackCombined;
       if (!viewOptions.includes(next.ui.reportView)) next.ui.reportView = fallbackCombined;
-      if (!["full", "projectPlan"].includes(next.ui.reportMode)) next.ui.reportMode = "full";
+      if (!["full", "projectPlan", "monthly"].includes(next.ui.reportMode)) next.ui.reportMode = "full";
+      next.ui.reportMonthlyCycle = next.ui.reportMonthlyCycle || "";
       if (!viewOptions.includes(next.ui.attendanceView)) next.ui.attendanceView = fallbackCombined;
       if (!viewOptions.includes(next.ui.borrowView) && next.ui.borrowView !== "ALL") next.ui.borrowView = fallbackCombined;
       if (!["full", "noWage"].includes(next.ui.attendanceExportMode)) next.ui.attendanceExportMode = "full";
@@ -3522,6 +3524,21 @@
     function dateLabel(date) {
       const d = new Date(`${date}T00:00:00`);
       return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function addDaysISO(date, days) {
+      const d = new Date(`${date}T00:00:00`);
+      d.setDate(d.getDate() + days);
+      return localISODate(d);
+    }
+
+    function addMonthsClampedISO(date, months) {
+      const source = new Date(`${date}T00:00:00`);
+      if (Number.isNaN(source.getTime())) return "";
+      const target = new Date(source.getFullYear(), source.getMonth() + months, 1);
+      const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+      target.setDate(Math.min(source.getDate(), lastDay));
+      return localISODate(target);
     }
 
     function thaiDateInput(date) {
@@ -4360,14 +4377,22 @@
       return total;
     }
 
-    function scopedActuals(view, plans) {
+    function normalizeDateFilter(dateFilter) {
+      if (!dateFilter) return null;
+      if (dateFilter instanceof Set) return dateFilter;
+      if (Array.isArray(dateFilter)) return new Set(dateFilter);
+      return null;
+    }
+
+    function scopedActuals(view, plans, dateFilter = null) {
+      const filterSet = normalizeDateFilter(dateFilter);
       const laborSeen = new Set();
       const machineSeen = new Set();
       let laborActual = 0;
       let machineActual = 0;
       plans.forEach((plan) => {
         const claimKey = claimGroupNo(plan);
-        const dates = planDateRange(plan);
+        const dates = planDateRange(plan).filter((date) => !filterSet || filterSet.has(date));
         const dateSet = new Set(dates);
         planPeriodsForView(plan, view).forEach((period) => {
           (period.items || []).forEach((item) => {
@@ -4405,10 +4430,10 @@
       return state.workPlans.slice(0, index).filter((row) => claimGroupNo(row) === groupNo);
     }
 
-    function continuationCarryFor(view, plan = activeWorkPlan()) {
+    function continuationCarryFor(view, plan = activeWorkPlan(), dateFilter = null) {
       if (!isContinuationPlan(plan)) return { laborActual: 0, machineActual: 0, total: 0, planCount: 0 };
       const plans = priorPlansInClaim(plan);
-      const { laborActual, machineActual } = scopedActuals(view, plans);
+      const { laborActual, machineActual } = scopedActuals(view, plans, dateFilter);
       return {
         laborActual,
         machineActual,
@@ -4463,19 +4488,23 @@
       return "normal";
     }
 
-    function summaryFor(view) {
+    function summaryFor(view, options = {}) {
+      const dateFilter = normalizeDateFilter(options.dateFilter);
       const plan = activeWorkPlan();
       const periodValue = scopedPeriodValue(view, plan ? [plan] : []);
       const laborValue = scopedLaborValue(view, plan ? [plan] : []);
-      const carry = continuationCarryFor(view, plan);
+      const carry = continuationCarryFor(view, plan, dateFilter);
       const chainPlans = isContinuationPlan(plan) ? [...priorPlansInClaim(plan), plan] : (plan ? [plan] : []);
-      const chainActuals = scopedActuals(view, chainPlans);
+      const chainActuals = scopedActuals(view, chainPlans, dateFilter);
       const laborActual = Math.max(0, chainActuals.laborActual - carry.laborActual);
       const machineActual = Math.max(0, chainActuals.machineActual - carry.machineActual);
       const total = laborActual + machineActual;
       const control = laborValue * n(state.settings.controlPercent) / 100;
-      const manual = accumulatedTotalsFor(view, plan);
       const effectiveTotal = chainActuals.laborActual + chainActuals.machineActual;
+      const manualBase = accumulatedTotalsFor(view, plan);
+      const manual = options.periodManual
+        ? { ...manualBase, contractLaborCost: laborValue, costToUpdate: effectiveTotal, note: "" }
+        : manualBase;
       const projectLaborValue = projectLaborValueFor(view);
       const manualRatioLaborValue = laborValue;
       return {
@@ -4564,6 +4593,40 @@
     function monthYearLabel(date) {
       const d = new Date(`${date}T00:00:00`);
       return d.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+    }
+
+    function reportMonthlyCycles(plan = activeWorkPlan()) {
+      if (!plan) return [];
+      const start = planStartDate(plan);
+      const end = planEndDate(plan);
+      if (!start || !end || start > end) return [];
+      const cycles = [];
+      let cycleStart = start;
+      for (let index = 1; index <= 60; index++) {
+        const nextStart = addMonthsClampedISO(start, index);
+        if (!nextStart || nextStart <= cycleStart) break;
+        const cycleEnd = addDaysISO(nextStart, -1);
+        if (cycleEnd > end) break;
+        cycles.push({
+          key: `${cycleStart}|${cycleEnd}`,
+          start: cycleStart,
+          end: cycleEnd,
+          label: monthYearLabel(cycleEnd),
+          rangeLabel: `${dateLabel(cycleStart)} - ${dateLabel(cycleEnd)}`
+        });
+        cycleStart = nextStart;
+      }
+      return cycles;
+    }
+
+    function selectedReportCycle() {
+      const cycles = reportMonthlyCycles();
+      if (!cycles.length) return null;
+      return cycles.find((cycle) => cycle.key === state.ui.reportMonthlyCycle) || cycles[0];
+    }
+
+    function reportCycleDateSet(cycle = selectedReportCycle()) {
+      return cycle ? new Set(getDates(cycle.start, cycle.end)) : null;
     }
 
     function selectedAttendanceMonth() {
@@ -6331,8 +6394,17 @@
       const viewOptions = buildingViewOptions();
       const view = viewOptions.includes(state.ui.reportView) ? state.ui.reportView : (viewOptions.at(-1) || viewOptions[0] || "ALL");
       const mode = reportMode();
+      const cycles = reportMonthlyCycles();
+      const cycle = mode === "monthly" ? selectedReportCycle() : null;
       const el = $("#tab-report");
       const reportOptions = viewOptions.map((row) => `<option value="${esc(row)}" ${view === row ? "selected" : ""}>${esc(viewLabel(row))}</option>`).join("");
+      const cycleControl = mode === "monthly"
+        ? `<select id="reportCycleSelect" style="width:240px" ${cycles.length ? "" : "disabled"}>
+            ${cycles.length
+              ? cycles.map((row) => `<option value="${esc(row.key)}" ${cycle?.key === row.key ? "selected" : ""}>${esc(row.label)} · ${esc(row.rangeLabel)}</option>`).join("")
+              : `<option>ยังไม่มีรอบรายเดือนเต็ม</option>`}
+          </select>`
+        : "";
       el.innerHTML = `
         <div class="section">
           <div class="panel">
@@ -6345,7 +6417,9 @@
                 <select id="reportModeSelect" style="width:190px">
                   <option value="full" ${mode === "full" ? "selected" : ""}>เต็มรูปแบบ</option>
                   <option value="projectPlan" ${mode === "projectPlan" ? "selected" : ""}>แผนสำหรับ Project</option>
+                  <option value="monthly" ${mode === "monthly" ? "selected" : ""}>สรุปรายเดือน</option>
                 </select>
+                ${cycleControl}
                 <button class="primary" data-action="download-report">ดาวน์โหลด PNG</button>
                 <button data-action="download-report-pdf">ดาวน์โหลด PDF</button>
               </div>
@@ -6357,7 +6431,8 @@
         </div>
       `;
       state.ui.reportView = view;
-      requestAnimationFrame(() => drawReport($("#reportCanvas"), view, 1, mode));
+      if (cycle) state.ui.reportMonthlyCycle = cycle.key;
+      requestAnimationFrame(() => drawReport($("#reportCanvas"), view, 1, mode, cycle));
     }
 
     function attendanceComment(workerId, date) {
@@ -6921,6 +6996,7 @@
         manualView: snapshot.ui?.manualView || "ALL",
         reportView: snapshot.ui?.reportView || "ALL",
         reportMode: snapshot.ui?.reportMode || "full",
+        reportMonthlyCycle: snapshot.ui?.reportMonthlyCycle || "",
         attendanceView: snapshot.ui?.attendanceView || "ALL",
         attendanceExportMode: snapshot.ui?.attendanceExportMode || "full",
         borrowView: snapshot.ui?.borrowView || "ALL",
@@ -9004,6 +9080,11 @@
         saveState();
         return renderReport();
       }
+      if (target.id === "reportCycleSelect") {
+        state.ui.reportMonthlyCycle = target.value;
+        saveState();
+        return renderReport();
+      }
       if (target.id === "attendanceMonthSelect") {
         state.ui.attendanceMonth = target.value;
         saveState();
@@ -9935,13 +10016,19 @@
     }
 
     function reportMode() {
-      return state.ui?.reportMode === "projectPlan" ? "projectPlan" : "full";
+      if (state.ui?.reportMode === "projectPlan") return "projectPlan";
+      if (state.ui?.reportMode === "monthly") return "monthly";
+      return "full";
     }
 
-    function reportFilename(ext, view, mode = reportMode()) {
+    function reportFilename(ext, view, mode = reportMode(), cycle = selectedReportCycle()) {
       const now = new Date();
       const stamp = `${localISODate(now)}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
-      const suffix = mode === "projectPlan" ? "-project-plan" : "";
+      const suffix = mode === "projectPlan"
+        ? "-project-plan"
+        : mode === "monthly" && cycle
+          ? `-monthly-${cycle.start}-${cycle.end}`
+          : "";
       return `tman-report-${view}${suffix}-${planUpdateDate() || "update"}-${stamp}.${ext}`;
     }
 
@@ -9949,11 +10036,12 @@
       const viewOptions = buildingViewOptions();
       const view = viewOptions.includes(state.ui.reportView) ? state.ui.reportView : (viewOptions.at(-1) || viewOptions[0] || "ALL");
       const mode = reportMode();
+      const cycle = mode === "monthly" ? selectedReportCycle() : null;
       const canvas = document.createElement("canvas");
-      drawReport(canvas, view, 2, mode);
+      drawReport(canvas, view, 2, mode, cycle);
       const a = document.createElement("a");
       a.href = canvas.toDataURL("image/png");
-      a.download = reportFilename("png", view, mode);
+      a.download = reportFilename("png", view, mode, cycle);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -9963,13 +10051,14 @@
       const viewOptions = buildingViewOptions();
       const view = viewOptions.includes(state.ui.reportView) ? state.ui.reportView : (viewOptions.at(-1) || viewOptions[0] || "ALL");
       const mode = reportMode();
+      const cycle = mode === "monthly" ? selectedReportCycle() : null;
       const canvas = document.createElement("canvas");
-      drawReport(canvas, view, 2, mode);
+      drawReport(canvas, view, 2, mode, cycle);
       const blob = canvasToPdfBlob(canvas);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = reportFilename("pdf", view, mode);
+      a.download = reportFilename("pdf", view, mode, cycle);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -10185,14 +10274,16 @@
       }
     }
 
-    function drawReport(canvas, view, scale = 1, mode = reportMode()) {
+    function drawReport(canvas, view, scale = 1, mode = reportMode(), cycle = null) {
       if (!canvas) return;
       const projectPlan = mode === "projectPlan";
-      const dates = getDates();
+      const monthlyCycle = mode === "monthly" ? (cycle || selectedReportCycle()) : null;
+      const dates = monthlyCycle ? getDates(monthlyCycle.start, monthlyCycle.end) : getDates();
+      const dateFilter = monthlyCycle ? new Set(dates) : null;
       const dateW = 42 * scale;
       const pad = 16 * scale;
       const rowH = 22 * scale;
-      const topH = 150 * scale;
+      const topH = (monthlyCycle ? 168 : 150) * scale;
       const seqW = 56 * scale;
       const itemW = 190 * scale;
       const laborValueW = 118 * scale;
@@ -10226,10 +10317,14 @@
       const titleView = reportViewTitle(view);
       ctx.fillStyle = "#111";
       ctx.fillText(`แผนงานประจำงวดโครงการ ${state.settings.projectName} ${titleView}`, x0 + tableW / 2, y + 22 * scale);
+      if (monthlyCycle) {
+        ctx.font = `bold ${12 * scale}px Tahoma, sans-serif`;
+        ctx.fillText(`สรุปรายเดือน ${monthlyCycle.label} (${monthlyCycle.rangeLabel})`, x0 + tableW / 2, y + 44 * scale);
+      }
       const claimDate = planClaimDate();
       let claimLineX = null;
       let claimBoxBottomY = null;
-      if (claimDate) {
+      if (claimDate && (!monthlyCycle || dates.includes(claimDate))) {
         const claimIndex = dates.indexOf(claimDate);
         const boxW = 154 * scale;
         const boxH = 46 * scale;
@@ -10249,7 +10344,7 @@
       }
       ctx.font = `${12 * scale}px Tahoma, sans-serif`;
       ctx.textAlign = "left";
-      const detailY = y + 54 * scale;
+      const detailY = y + (monthlyCycle ? 76 : 54) * scale;
       const groups = buildingsForView(view);
       groups.forEach((building, index) => {
         const gx = x0 + index * (tableW / Math.max(1, groups.length));
@@ -10356,7 +10451,7 @@
       }
 
       y += rowH;
-      const s = summaryFor(view);
+      const s = summaryFor(view, monthlyCycle ? { dateFilter, periodManual: true } : {});
       const summaryW = 580 * scale;
       const valueW = 160 * scale;
       const sx = x0;
@@ -10384,9 +10479,9 @@
       const rx = sx + summaryW + valueW + 120 * scale;
       y -= summary.length * rowH;
       const manualRows = [
-        ["ค่าแรงต้นทุนสะสมถึงงวดปัจจุบัน", money(s.manual.contractLaborCost, 0), "#d9e6f7"],
-        ["ค่าแรง+ค่าเครื่องจักรสะสมถึงวัน update", money(s.manual.costToUpdate, 0), "#fff0a8"],
-        ["สรุปค่าแรงทั้งโครงการ(ถ้าอนุมัติ ณ วันupdate)", projectPlan ? "" : pct(s.manualRatio), "#ff9f9f"],
+        [monthlyCycle ? "ค่าแรงต้นทุนของรอบรายเดือน" : "ค่าแรงต้นทุนสะสมถึงงวดปัจจุบัน", money(s.manual.contractLaborCost, 0), "#d9e6f7"],
+        [monthlyCycle ? "ค่าแรง+ค่าเครื่องจักรของรอบรายเดือน" : "ค่าแรง+ค่าเครื่องจักรสะสมถึงวัน update", money(s.manual.costToUpdate, 0), "#fff0a8"],
+        [monthlyCycle ? "สรุปค่าแรงของรอบรายเดือน" : "สรุปค่าแรงทั้งโครงการ(ถ้าอนุมัติ ณ วันupdate)", projectPlan ? "" : pct(s.manualRatio), "#ff9f9f"],
         ["วันที่ Update", projectPlan ? "" : dateLabel(planUpdateDate()), "#e8e8e8"],
         ["หมายเหตุ", projectPlan ? "" : (s.manual.note || ""), "#c8e0b8"]
       ];
