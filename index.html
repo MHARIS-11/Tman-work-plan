@@ -16,6 +16,7 @@
       --primary: oklch(0.35 0.077 160);
       --primary-2: oklch(0.45 0.088 160);
       --primary-soft: oklch(0.92 0.034 160);
+      --brand: var(--primary);
       --actual: oklch(0.63 0.215 28);
       --actual-soft: oklch(0.92 0.07 28);
       --warning: oklch(0.78 0.145 82);
@@ -945,7 +946,7 @@
       background: var(--bg);
     }
     .work-table {
-      min-width: 3700px;
+      min-width: 3890px;
       border-collapse: separate;
       border-spacing: 0;
       table-layout: fixed;
@@ -976,6 +977,8 @@
     .work-table .col-period { width: 96px; left: 70px; }
     .work-table .col-item { width: 210px; left: 166px; }
     .work-table .col-value { width: 112px; left: 376px; text-align: right; }
+    .work-table .col-actual { width: 112px; left: 488px; text-align: right; }
+    .work-table .col-percent { width: 78px; left: 600px; text-align: right; }
     .work-table .date-cell { width: 46px; min-width: 46px; }
     .work-table .month-cell { height: 24px; font-size: 11px; text-align: center; }
     .work-table .day-cell { height: 26px; font-size: 11px; }
@@ -2407,6 +2410,196 @@
         to { opacity: 1; transform: translate(-50%, -50%); }
       }
     }
+    .holiday-page {
+      display: grid;
+      gap: 14px;
+    }
+    .holiday-command {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid oklch(0.82 0.04 160);
+      background: oklch(0.975 0.012 160);
+    }
+    .holiday-command h2,
+    .holiday-command p { margin: 0; }
+    .holiday-command p { color: var(--muted); font-size: 12px; }
+    .holiday-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .holiday-nav input[type="month"] { width: 170px; }
+    .holiday-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .holiday-kpi {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: 12px 14px;
+      min-width: 0;
+    }
+    .holiday-kpi span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .holiday-kpi strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+    .holiday-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(320px, .85fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .holiday-calendar-shell,
+    .holiday-editor,
+    .holiday-register {
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .holiday-block-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .holiday-block-head h3,
+    .holiday-block-head p { margin: 0; }
+    .holiday-block-head p { color: var(--muted); font-size: 11px; }
+    .holiday-calendar {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+    .holiday-weekday {
+      padding: 8px 4px;
+      text-align: center;
+      color: var(--muted);
+      background: var(--surface-2);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .holiday-day {
+      position: relative;
+      min-height: 88px;
+      padding: 7px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: white;
+      text-align: left;
+      overflow: hidden;
+    }
+    .holiday-day:nth-child(7n),
+    .holiday-weekday:nth-child(7n) { border-right: 0; }
+    .holiday-day.outside { background: oklch(0.975 0.005 160); color: oklch(0.62 0.01 160); }
+    .holiday-day.today .holiday-day-number {
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .holiday-day:hover { background: oklch(0.97 0.025 160); }
+    .holiday-day-number { font-weight: 900; }
+    .holiday-day-events { display: grid; gap: 3px; margin-top: 6px; }
+    .holiday-chip {
+      display: block;
+      width: 100%;
+      padding: 3px 5px;
+      border-left: 3px solid;
+      border-radius: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 10px;
+      font-weight: 850;
+    }
+    .holiday-chip.company { color: oklch(0.34 0.11 28); background: oklch(0.95 0.04 28); border-color: oklch(0.58 0.18 28); }
+    .holiday-chip.site { color: oklch(0.32 0.09 250); background: oklch(0.95 0.04 250); border-color: oklch(0.58 0.14 250); }
+    .holiday-chip.special { color: oklch(0.34 0.1 82); background: oklch(0.96 0.05 82); border-color: oklch(0.65 0.16 82); }
+    .holiday-side { display: grid; gap: 12px; }
+    .holiday-editor-body { display: grid; gap: 10px; padding: 14px; }
+    .holiday-mode {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+    .holiday-mode button[aria-pressed="true"] { background: var(--brand); color: white; border-color: var(--brand); }
+    .holiday-date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .holiday-editor-actions { display: flex; justify-content: flex-end; gap: 6px; }
+    .holiday-upcoming { display: grid; }
+    .holiday-upcoming-row {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .holiday-upcoming-row:last-child { border-bottom: 0; }
+    .holiday-upcoming-date {
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .holiday-upcoming-name { min-width: 0; }
+    .holiday-upcoming-name strong,
+    .holiday-upcoming-name small { display: block; }
+    .holiday-upcoming-name small { color: var(--muted); overflow-wrap: anywhere; }
+    .holiday-actions { display: flex; gap: 4px; }
+    .holiday-register .table-wrap { border: 0; border-radius: 0; }
+    .holiday-legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .holiday-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 4px; border-radius: 2px; }
+    .holiday-legend .company { background: oklch(0.7 0.16 28); }
+    .holiday-legend .site { background: oklch(0.68 0.14 250); }
+    .holiday-legend .special { background: oklch(0.74 0.16 82); }
+    @media (max-width: 1050px) {
+      .holiday-workspace { grid-template-columns: 1fr; }
+      .holiday-side { grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr); }
+    }
+    @media (max-width: 720px) {
+      .holiday-page { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+      .holiday-page > *,
+      .holiday-workspace > *,
+      .holiday-side > * { min-width: 0; }
+      .holiday-command { align-items: stretch; flex-direction: column; }
+      .holiday-nav { display: grid; grid-template-columns: auto 1fr auto; }
+      .holiday-nav > :last-child { grid-column: 1 / -1; }
+      .holiday-nav input[type="month"] { width: 100%; min-width: 0; }
+      .holiday-kpis { grid-template-columns: 1fr 1fr; }
+      .holiday-workspace,
+      .holiday-side { display: grid; grid-template-columns: 1fr; }
+      .holiday-calendar-shell { overflow: hidden; }
+      .holiday-calendar { min-width: 0; }
+      .holiday-day { min-height: 64px; padding: 4px; }
+      .holiday-day-number { font-size: 11px; }
+      .holiday-day.today .holiday-day-number { width: 21px; height: 21px; }
+      .holiday-day-events { gap: 2px; margin-top: 3px; }
+      .holiday-chip { padding: 2px 3px; font-size: 8px; }
+      .holiday-date-grid { grid-template-columns: 1fr; }
+      .holiday-upcoming-row { grid-template-columns: 64px minmax(0, 1fr); }
+      .holiday-actions { grid-column: 2; }
+    }
     .notice {
       border: 1px solid oklch(0.82 0.13 82);
       background: oklch(0.96 0.055 82);
@@ -2508,7 +2701,7 @@
       .attendance-table .col-code { width: 78px; left: 52px; }
       .attendance-table .col-name { width: 160px; left: 130px; }
       .plan-grid { max-height: calc(100vh - 260px); }
-      .work-table { min-width: 3650px; }
+      .work-table { min-width: 3810px; }
       .work-table .sticky {
         position: static;
         left: auto;
@@ -2521,6 +2714,8 @@
       .work-table .col-period { width: 74px; }
       .work-table .col-item { width: 180px; }
       .work-table .col-value { width: 82px; }
+      .work-table .col-actual { width: 92px; }
+      .work-table .col-percent { width: 68px; }
       .work-table .date-cell { width: 46px; min-width: 46px; }
       .fill-handle {
         width: 18px;
@@ -2829,6 +3024,10 @@
           reportView: "ALL",
           reportMode: "full",
           reportMonthlyCycle: "",
+          reportShowActualColumns: false,
+          holidayMonth: "",
+          holidayEditId: "",
+          holidayRangeMode: false,
           attendanceView: "ALL",
           attendanceExportMode: "full",
           workerTab: "regular",
@@ -3244,7 +3443,18 @@
         })).filter((worker) => worker.id) : []
       })).filter((building) => building.id) : [];
       next.machines = Array.isArray(next.machines) ? next.machines : [];
-      next.holidays = Array.isArray(next.holidays) ? next.holidays : [];
+      next.holidays = Array.isArray(next.holidays) ? next.holidays.map((holiday) => {
+        const date = String(holiday?.date || "").trim();
+        const endDate = String(holiday?.endDate || date).trim() || date;
+        return {
+          id: holiday?.id || uid("h"),
+          date,
+          endDate: endDate < date ? date : endDate,
+          name: String(holiday?.name || "วันหยุดบริษัท").trim() || "วันหยุดบริษัท",
+          type: ["company", "site", "special"].includes(holiday?.type) ? holiday.type : "company",
+          note: String(holiday?.note || "").trim()
+        };
+      }).filter((holiday) => holiday.date) : [];
       next.borrowedWorkers = Array.isArray(next.borrowedWorkers) ? next.borrowedWorkers.map((row) => ({
         id: row.id || uid("bw"),
         date: row.date || "",
@@ -3340,6 +3550,10 @@
       if (!viewOptions.includes(next.ui.reportView)) next.ui.reportView = fallbackCombined;
       if (!["full", "projectPlan", "monthly"].includes(next.ui.reportMode)) next.ui.reportMode = "full";
       next.ui.reportMonthlyCycle = next.ui.reportMonthlyCycle || "";
+      next.ui.reportShowActualColumns = Boolean(next.ui.reportShowActualColumns);
+      next.ui.holidayMonth = /^\d{4}-\d{2}$/.test(next.ui.holidayMonth || "") ? next.ui.holidayMonth : "";
+      next.ui.holidayEditId = next.holidays.some((holiday) => holiday.id === next.ui.holidayEditId) ? next.ui.holidayEditId : "";
+      next.ui.holidayRangeMode = Boolean(next.ui.holidayRangeMode);
       if (!viewOptions.includes(next.ui.attendanceView)) next.ui.attendanceView = fallbackCombined;
       if (!viewOptions.includes(next.ui.borrowView) && next.ui.borrowView !== "ALL") next.ui.borrowView = fallbackCombined;
       if (!["full", "noWage"].includes(next.ui.attendanceExportMode)) next.ui.attendanceExportMode = "full";
@@ -3570,8 +3784,22 @@
       return new Date(`${date}T00:00:00`).getDate();
     }
 
+    function holidayEndDate(holiday) {
+      return holiday?.endDate || holiday?.date || "";
+    }
+
+    function holidayCoversDate(holiday, date) {
+      if (!holiday?.date || !date) return false;
+      return date >= holiday.date && date <= holidayEndDate(holiday);
+    }
+
+    function holidayDayCount(holiday) {
+      if (!holiday?.date) return 0;
+      return getDates(holiday.date, holidayEndDate(holiday)).length;
+    }
+
     function isHoliday(date) {
-      return state.holidays.some((holiday) => holiday.date === date);
+      return state.holidays.some((holiday) => holidayCoversDate(holiday, date));
     }
 
     function externalWorkerRecords() {
@@ -4384,24 +4612,49 @@
       return null;
     }
 
-    function scopedActuals(view, plans, dateFilter = null) {
+    function itemIdsForPlanView(plan, view) {
+      return new Set(
+        planPeriodsForView(plan, view).flatMap((period) =>
+          (period.items || []).map((item) => item.id)
+        )
+      );
+    }
+
+    function scopedActuals(view, plans, dateFilter = null, options = {}) {
       const filterSet = normalizeDateFilter(dateFilter);
+      const allowedItemIds = options.allowedItemIds
+        ? new Set(options.allowedItemIds)
+        : null;
       const laborSeen = new Set();
       const machineSeen = new Set();
       let laborActual = 0;
       let machineActual = 0;
-      plans.forEach((plan) => {
-        const claimKey = claimGroupNo(plan);
+      const byItem = {};
+      const ensureItem = (itemId) => {
+        byItem[itemId] = byItem[itemId] || { laborActual: 0, machineActual: 0, total: 0 };
+        return byItem[itemId];
+      };
+      [...(plans || [])].forEach((plan) => {
         const dates = planDateRange(plan).filter((date) => !filterSet || filterSet.has(date));
         const dateSet = new Set(dates);
-        planPeriodsForView(plan, view).forEach((period) => {
+        const planPeriods = planPeriodsForView(plan, view);
+        const itemsByBuilding = new Map();
+        planPeriods.forEach((period) => {
+          const rows = itemsByBuilding.get(period.building) || [];
+          (period.items || []).forEach((item) => rows.push(item));
+          itemsByBuilding.set(period.building, rows);
           (period.items || []).forEach((item) => {
             dates.forEach((date) => {
               planActualEntries(plan, item, date).forEach((entry, index) => {
-                const key = `${claimKey}|${item.id}|${date}|${entry.workerId || ""}|${entry.unit || ""}|${entry.hours || ""}|${n(entry.amount)}|${index}`;
+                const key = `${plan.id}|${item.id}|${date}|${entry.workerId || ""}|${entry.unit || ""}|${entry.hours || ""}|${n(entry.amount)}|${index}`;
                 if (laborSeen.has(key)) return;
                 laborSeen.add(key);
-                laborActual += laborAmount(entry);
+                if (allowedItemIds && !allowedItemIds.has(item.id)) return;
+                const amount = laborAmount(entry);
+                laborActual += amount;
+                const itemTotal = ensureItem(item.id);
+                itemTotal.laborActual += amount;
+                itemTotal.total += amount;
               });
             });
           });
@@ -4411,15 +4664,32 @@
           Object.entries(usage).forEach(([date, rows]) => {
             if (!dateSet.has(date)) return;
             (rows || []).forEach((row, index) => {
-              const key = `${claimKey}|${building}|${date}|${row.id || index}|${row.machineId || ""}|${n(row.amount)}`;
+              const key = `${plan.id}|${building}|${date}|${row.id || index}|${row.machineId || ""}|${n(row.amount)}`;
               if (machineSeen.has(key)) return;
               machineSeen.add(key);
-              machineActual += n(row.amount);
+              const amount = n(row.amount);
+              const itemLabor = (itemsByBuilding.get(building) || []).map((item) => ({
+                item,
+                labor: planActualEntries(plan, item, date).reduce((sum, entry) => sum + laborAmount(entry), 0)
+              }));
+              const totalLabor = itemLabor.reduce((sum, entry) => sum + entry.labor, 0);
+              if (!totalLabor) {
+                if (!allowedItemIds) machineActual += amount;
+                return;
+              }
+              itemLabor.forEach(({ item, labor }) => {
+                if (!labor || (allowedItemIds && !allowedItemIds.has(item.id))) return;
+                const share = amount * labor / totalLabor;
+                machineActual += share;
+                const itemTotal = ensureItem(item.id);
+                itemTotal.machineActual += share;
+                itemTotal.total += share;
+              });
             });
           });
         });
       });
-      return { laborActual, machineActual };
+      return { laborActual, machineActual, total: laborActual + machineActual, byItem };
     }
 
     function priorPlansInClaim(plan = activeWorkPlan()) {
@@ -4430,14 +4700,13 @@
       return state.workPlans.slice(0, index).filter((row) => claimGroupNo(row) === groupNo);
     }
 
-    function continuationCarryFor(view, plan = activeWorkPlan(), dateFilter = null) {
-      if (!isContinuationPlan(plan)) return { laborActual: 0, machineActual: 0, total: 0, planCount: 0 };
+    function continuationCarryFor(view, plan = activeWorkPlan()) {
+      if (!isContinuationPlan(plan)) return { laborActual: 0, machineActual: 0, total: 0, byItem: {}, planCount: 0 };
       const plans = priorPlansInClaim(plan);
-      const { laborActual, machineActual } = scopedActuals(view, plans, dateFilter);
+      const allowedItemIds = itemIdsForPlanView(plan, view);
+      const actuals = scopedActuals(view, plans, null, { allowedItemIds });
       return {
-        laborActual,
-        machineActual,
-        total: laborActual + machineActual,
+        ...actuals,
         planCount: plans.length
       };
     }
@@ -4493,20 +4762,26 @@
       const plan = activeWorkPlan();
       const periodValue = scopedPeriodValue(view, plan ? [plan] : []);
       const laborValue = scopedLaborValue(view, plan ? [plan] : []);
-      const carry = continuationCarryFor(view, plan, dateFilter);
-      const chainPlans = isContinuationPlan(plan) ? [...priorPlansInClaim(plan), plan] : (plan ? [plan] : []);
-      const chainActuals = scopedActuals(view, chainPlans, dateFilter);
-      const laborActual = Math.max(0, chainActuals.laborActual - carry.laborActual);
-      const machineActual = Math.max(0, chainActuals.machineActual - carry.machineActual);
+      const carry = continuationCarryFor(view, plan);
+      const currentActuals = scopedActuals(view, plan ? [plan] : [], dateFilter);
+      const laborActual = currentActuals.laborActual;
+      const machineActual = currentActuals.machineActual;
       const total = laborActual + machineActual;
-      const control = laborValue * n(state.settings.controlPercent) / 100;
-      const effectiveTotal = chainActuals.laborActual + chainActuals.machineActual;
+      let beforeActual = { laborActual: 0, machineActual: 0, total: 0, byItem: {} };
+      if (dateFilter?.size && plan) {
+        const firstCycleDate = [...dateFilter].sort()[0];
+        const beforeDates = planDateRange(plan).filter((date) => date < firstCycleDate);
+        beforeActual = scopedActuals(view, [plan], beforeDates);
+      }
+      const availableLaborBudget = Math.max(0, laborValue - carry.total - beforeActual.total);
+      const control = availableLaborBudget * n(state.settings.controlPercent) / 100;
+      const effectiveTotal = carry.total + beforeActual.total + total;
       const manualBase = accumulatedTotalsFor(view, plan);
       const manual = options.periodManual
-        ? { ...manualBase, contractLaborCost: laborValue, costToUpdate: effectiveTotal, note: "" }
+        ? { ...manualBase, contractLaborCost: availableLaborBudget, costToUpdate: total, note: "" }
         : manualBase;
       const projectLaborValue = projectLaborValueFor(view);
-      const manualRatioLaborValue = laborValue;
+      const manualRatioLaborValue = availableLaborBudget;
       return {
         view,
         periodValue,
@@ -4516,13 +4791,28 @@
         machineActual,
         total,
         carry,
+        beforeActual,
+        availableLaborBudget,
         effectiveTotal,
         balance: control - total,
         costRatio: control ? total / control : 0,
-        currentRatio: laborValue ? effectiveTotal / laborValue : 0,
+        currentRatio: availableLaborBudget ? total / availableLaborBudget : 0,
         manual,
         projectLaborValue,
         manualRatio: manualRatioLaborValue ? n(manual.costToUpdate) / manualRatioLaborValue : 0
+      };
+    }
+
+    function itemActualSummary(view, plan, item, dateFilter = null) {
+      const empty = { laborActual: 0, machineActual: 0, total: 0 };
+      if (!plan || !item) return { ...empty };
+      const allowedItemIds = new Set([item.id]);
+      const current = scopedActuals(view, [plan], dateFilter, { allowedItemIds });
+      const carry = continuationCarryFor(view, plan).byItem?.[item.id] || empty;
+      return {
+        laborActual: n(current.laborActual) + n(carry.laborActual),
+        machineActual: n(current.machineActual) + n(carry.machineActual),
+        total: n(current.total) + n(carry.total)
       };
     }
 
@@ -5177,8 +5467,9 @@
           </div>
         `;
       }).join("");
-      const scopeCostCard = ({ title, subtitle, note, summary, current = false }) => {
-        const ratio = Number.isFinite(summary.costRatio) ? summary.costRatio : 0;
+      const scopeCostCard = ({ title, subtitle, note, summary, current = false, ratioOverride = null, budgetOverride = null, ratioLabel = "จากงบควบคุม" }) => {
+        const ratio = Number.isFinite(ratioOverride) ? ratioOverride : (Number.isFinite(summary.costRatio) ? summary.costRatio : 0);
+        const budget = Number.isFinite(budgetOverride) ? budgetOverride : summary.control;
         const ratioPercent = Math.max(0, ratio * 100);
         const ringPercent = Math.min(100, ratioPercent);
         const statusClass = costStatus(ratio);
@@ -5201,14 +5492,14 @@
               >
                 <div class="scope-cost-donut-center">
                   <strong>${money(ratioPercent, 1)}%</strong>
-                  <span>จากงบควบคุม</span>
+                  <span>${esc(ratioLabel)}</span>
                 </div>
               </div>
               <div class="scope-cost-data">
                 <div class="scope-cost-ratio" title="ใช้แล้ว / ต้นทุนค่าแรง">
                   <strong>${money(summary.total, 0)}</strong>
                   <span>/</span>
-                  <strong>${money(summary.control, 0)}</strong>
+                   <strong>${money(budget, 0)}</strong>
                 </div>
                 <div class="scope-cost-breakdown">
                   <div class="scope-cost-stat">
@@ -5243,19 +5534,25 @@
             note: "ไม่คิดงวดซ้ำภายในเบิกงวดเดียวกัน",
             summary: claim
           })}
-          ${scopeCostCard({
-            title: `แผนที่เปิดอยู่ · ${esc(planTypeLabel())}`,
-            subtitle: esc(workPlanLabel()),
-            note: "เฉพาะข้อมูลในแผนนี้",
-            summary: currentPlanSummary,
-            current: true
-          })}
+           ${scopeCostCard({
+             title: `แผนที่เปิดอยู่ · ${esc(planTypeLabel())}`,
+             subtitle: esc(workPlanLabel()),
+             note: isContinuationPlan()
+               ? `ต้นทุนค่าแรงแผนต่อ ${money(currentPlanSummary.laborValue, 0)} - ${money(currentPlanSummary.carry.total, 0)} = ${money(currentPlanSummary.availableLaborBudget, 0)}`
+               : "เฉพาะข้อมูลในแผนนี้",
+             summary: currentPlanSummary,
+             current: true,
+             ratioOverride: currentPlanSummary.currentRatio,
+             budgetOverride: currentPlanSummary.availableLaborBudget,
+             ratioLabel: isContinuationPlan() ? "จากต้นทุนแผนต่อ" : "จากต้นทุนค่าแรง"
+           })}
         </div>
       `;
       const periodRows = periodsForView(mainView).map((period) => {
         const laborValue = periodLaborValue(period);
-        const laborActual = periodLaborActual(period);
-        const machineActual = periodMachineActual(period);
+        const itemActuals = (period.items || []).map((item) => itemActualSummary(mainView, activeWorkPlan(), item));
+        const laborActual = itemActuals.reduce((sum, row) => sum + n(row.laborActual), 0);
+        const machineActual = itemActuals.reduce((sum, row) => sum + n(row.machineActual), 0);
         const used = laborActual + machineActual;
         const ratio = laborValue ? used / laborValue : 0;
         const status = laborValue && used > laborValue ? "danger" : used > laborValue * n(state.settings.controlPercent) / 100 ? "warning" : "normal";
@@ -5569,24 +5866,29 @@
 
     function buildPlanTable(view, dates) {
       const editable = true;
+      const plan = activeWorkPlan();
       const activePeriods = periodsForView(view);
-      const totalCols = dates.length + 4;
+      const totalCols = dates.length + 6;
       let body = "";
       if (!activePeriods.length) {
         body = `<tr class="empty-row"><td colspan="${totalCols}">ยังไม่ได้เลือกงวดงานสำหรับรอบนี้</td></tr>`;
       } else {
         for (const building of buildingsForView(view)) {
           const periods = periodsForBuilding(building);
-          body += `<tr class="building-row"><td class="sticky col-building" colspan="4">อาคาร ${building}</td>${dates.map((date) => `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}"></td>`).join("")}</tr>`;
+          body += `<tr class="building-row"><td class="sticky col-building" colspan="6">อาคาร ${building}</td>${dates.map((date) => `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}"></td>`).join("")}</tr>`;
           for (const period of periods) {
-            body += `<tr class="period-row"><td class="sticky col-building"></td><td class="sticky col-period">${esc(period.title)}</td><td class="sticky col-item" colspan="2">${esc(period.description)}</td>${dates.map((date) => `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}"></td>`).join("")}</tr>`;
+            body += `<tr class="period-row"><td class="sticky col-building"></td><td class="sticky col-period">${esc(period.title)}</td><td class="sticky col-item" colspan="4">${esc(period.description)}</td>${dates.map((date) => `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}"></td>`).join("")}</tr>`;
             for (const item of period.items) {
+              const itemActual = itemActualSummary(view, plan, item);
+              const itemRatio = n(item.laborValue) ? itemActual.total / n(item.laborValue) * 100 : 0;
               body += `
                 <tr>
                   <td class="sticky col-building">${esc(period.building)}</td>
                   <td class="sticky col-period">งวด ${esc(period.no)}</td>
-                  <td class="sticky col-item">${esc(item.name)} <span class="pill">${money(item.progressPct, 0)}%</span></td>
-                  <td class="sticky col-value num">${money(item.laborValue, 0)}</td>
+                   <td class="sticky col-item">${esc(item.name)} <span class="pill">${money(item.progressPct, 0)}%</span></td>
+                   <td class="sticky col-value num">${money(item.laborValue, 0)}</td>
+                   <td class="sticky col-actual num" title="ค่าแรงจริง ${money(itemActual.laborActual, 0)} + ค่าเครื่องจักร ${money(itemActual.machineActual, 0)}">${money(itemActual.total, 0)}</td>
+                   <td class="sticky col-percent num">${money(itemRatio, 1)}%</td>
                   ${dates.map((date) => {
                     const planned = itemPlanValue(item, date);
                     const units = itemActualUnits(item, date);
@@ -5629,7 +5931,7 @@
         ["รวมค่าใช้จ่ายต่อวัน", (date) => totalSpend(view, date), 0]
       ].map(([label, getter, digits]) => `
         <tr class="summary-row">
-          <td class="sticky col-building" colspan="4">${label}</td>
+          <td class="sticky col-building" colspan="6">${label}</td>
           ${dates.map((date) => `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}">${getter(date) ? (digits === "qty" ? qty(getter(date)) : money(getter(date), digits)) : "0"}</td>`).join("")}
         </tr>
       `).join("") : "";
@@ -5641,6 +5943,8 @@
               <th class="sticky col-period">งวด</th>
               <th class="sticky col-item">รายการ</th>
               <th class="sticky col-value">มูลค่า</th>
+              <th class="sticky col-actual">ใช้จริง</th>
+              <th class="sticky col-percent">%</th>
               ${monthGroups(dates).map((group) => `<th class="month-cell" colspan="${group.count}">${esc(group.label)}</th>`).join("")}
             </tr>
             <tr>
@@ -5648,6 +5952,8 @@
               <th class="sticky col-period"></th>
               <th class="sticky col-item"></th>
               <th class="sticky col-value"></th>
+              <th class="sticky col-actual"></th>
+              <th class="sticky col-percent"></th>
               ${dates.map((date) => `<th class="day-cell date-cell ${dateClass(date)}" data-date-col="${esc(date)}">${dayNumber(date)}</th>`).join("")}
             </tr>
           </thead>
@@ -6362,30 +6668,140 @@
 
     function renderHolidays() {
       const el = $("#tab-holidays");
-      const rows = [...state.holidays].sort((a, b) => a.date.localeCompare(b.date)).map((holiday) => `
-        <tr>
-          <td>${esc(dateLabel(holiday.date))}</td>
-          <td><input data-holiday-field="name" data-holiday-id="${holiday.id}" value="${esc(holiday.name)}"></td>
-          <td><button class="danger" data-action="delete-holiday" data-holiday-id="${holiday.id}">ลบ</button></td>
-        </tr>
-      `).join("");
-      el.innerHTML = `
-        <div class="section">
-          <div class="panel">
-            <div class="panel-head"><h2>เพิ่มวันหยุด</h2></div>
-            <div class="panel-body form-grid">
-              <label><span>วันที่</span><input id="holidayDate" type="date"></label>
-              <label><span>ชื่อวันหยุด</span><input id="holidayName" value="วันหยุดบริษัท"></label>
-              <button class="primary" data-action="add-holiday">เพิ่มวันหยุด</button>
-              <button data-action="add-sundays">เพิ่มวันอาทิตย์ในช่วงแผน</button>
+      const today = isoToday();
+      const fallbackMonth = (planUpdateDate() || today).slice(0, 7);
+      const selectedMonth = /^\d{4}-\d{2}$/.test(state.ui.holidayMonth || "") ? state.ui.holidayMonth : fallbackMonth;
+      state.ui.holidayMonth = selectedMonth;
+      const [year, month] = selectedMonth.split("-").map(Number);
+      const monthStart = `${selectedMonth}-01`;
+      const monthEnd = localISODate(new Date(year, month, 0));
+      const firstWeekday = (new Date(`${monthStart}T00:00:00`).getDay() + 6) % 7;
+      const gridStart = addDaysISO(monthStart, -firstWeekday);
+      const gridDates = Array.from({ length: 42 }, (_, index) => addDaysISO(gridStart, index));
+      const editing = state.holidays.find((holiday) => holiday.id === state.ui.holidayEditId) || null;
+      const rangeMode = editing ? holidayEndDate(editing) !== editing.date : Boolean(state.ui.holidayRangeMode);
+      const typeMeta = {
+        company: { label: "วันหยุดบริษัท", className: "company" },
+        site: { label: "หยุดเฉพาะหน้างาน", className: "site" },
+        special: { label: "วันหยุดพิเศษ", className: "special" }
+      };
+      const sorted = [...state.holidays].sort((a, b) => a.date.localeCompare(b.date));
+      const monthRows = sorted.filter((holiday) => holiday.date <= monthEnd && holidayEndDate(holiday) >= monthStart);
+      const yearStart = `${year}-01-01`;
+      const yearEnd = `${year}-12-31`;
+      const yearRows = sorted.filter((holiday) => holiday.date <= yearEnd && holidayEndDate(holiday) >= yearStart);
+      const yearHolidayDays = new Set(yearRows.flatMap((holiday) =>
+        getDates(holiday.date < yearStart ? yearStart : holiday.date, holidayEndDate(holiday) > yearEnd ? yearEnd : holidayEndDate(holiday))
+      )).size;
+      const upcoming = sorted.filter((holiday) => holidayEndDate(holiday) >= today).slice(0, 6);
+      const nextHoliday = upcoming[0] || null;
+      const calendar = `
+        ${["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."].map((label) => `<div class="holiday-weekday">${label}</div>`).join("")}
+        ${gridDates.map((date) => {
+          const dayEvents = sorted.filter((holiday) => holidayCoversDate(holiday, date));
+          return `
+            <button type="button" class="holiday-day ${date.slice(0, 7) === selectedMonth ? "" : "outside"} ${date === today ? "today" : ""}" data-action="holiday-select-date" data-date="${date}" title="เพิ่มวันหยุด ${esc(dateLabel(date))}">
+              <span class="holiday-day-number">${dayNumber(date)}</span>
+              <span class="holiday-day-events">
+                ${dayEvents.slice(0, 2).map((holiday) => `<span class="holiday-chip ${typeMeta[holiday.type]?.className || "company"}" title="${esc(holiday.name)}">${esc(holiday.name)}</span>`).join("")}
+                ${dayEvents.length > 2 ? `<span class="holiday-chip special">+${dayEvents.length - 2} รายการ</span>` : ""}
+              </span>
+            </button>
+          `;
+        }).join("")}
+      `;
+      const upcomingRows = upcoming.map((holiday) => {
+        const meta = typeMeta[holiday.type] || typeMeta.company;
+        const dateText = holiday.date === holidayEndDate(holiday)
+          ? dateLabel(holiday.date)
+          : `${dateLabel(holiday.date)} - ${dateLabel(holidayEndDate(holiday))}`;
+        return `
+          <div class="holiday-upcoming-row">
+            <div class="holiday-upcoming-date">${esc(dateText)}</div>
+            <div class="holiday-upcoming-name">
+              <strong>${esc(holiday.name)}</strong>
+              <small>${esc(meta.label)}${holiday.note ? ` · ${esc(holiday.note)}` : ""}</small>
+            </div>
+            <div class="holiday-actions">
+              <button type="button" data-action="edit-holiday" data-holiday-id="${holiday.id}">แก้ไข</button>
+              <button type="button" class="danger" data-action="delete-holiday" data-holiday-id="${holiday.id}" title="ลบวันหยุด">ลบ</button>
             </div>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>วันที่</th><th>ชื่อ</th><th></th></tr></thead>
-              <tbody>${rows || `<tr><td colspan="3" class="muted">ยังไม่มีวันหยุด</td></tr>`}</tbody>
-            </table>
+        `;
+      }).join("");
+      const registerRows = yearRows.map((holiday) => {
+        const meta = typeMeta[holiday.type] || typeMeta.company;
+        return `
+          <tr>
+            <td>${esc(holiday.date === holidayEndDate(holiday) ? dateLabel(holiday.date) : `${dateLabel(holiday.date)} - ${dateLabel(holidayEndDate(holiday))}`)}</td>
+            <td><span class="holiday-chip ${meta.className}">${esc(meta.label)}</span></td>
+            <td><strong>${esc(holiday.name)}</strong></td>
+            <td class="num">${money(holidayDayCount(holiday), 0)}</td>
+            <td>${esc(holiday.note || "-")}</td>
+            <td><div class="holiday-actions"><button type="button" data-action="edit-holiday" data-holiday-id="${holiday.id}">แก้ไข</button><button type="button" class="danger" data-action="delete-holiday" data-holiday-id="${holiday.id}">ลบ</button></div></td>
+          </tr>
+        `;
+      }).join("");
+      el.innerHTML = `
+        <div class="holiday-page">
+          <section class="holiday-command">
+            <div>
+              <h2>ปฏิทินวันหยุดบริษัท</h2>
+              <p>จัดการวันหยุดส่วนกลาง วันหยุดหน้างาน และช่วงหยุดพิเศษจากจุดเดียว</p>
+            </div>
+            <div class="holiday-nav">
+              <button type="button" data-action="holiday-prev-month" title="เดือนก่อน">‹</button>
+              <input id="holidayMonthSelect" type="month" value="${selectedMonth}" aria-label="เดือนที่แสดง">
+              <button type="button" data-action="holiday-next-month" title="เดือนถัดไป">›</button>
+              <button type="button" data-action="holiday-today">วันนี้</button>
+            </div>
+          </section>
+          <div class="holiday-kpis">
+            <div class="holiday-kpi"><span>วันหยุดใน ${year + 543}</span><strong>${money(yearHolidayDays, 0)} วัน</strong></div>
+            <div class="holiday-kpi"><span>รายการในเดือนนี้</span><strong>${money(monthRows.length, 0)} รายการ</strong></div>
+            <div class="holiday-kpi"><span>วันหยุดถัดไป</span><strong>${nextHoliday ? esc(dateLabel(nextHoliday.date)) : "-"}</strong></div>
+            <div class="holiday-kpi"><span>ช่วงแผนปัจจุบัน</span><strong>${money(getDates(planStartDate(), planEndDate()).filter(isHoliday).length, 0)} วัน</strong></div>
           </div>
+          <div class="holiday-workspace">
+            <section class="holiday-calendar-shell">
+              <div class="holiday-block-head">
+                <div><h3>${esc(new Date(`${monthStart}T00:00:00`).toLocaleDateString("th-TH", { month: "long", year: "numeric" }))}</h3><p>กดวันที่ในปฏิทินเพื่อเริ่มเพิ่มรายการ</p></div>
+                <div class="holiday-legend"><span><i class="company"></i>บริษัท</span><span><i class="site"></i>หน้างาน</span><span><i class="special"></i>พิเศษ</span></div>
+              </div>
+              <div class="holiday-calendar">${calendar}</div>
+            </section>
+            <aside class="holiday-side">
+              <section class="holiday-editor">
+                <div class="holiday-block-head"><div><h3>${editing ? "แก้ไขวันหยุด" : "กำหนดวันหยุด"}</h3><p>${editing ? "ปรับข้อมูลแล้วบันทึกการเปลี่ยนแปลง" : "เพิ่มวันเดียวหรือช่วงหลายวัน"}</p></div>${editing ? `<span class="pill amber">กำลังแก้ไข</span>` : ""}</div>
+                <div class="holiday-editor-body">
+                  <div class="holiday-mode">
+                    <button type="button" data-action="holiday-mode-single" aria-pressed="${!rangeMode}">วันเดียว</button>
+                    <button type="button" data-action="holiday-mode-range" aria-pressed="${rangeMode}">หลายวัน</button>
+                  </div>
+                  <div class="holiday-date-grid">
+                    <label><span>${rangeMode ? "วันเริ่มต้น" : "วันที่"}</span><input id="holidayDate" type="date" value="${esc(editing?.date || monthStart)}"></label>
+                    ${rangeMode ? `<label><span>วันสิ้นสุด</span><input id="holidayEndDate" type="date" value="${esc(editing ? holidayEndDate(editing) : (editing?.date || monthStart))}"></label>` : ""}
+                  </div>
+                  <label><span>ประเภท</span><select id="holidayType"><option value="company" ${editing?.type === "company" || !editing ? "selected" : ""}>วันหยุดบริษัท</option><option value="site" ${editing?.type === "site" ? "selected" : ""}>หยุดเฉพาะหน้างาน</option><option value="special" ${editing?.type === "special" ? "selected" : ""}>วันหยุดพิเศษ</option></select></label>
+                  <label><span>ชื่อวันหยุด</span><input id="holidayName" value="${esc(editing?.name || "วันหยุดบริษัท")}" placeholder="เช่น วันหยุดประจำสัปดาห์"></label>
+                  <label><span>หมายเหตุ</span><textarea id="holidayNote" rows="2" placeholder="รายละเอียดเพิ่มเติม (ไม่บังคับ)">${esc(editing?.note || "")}</textarea></label>
+                  <div class="holiday-editor-actions">
+                    <button type="button" data-action="add-sundays">เพิ่มวันอาทิตย์ในช่วงแผน</button>
+                    ${editing ? `<button type="button" data-action="cancel-holiday-edit">ยกเลิก</button>` : ""}
+                    <button type="button" class="primary" data-action="add-holiday">${editing ? "บันทึกการแก้ไข" : "เพิ่มวันหยุด"}</button>
+                  </div>
+                </div>
+              </section>
+              <section class="holiday-editor">
+                <div class="holiday-block-head"><div><h3>รายการถัดไป</h3><p>วันหยุดที่กำลังจะมาถึง</p></div><span class="pill">${upcoming.length} รายการ</span></div>
+                <div class="holiday-upcoming">${upcomingRows || `<div class="empty-state">ยังไม่มีวันหยุดที่กำลังจะมาถึง</div>`}</div>
+              </section>
+            </aside>
+          </div>
+          <section class="holiday-register">
+            <div class="holiday-block-head"><div><h3>ทะเบียนวันหยุด ${year + 543}</h3><p>ตรวจสอบและแก้ไขข้อมูลทั้งหมดของปีที่เลือก</p></div><span class="pill">${yearRows.length} รายการ</span></div>
+            <div class="table-wrap"><table><thead><tr><th>วันที่ / ช่วงวันที่</th><th>ประเภท</th><th>ชื่อวันหยุด</th><th class="num">จำนวนวัน</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead><tbody>${registerRows || `<tr><td colspan="6" class="muted">ยังไม่มีวันหยุดในปีนี้</td></tr>`}</tbody></table></div>
+          </section>
         </div>
       `;
     }
@@ -6404,13 +6820,14 @@
               ? cycles.map((row) => `<option value="${esc(row.key)}" ${cycle?.key === row.key ? "selected" : ""}>${esc(row.label)} · ${esc(row.rangeLabel)}</option>`).join("")
               : `<option>ยังไม่มีรอบรายเดือนเต็ม</option>`}
           </select>`
-        : "";
+        : `<select aria-label="รอบเดือน" style="width:240px;visibility:hidden" disabled><option>รอบเดือน</option></select>`;
       el.innerHTML = `
         <div class="section">
           <div class="panel">
             <div class="panel-head">
               <h2>รายงานรูปภาพ</h2>
               <div class="inline-list">
+                ${cycleControl}
                 <select id="reportViewSelect" style="width:150px">
                   ${reportOptions}
                 </select>
@@ -6419,7 +6836,10 @@
                   <option value="projectPlan" ${mode === "projectPlan" ? "selected" : ""}>แผนสำหรับ Project</option>
                   <option value="monthly" ${mode === "monthly" ? "selected" : ""}>สรุปรายเดือน</option>
                 </select>
-                ${cycleControl}
+                <label class="check-row" title="แสดงคอลัมน์ใช้จริงและเปอร์เซ็นต์ในตารางรายงาน">
+                  <input id="reportActualColumnsToggle" type="checkbox" ${state.ui.reportShowActualColumns ? "checked" : ""} ${mode === "projectPlan" ? "disabled" : ""}>
+                  <span>ใช้จริง + %</span>
+                </label>
                 <button class="primary" data-action="download-report">ดาวน์โหลด PNG</button>
                 <button data-action="download-report-pdf">ดาวน์โหลด PDF</button>
               </div>
@@ -6997,6 +7417,7 @@
         reportView: snapshot.ui?.reportView || "ALL",
         reportMode: snapshot.ui?.reportMode || "full",
         reportMonthlyCycle: snapshot.ui?.reportMonthlyCycle || "",
+        reportShowActualColumns: Boolean(snapshot.ui?.reportShowActualColumns),
         attendanceView: snapshot.ui?.attendanceView || "ALL",
         attendanceExportMode: snapshot.ui?.attendanceExportMode || "full",
         borrowView: snapshot.ui?.borrowView || "ALL",
@@ -8829,6 +9250,14 @@
       if (action === "add-holiday") return addHoliday();
       if (action === "add-sundays") return addSundays();
       if (action === "delete-holiday") return deleteHoliday(button.dataset.holidayId);
+      if (action === "holiday-prev-month") return shiftHolidayMonth(-1);
+      if (action === "holiday-next-month") return shiftHolidayMonth(1);
+      if (action === "holiday-today") return showCurrentHolidayMonth();
+      if (action === "holiday-select-date") return selectHolidayDate(button.dataset.date);
+      if (action === "holiday-mode-single") return setHolidayRangeMode(false);
+      if (action === "holiday-mode-range") return setHolidayRangeMode(true);
+      if (action === "edit-holiday") return editHoliday(button.dataset.holidayId);
+      if (action === "cancel-holiday-edit") return cancelHolidayEdit();
       if (action === "download-json") return downloadJson();
       if (action === "copy-json") return copyJson();
       if (action === "import-json") return importJson();
@@ -9084,6 +9513,16 @@
         state.ui.reportMonthlyCycle = target.value;
         saveState();
         return renderReport();
+      }
+      if (target.id === "reportActualColumnsToggle") {
+        state.ui.reportShowActualColumns = target.checked;
+        saveState();
+        return renderReport();
+      }
+      if (target.id === "holidayMonthSelect") {
+        state.ui.holidayMonth = target.value;
+        saveState();
+        return renderHolidays();
       }
       if (target.id === "attendanceMonthSelect") {
         state.ui.attendanceMonth = target.value;
@@ -9699,19 +10138,37 @@
 
     function addHoliday() {
       const date = $("#holidayDate").value;
+      const endDate = state.ui.holidayRangeMode ? ($("#holidayEndDate")?.value || date) : date;
+      const type = $("#holidayType")?.value || "company";
+      const name = $("#holidayName")?.value.trim() || "วันหยุดบริษัท";
+      const note = $("#holidayNote")?.value.trim() || "";
       if (!date) return showToast("เลือกวันที่ก่อน");
-      if (state.holidays.some((holiday) => holiday.date === date)) return showToast("มีวันหยุดวันนี้แล้ว");
-      state.holidays.push({ id: uid("h"), date, name: $("#holidayName").value.trim() || "วันหยุดบริษัท" });
+      if (endDate < date) return showToast("วันสิ้นสุดต้องไม่อยู่ก่อนวันเริ่มต้น");
+      const editId = state.ui.holidayEditId || "";
+      const overlaps = state.holidays.some((holiday) =>
+        holiday.id !== editId && holiday.date <= endDate && holidayEndDate(holiday) >= date
+      );
+      if (overlaps) return showToast("ช่วงวันที่นี้มีวันหยุดรายการอื่นอยู่แล้ว");
+      if (editId) {
+        const holiday = state.holidays.find((row) => row.id === editId);
+        if (holiday) Object.assign(holiday, { date, endDate, type, name, note });
+      } else {
+        state.holidays.push({ id: uid("h"), date, endDate, type, name, note });
+      }
+      state.ui.holidayEditId = "";
+      state.ui.holidayRangeMode = false;
+      state.ui.holidayMonth = date.slice(0, 7);
       saveState();
       renderHolidays();
+      showToast(editId ? "บันทึกการแก้ไขวันหยุดแล้ว" : "เพิ่มวันหยุดแล้ว");
     }
 
     function addSundays() {
-      const existing = new Set(state.holidays.map((holiday) => holiday.date));
+      const existing = new Set(state.holidays.flatMap((holiday) => getDates(holiday.date, holidayEndDate(holiday))));
       let count = 0;
       for (const date of getDates()) {
         if (new Date(`${date}T00:00:00`).getDay() === 0 && !existing.has(date)) {
-          state.holidays.push({ id: uid("h"), date, name: "วันหยุดบริษัท" });
+          state.holidays.push({ id: uid("h"), date, endDate: date, type: "company", name: "วันหยุดบริษัท", note: "วันหยุดประจำสัปดาห์" });
           count++;
         }
       }
@@ -9721,7 +10178,55 @@
     }
 
     function deleteHoliday(id) {
+      if (!confirm("ลบวันหยุดรายการนี้?")) return;
       state.holidays = state.holidays.filter((holiday) => holiday.id !== id);
+      if (state.ui.holidayEditId === id) state.ui.holidayEditId = "";
+      saveState();
+      renderHolidays();
+    }
+
+    function shiftHolidayMonth(offset) {
+      const source = /^\d{4}-\d{2}$/.test(state.ui.holidayMonth || "") ? `${state.ui.holidayMonth}-01` : isoToday();
+      const date = new Date(`${source}T00:00:00`);
+      date.setMonth(date.getMonth() + offset);
+      state.ui.holidayMonth = localISODate(date).slice(0, 7);
+      saveState();
+      renderHolidays();
+    }
+
+    function showCurrentHolidayMonth() {
+      state.ui.holidayMonth = isoToday().slice(0, 7);
+      saveState();
+      renderHolidays();
+    }
+
+    function selectHolidayDate(date) {
+      const startInput = $("#holidayDate");
+      const endInput = $("#holidayEndDate");
+      if (startInput) startInput.value = date;
+      if (endInput && (!endInput.value || endInput.value < date)) endInput.value = date;
+      $("#holidayName")?.focus();
+    }
+
+    function setHolidayRangeMode(enabled) {
+      state.ui.holidayRangeMode = Boolean(enabled);
+      saveState();
+      renderHolidays();
+    }
+
+    function editHoliday(id) {
+      const holiday = state.holidays.find((row) => row.id === id);
+      if (!holiday) return;
+      state.ui.holidayEditId = id;
+      state.ui.holidayRangeMode = holidayEndDate(holiday) !== holiday.date;
+      state.ui.holidayMonth = holiday.date.slice(0, 7);
+      saveState();
+      renderHolidays();
+    }
+
+    function cancelHolidayEdit() {
+      state.ui.holidayEditId = "";
+      state.ui.holidayRangeMode = false;
       saveState();
       renderHolidays();
     }
@@ -10287,10 +10792,13 @@
       const seqW = 56 * scale;
       const itemW = 190 * scale;
       const laborValueW = 118 * scale;
+      const showActualColumns = Boolean(state.ui.reportShowActualColumns) && !projectPlan;
+      const actualW = showActualColumns ? 104 * scale : 0;
+      const actualPctW = showActualColumns ? 68 * scale : 0;
       const dataLabelW = 112 * scale;
       const progressW = 68 * scale;
       const noteW = 76 * scale;
-      const leftW = seqW + itemW + laborValueW + dataLabelW + progressW + noteW;
+      const leftW = seqW + itemW + laborValueW + actualW + actualPctW + dataLabelW + progressW + noteW;
       const reportPeriods = periodsForView(view);
       const itemRows = reportPeriods.reduce((sum, period) => sum + 1 + period.items.length * 3, 0);
       const totalRows = reportPeriods.length ? 5 : 0;
@@ -10358,9 +10866,15 @@
       drawCell(ctx, x0, y, seqW, rowH * 2, "ลำดับ", true);
       drawCell(ctx, x0 + seqW, y, itemW, rowH * 2, "รายการ", true);
       drawCell(ctx, x0 + seqW + itemW, y, laborValueW, rowH * 2, "มูลค่าค่าแรง", true);
-      drawCell(ctx, x0 + seqW + itemW + laborValueW, y, dataLabelW, rowH * 2, "บรรทัดข้อมูล", true);
-      drawCell(ctx, x0 + seqW + itemW + laborValueW + dataLabelW, y, progressW, rowH * 2, "ก้าวหน้า", true);
-      drawCell(ctx, x0 + seqW + itemW + laborValueW + dataLabelW + progressW, y, noteW, rowH * 2, "หมายเหตุ", true);
+      const actualX = x0 + seqW + itemW + laborValueW;
+      if (showActualColumns) {
+        drawCell(ctx, actualX, y, actualW, rowH * 2, "ใช้จริง", true);
+        drawCell(ctx, actualX + actualW, y, actualPctW, rowH * 2, "%", true);
+      }
+      const dataLabelX = actualX + actualW + actualPctW;
+      drawCell(ctx, dataLabelX, y, dataLabelW, rowH * 2, "บรรทัดข้อมูล", true);
+      drawCell(ctx, dataLabelX + dataLabelW, y, progressW, rowH * 2, "ก้าวหน้า", true);
+      drawCell(ctx, dataLabelX + dataLabelW + progressW, y, noteW, rowH * 2, "หมายเหตุ", true);
       let monthX = x0 + leftW;
       monthGroups(dates).forEach((group) => {
         const w = group.count * dateW;
@@ -10381,6 +10895,11 @@
         periods.forEach((period) => {
           period.items.forEach((item, itemIndex) => {
             const seq = itemIndex === 0 ? period.no : "";
+            const itemFilter = monthlyCycle
+              ? planDateRange(activeWorkPlan()).filter((date) => date <= monthlyCycle.end)
+              : null;
+            const itemActual = itemActualSummary(view, activeWorkPlan(), item, itemFilter);
+            const itemRatio = n(item.laborValue) ? itemActual.total / n(item.laborValue) : 0;
             const leftRows = [
               ["แรงคนงาน(แผน)", (date) => itemPlanValue(item, date) || ""],
               ["แรงคนงาน(จริง)", (date) => itemActualUnits(item, date) || ""],
@@ -10391,9 +10910,13 @@
               drawCell(ctx, x0, y, seqW, rowH, subIndex === 0 ? seq : "", false, fill);
               drawCell(ctx, x0 + seqW, y, itemW, rowH, subIndex === 0 ? item.name : "", false, fill, "#111", "left");
               drawCell(ctx, x0 + seqW + itemW, y, laborValueW, rowH, subIndex === 0 ? money(item.laborValue, 0) : "", false, fill, "#111", "right");
-              drawCell(ctx, x0 + seqW + itemW + laborValueW, y, dataLabelW, rowH, label, false, fill);
-              drawCell(ctx, x0 + seqW + itemW + laborValueW + dataLabelW, y, progressW, rowH, subIndex === 0 ? `${money(item.progressPct, 0)}%` : "", false, fill);
-              drawCell(ctx, x0 + seqW + itemW + laborValueW + dataLabelW + progressW, y, noteW, rowH, "", false, fill);
+              if (showActualColumns) {
+                drawCell(ctx, actualX, y, actualW, rowH, subIndex === 0 ? money(itemActual.total, 0) : "", false, fill, "#111", "right");
+                drawCell(ctx, actualX + actualW, y, actualPctW, rowH, subIndex === 0 ? pct(itemRatio) : "", false, fill, "#111", "right");
+              }
+              drawCell(ctx, dataLabelX, y, dataLabelW, rowH, label, false, fill);
+              drawCell(ctx, dataLabelX + dataLabelW, y, progressW, rowH, subIndex === 0 ? `${money(item.progressPct, 0)}%` : "", false, fill);
+              drawCell(ctx, dataLabelX + dataLabelW + progressW, y, noteW, rowH, "", false, fill);
               dates.forEach((date, index) => {
                 const value = projectPlan && subIndex > 0 ? "" : getter(date);
                 const x = x0 + leftW + index * dateW;
@@ -10455,21 +10978,26 @@
       const summaryW = 580 * scale;
       const valueW = 160 * scale;
       const sx = x0;
+      const reportLaborBase = monthlyCycle ? s.availableLaborBudget : s.laborValue;
+      const reportControl = reportLaborBase * n(state.settings.controlPercent) / 100;
+      const reportRatio = monthlyCycle
+        ? (reportLaborBase ? s.total / reportLaborBase : 0)
+        : (s.laborValue ? s.effectiveTotal / s.laborValue : 0);
       const summary = [
-        ["มูลค่าค่าแรง", money(s.laborValue, 0), "#d9e6f7"],
-        [`ค่าแรงควบคุมที่ ${money(state.settings.controlPercent, 0)}%`, money(s.control, 0), "#ff9f9f"],
+        ["มูลค่าค่าแรง", money(reportLaborBase, 0), "#d9e6f7"],
+        [`ค่าแรงควบคุมที่ ${money(state.settings.controlPercent, 0)}%`, money(reportControl, 0), "#ff9f9f"],
         ["ค่าแรงสะสม ณ.ปัจจุบัน (A)", money(s.laborActual, 0), "#fff0a8"],
         ["ค่าเครื่องจักรสะสม ณ.ปัจจุบัน (B)", money(s.machineActual, 0), "#b790dc"],
         ["(A) + (B)", money(s.total, 0), "#ff9f9f"]
       ];
-      if (isContinuationPlan()) {
+      if (isContinuationPlan() && !monthlyCycle) {
         summary.push([
           `ค่าใช้จ่ายสะสมจากแผนก่อนหน้า (แผนเบิกงวดครั้งที่ ${claimGroupNo()})`,
           money(s.carry.total, 0),
           "#d9e6f7"
         ]);
       }
-      summary.push(["สรุปค่าแรง ณ.ปัจจุบัน", pct(s.currentRatio), "#c8e0b8"]);
+      summary.push(["สรุปค่าแรง ณ.ปัจจุบัน", pct(reportRatio), "#c8e0b8"]);
       summary.forEach((row) => {
         drawCell(ctx, sx, y, summaryW, rowH, row[0], false, row[2], "#111", "right", true);
         drawCell(ctx, sx + summaryW, y, valueW, rowH, row[1], false, row[2], "#111", "right", true);
@@ -10481,8 +11009,8 @@
       const cumulativeManual = monthlyCycle
         ? accumulatedTotalsFor(view, activeWorkPlan(), monthlyCycle.end)
         : s.manual;
-      const cumulativeRatio = s.laborValue
-        ? n(cumulativeManual.costToUpdate) / s.laborValue
+      const cumulativeRatio = s.projectLaborValue
+        ? n(cumulativeManual.costToUpdate) / s.projectLaborValue
         : 0;
       const manualRows = [
         ["ค่าแรงต้นทุนสะสมถึงงวดปัจจุบัน", money(cumulativeManual.contractLaborCost, 0), "#d9e6f7"],
