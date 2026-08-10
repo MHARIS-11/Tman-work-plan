@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TMAN WorkPlan</title>
+  <title>Planora - Project WorkPlan & Cost Control</title>
   <style>
     :root {
       --bg: oklch(1 0 0);
@@ -2778,16 +2778,534 @@
     @media (prefers-reduced-motion: reduce) {
       * { scroll-behavior: auto !important; transition: none !important; }
     }
-  </style>
+</style>
+<style>
+  :root {
+    --planora-navy: #071d3b;
+    --planora-navy-2: #0d315b;
+    --planora-orange: #f28a1b;
+    --planora-ink: #10233f;
+    --planora-muted: #66758a;
+    --planora-line: #dbe3ec;
+  }
+
+  body.auth-pending,
+  body.auth-required {
+    overflow: hidden;
+    background: #f3f6fa;
+  }
+
+  body.auth-pending .app,
+  body.auth-required .app {
+    display: none;
+  }
+
+  body.authenticated .planora-login {
+    display: none;
+  }
+
+  .planora-login {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    grid-template-columns: minmax(420px, 1.08fr) minmax(420px, .92fr);
+    min-height: 100dvh;
+    color: var(--planora-ink);
+    background: #f4f7fb;
+  }
+
+  .planora-hero {
+    position: relative;
+    display: flex;
+    min-height: 100dvh;
+    overflow: hidden;
+    color: #fff;
+    background:
+      linear-gradient(180deg, rgba(4, 24, 52, .76), rgba(4, 24, 52, .96)),
+      url("https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1800&q=86") center/cover no-repeat;
+  }
+
+  .planora-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.05), transparent 42%);
+    pointer-events: none;
+  }
+
+  .planora-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: min(100%, 760px);
+    min-height: 100%;
+    margin: 0 auto;
+    padding: clamp(38px, 6vw, 78px);
+    flex-direction: column;
+  }
+
+  .planora-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .planora-mark {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    place-items: center;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 0 46%, var(--planora-orange) 47% 68%, #14345e 69%);
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+  }
+
+  .planora-brand-name {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(32px, 3vw, 48px);
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .planora-descriptor {
+    margin-top: 8px;
+    color: rgba(255,255,255,.84);
+    font-size: 15px;
+  }
+
+  .planora-hero-copy {
+    margin-top: clamp(62px, 10vh, 120px);
+  }
+
+  .planora-hero-copy h2 {
+    margin: 0;
+    max-width: 540px;
+    color: #fff;
+    font-size: clamp(30px, 3.4vw, 50px);
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+
+  .planora-hero-copy h2 span { color: var(--planora-orange); }
+
+  .planora-hero-copy > p {
+    max-width: 520px;
+    margin: 22px 0 0;
+    color: rgba(255,255,255,.78);
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .planora-benefits {
+    display: grid;
+    gap: 16px;
+    margin: 34px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .planora-benefits li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: rgba(255,255,255,.9);
+  }
+
+  .planora-benefit-icon {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border: 1px solid rgba(242,138,27,.74);
+    border-radius: 7px;
+    color: var(--planora-orange);
+    font-weight: 800;
+  }
+
+  .planora-trust-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    margin-top: auto;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.19);
+    border-radius: 8px;
+    background: rgba(255,255,255,.18);
+  }
+
+  .planora-trust-item {
+    min-width: 0;
+    padding: 16px;
+    color: rgba(255,255,255,.84);
+    background: rgba(5,29,61,.76);
+  }
+
+  .planora-trust-item strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #fff;
+    font-size: 13px;
+  }
+
+  .planora-trust-item span { font-size: 11px; }
+
+  .planora-login-side {
+    display: grid;
+    min-height: 100dvh;
+    padding: clamp(28px, 5vw, 72px);
+    place-items: center;
+    background:
+      linear-gradient(rgba(255,255,255,.92), rgba(255,255,255,.92)),
+      linear-gradient(90deg, #e9eef5 1px, transparent 1px),
+      linear-gradient(#e9eef5 1px, transparent 1px);
+    background-size: auto, 34px 34px, 34px 34px;
+  }
+
+  .planora-login-card {
+    width: min(100%, 470px);
+    padding: clamp(30px, 4vw, 48px);
+    border: 1px solid rgba(219,227,236,.8);
+    border-radius: 18px;
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 24px 70px rgba(23, 45, 75, .14);
+  }
+
+  .planora-login-card .planora-mobile-brand { display: none; }
+
+  .planora-lock {
+    display: grid;
+    width: 66px;
+    height: 66px;
+    margin: 0 auto 18px;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--planora-navy);
+    font-size: 28px;
+    background: #f0f4f9;
+  }
+
+  .planora-login-card h1 {
+    margin: 0;
+    color: var(--planora-ink);
+    font-size: 29px;
+    text-align: center;
+  }
+
+  .planora-login-lead {
+    margin: 9px 0 28px;
+    color: var(--planora-muted);
+    text-align: center;
+  }
+
+  .planora-login-form { display: grid; gap: 18px; }
+
+  .planora-field { display: grid; gap: 8px; }
+
+  .planora-field label {
+    color: var(--planora-ink);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .planora-input-wrap { position: relative; }
+
+  .planora-input-wrap input {
+    width: 100%;
+    height: 48px;
+    padding: 0 46px 0 15px;
+    border: 1px solid #cfd9e5;
+    border-radius: 7px;
+    color: var(--planora-ink);
+    font: inherit;
+    background: #fff;
+    outline: none;
+  }
+
+  .planora-input-wrap input:focus {
+    border-color: var(--planora-navy-2);
+    box-shadow: 0 0 0 3px rgba(13,49,91,.1);
+  }
+
+  .planora-input-icon,
+  .planora-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 13px;
+    transform: translateY(-50%);
+    color: #718096;
+  }
+
+  .planora-password-toggle {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .planora-password-toggle:hover { background: #eef3f8; }
+
+  .planora-login-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
+  }
+
+  .planora-remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--planora-muted);
+  }
+
+  .planora-remember input { width: 16px; height: 16px; accent-color: var(--planora-navy); }
+
+  .planora-forgot {
+    padding: 0;
+    border: 0;
+    color: #2369c4;
+    font: inherit;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .planora-submit {
+    display: inline-flex;
+    width: 100%;
+    min-height: 50px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 7px;
+    color: #fff;
+    font: inherit;
+    font-weight: 800;
+    background: var(--planora-navy);
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(7,29,59,.17);
+  }
+
+  .planora-submit:hover { background: #0c2b54; }
+  .planora-submit:disabled { cursor: wait; opacity: .72; }
+
+  .planora-spinner {
+    display: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: planora-spin .8s linear infinite;
+  }
+
+  .planora-submit.is-loading .planora-spinner { display: block; }
+  @keyframes planora-spin { to { transform: rotate(360deg); } }
+
+  .planora-login-error,
+  .planora-login-info {
+    display: none;
+    padding: 11px 13px;
+    border-radius: 7px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .planora-login-error.is-visible {
+    display: block;
+    border: 1px solid #f0b7b2;
+    color: #a52a23;
+    background: #fff3f2;
+  }
+
+  .planora-login-info.is-visible {
+    display: block;
+    border: 1px solid #b8d8c9;
+    color: #17603c;
+    background: #eef9f3;
+  }
+
+  .planora-auth-note {
+    margin-top: 28px;
+    padding: 14px;
+    border: 1px solid #d9e5f2;
+    border-radius: 8px;
+    color: #516176;
+    font-size: 12px;
+    line-height: 1.55;
+    text-align: center;
+    background: #f7faff;
+  }
+
+  .planora-auth-note strong { color: var(--planora-navy); }
+
+  .planora-auth-loading {
+    display: none;
+    margin-bottom: 18px;
+    color: var(--planora-muted);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  body.auth-pending .planora-auth-loading { display: block; }
+  body.auth-pending .planora-login-form { opacity: .48; pointer-events: none; }
+
+  @media (max-width: 900px) {
+    .planora-login {
+      position: fixed;
+      display: block;
+      overflow-y: auto;
+      background: #f3f6fa;
+    }
+
+    .planora-hero {
+      min-height: 245px;
+      background-position: center 45%;
+    }
+
+    .planora-hero-inner {
+      min-height: 245px;
+      padding: 26px 24px 72px;
+      align-items: center;
+      text-align: center;
+    }
+
+    .planora-hero .planora-brand,
+    .planora-hero-copy > p,
+    .planora-benefits,
+    .planora-trust-strip { display: none; }
+
+    .planora-hero-copy { margin: auto 0 0; }
+    .planora-hero-copy h2 { max-width: 360px; font-size: 27px; }
+
+    .planora-login-side {
+      min-height: auto;
+      padding: 0 18px 28px;
+      place-items: start center;
+      background: transparent;
+    }
+
+    .planora-login-card {
+      margin-top: -48px;
+      padding: 28px 22px;
+      border-radius: 16px;
+    }
+
+    .planora-login-card .planora-mobile-brand {
+      display: flex;
+      margin-bottom: 25px;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
+    }
+
+    .planora-mobile-brand .planora-mark { width: 45px; height: 45px; font-size: 27px; }
+    .planora-mobile-brand .planora-brand-name { color: var(--planora-navy); font-size: 31px; }
+    .planora-mobile-brand .planora-descriptor { color: var(--planora-muted); font-size: 11px; }
+  }
+
+  @media (max-width: 480px) {
+    .planora-hero { min-height: 210px; }
+    .planora-hero-inner { min-height: 210px; padding-inline: 18px; }
+    .planora-hero-copy h2 { font-size: 23px; }
+    .planora-login-side { padding-inline: 12px; }
+    .planora-login-card { padding: 24px 18px; }
+    .planora-login-card h1 { font-size: 25px; }
+    .planora-login-options { align-items: flex-start; }
+  }
+</style>
 </head>
-<body>
+<body class="auth-pending">
+  <section class="planora-login" id="planoraLogin" aria-label="เข้าสู่ระบบ Planora">
+    <div class="planora-hero">
+      <div class="planora-hero-inner">
+        <div class="planora-brand">
+          <div class="planora-mark" aria-hidden="true">P</div>
+          <div>
+            <p class="planora-brand-name">Planora</p>
+            <div class="planora-descriptor">Project WorkPlan &amp; Cost Control</div>
+          </div>
+        </div>
+        <div class="planora-hero-copy">
+          <h2>วางแผนงานก่อสร้าง<br>ควบคุมต้นทุน <span>ได้อย่างมีประสิทธิภาพ</span></h2>
+          <p>บริหารแผนงาน แรงงาน ค่าแรง และเครื่องจักร พร้อมติดตามต้นทุนในมุมมองเดียว</p>
+          <ul class="planora-benefits">
+            <li><span class="planora-benefit-icon">1</span>วางแผนงานรายวันและงวดงาน</li>
+            <li><span class="planora-benefit-icon">2</span>ควบคุมแรงงานและค่าแรง</li>
+            <li><span class="planora-benefit-icon">3</span>ติดตามต้นทุนและงบประมาณ</li>
+            <li><span class="planora-benefit-icon">4</span>รายงานครบ จบในที่เดียว</li>
+          </ul>
+        </div>
+        <div class="planora-trust-strip" aria-label="จุดเด่นของระบบ">
+          <div class="planora-trust-item"><strong>ปลอดภัย</strong><span>Firebase Authentication</span></div>
+          <div class="planora-trust-item"><strong>ซิงก์อัตโนมัติ</strong><span>ใช้งานต่อได้ทุกอุปกรณ์</span></div>
+          <div class="planora-trust-item"><strong>สำรองข้อมูลได้</strong><span>ดูแลข้อมูลโครงการได้ง่าย</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="planora-login-side">
+      <div class="planora-login-card">
+        <div class="planora-mobile-brand">
+          <div class="planora-mark" aria-hidden="true">P</div>
+          <div>
+            <p class="planora-brand-name">Planora</p>
+            <div class="planora-descriptor">Project WorkPlan &amp; Cost Control</div>
+          </div>
+        </div>
+        <div class="planora-lock" aria-hidden="true">&#128274;</div>
+        <h1>เข้าสู่ระบบ</h1>
+        <p class="planora-login-lead">เข้าสู่ระบบเพื่อใช้งาน Planora</p>
+        <div class="planora-auth-loading" id="planoraAuthLoading">กำลังตรวจสอบสถานะการเข้าสู่ระบบ...</div>
+        <form class="planora-login-form" id="planoraLoginForm" novalidate>
+          <div class="planora-field">
+            <label for="planoraEmail">อีเมล</label>
+            <div class="planora-input-wrap">
+              <input id="planoraEmail" type="email" autocomplete="username" placeholder="กรอกอีเมลของคุณ" required>
+              <span class="planora-input-icon" aria-hidden="true">@</span>
+            </div>
+          </div>
+          <div class="planora-field">
+            <label for="planoraPassword">รหัสผ่าน</label>
+            <div class="planora-input-wrap">
+              <input id="planoraPassword" type="password" autocomplete="current-password" placeholder="กรอกรหัสผ่านของคุณ" required>
+              <button class="planora-password-toggle" id="planoraPasswordToggle" type="button" aria-label="แสดงรหัสผ่าน">&#128065;</button>
+            </div>
+          </div>
+          <div class="planora-login-options">
+            <label class="planora-remember"><input id="planoraRemember" type="checkbox" checked> จดจำการเข้าสู่ระบบ</label>
+            <button class="planora-forgot" id="planoraForgotPassword" type="button">ลืมรหัสผ่าน?</button>
+          </div>
+          <div class="planora-login-error" id="planoraLoginError" role="alert"></div>
+          <div class="planora-login-info" id="planoraLoginInfo" role="status"></div>
+          <button class="planora-submit" id="planoraLoginSubmit" type="submit">
+            <span class="planora-spinner" aria-hidden="true"></span>
+            <span class="planora-submit-label">เข้าสู่ระบบ</span>
+          </button>
+        </form>
+        <div class="planora-auth-note"><strong>ระบบใช้ Firebase Authentication</strong><br>ข้อมูลของคุณได้รับการปกป้องด้วยบัญชีที่ได้รับอนุญาต</div>
+      </div>
+    </div>
+  </section>
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">TM</div>
         <div>
-          <strong>TMAN WorkPlan</strong><br>
-          <small>local-first</small>
+          <strong>Planora</strong><br>
+          <small>Project WorkPlan &amp; Cost Control</small>
         </div>
       </div>
       <nav class="nav" id="desktopNav"></nav>
@@ -3229,6 +3747,119 @@
       return firebaseAuthState;
     }
 
+    function setPlanoraAuthMessage(type, message = "") {
+      const errorEl = $("#planoraLoginError");
+      const infoEl = $("#planoraLoginInfo");
+      if (errorEl) {
+        errorEl.textContent = type === "error" ? message : "";
+        errorEl.classList.toggle("show", type === "error" && !!message);
+      }
+      if (infoEl) {
+        infoEl.textContent = type === "info" ? message : "";
+        infoEl.classList.toggle("show", type === "info" && !!message);
+      }
+    }
+
+    function setPlanoraLoginBusy(busy) {
+      const button = $("#planoraLoginSubmit");
+      const form = $("#planoraLoginForm");
+      if (button) {
+        button.disabled = !!busy;
+        button.classList.toggle("is-loading", !!busy);
+        button.setAttribute("aria-busy", busy ? "true" : "false");
+      }
+      if (form) {
+        form.querySelectorAll("input, button").forEach((control) => {
+          if (control.id !== "planoraPasswordToggle") control.disabled = !!busy;
+        });
+      }
+    }
+
+    function showPlanoraLogin(message = "") {
+      document.body.classList.remove("auth-pending", "authenticated");
+      document.body.classList.add("auth-required");
+      setPlanoraLoginBusy(false);
+      setPlanoraAuthMessage(message ? "error" : "", message);
+      const emailInput = $("#planoraEmail");
+      if (emailInput && firebaseAuthState?.email) emailInput.value = firebaseAuthState.email;
+      window.setTimeout(() => emailInput?.focus(), 50);
+    }
+
+    function showPlanoraApp() {
+      document.body.classList.remove("auth-pending", "auth-required");
+      document.body.classList.add("authenticated");
+      setPlanoraAuthMessage("", "");
+    }
+
+    async function submitPlanoraLogin(event) {
+      event?.preventDefault();
+      const email = $("#planoraEmail")?.value.trim() || "";
+      const password = $("#planoraPassword")?.value || "";
+      if (!email || !password) {
+        setPlanoraAuthMessage("error", "กรุณากรอกอีเมลและรหัสผ่าน");
+        return;
+      }
+      setPlanoraAuthMessage("", "");
+      setPlanoraLoginBusy(true);
+      try {
+        await firebaseSignIn(email, password);
+        showPlanoraApp();
+        renderAll();
+        if (hasLocalDirty()) scheduleAutoSync("login-dirty");
+        scheduleAutoPull("login");
+      } catch (error) {
+        console.error(error);
+        clearAuthState();
+        setPlanoraAuthMessage("error", error.message || "เข้าสู่ระบบไม่สำเร็จ");
+      } finally {
+        setPlanoraLoginBusy(false);
+      }
+    }
+
+    async function sendPlanoraPasswordReset() {
+      const email = $("#planoraEmail")?.value.trim() || "";
+      if (!email) {
+        setPlanoraAuthMessage("error", "กรอกอีเมลก่อนขอเปลี่ยนรหัสผ่าน");
+        $("#planoraEmail")?.focus();
+        return;
+      }
+      setPlanoraLoginBusy(true);
+      setPlanoraAuthMessage("", "");
+      try {
+        const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FIREBASE_CONFIG.apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requestType: "PASSWORD_RESET", email })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(firebaseAuthError(data?.error?.message));
+        setPlanoraAuthMessage("info", "ส่งลิงก์เปลี่ยนรหัสผ่านไปยังอีเมลแล้ว");
+      } catch (error) {
+        console.error(error);
+        setPlanoraAuthMessage("error", error.message || "ส่งลิงก์เปลี่ยนรหัสผ่านไม่สำเร็จ");
+      } finally {
+        setPlanoraLoginBusy(false);
+      }
+    }
+
+    async function initializePlanoraApp() {
+      if (!firebaseAuthState?.uid) {
+        showPlanoraLogin();
+        return;
+      }
+      try {
+        await ensureAuthToken();
+        showPlanoraApp();
+        renderAll();
+        if (hasLocalDirty()) scheduleAutoSync("init-dirty");
+        scheduleAutoPull("init");
+      } catch (error) {
+        console.error(error);
+        clearAuthState();
+        showPlanoraLogin("เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
+      }
+    }
+
     async function loginFirebaseUser() {
       const email = $("#syncEmail")?.value.trim();
       const password = $("#syncPassword")?.value || "";
@@ -3260,6 +3891,7 @@
       setSyncStatus("ออกจากระบบแล้ว");
       showToast("ออกจากระบบ Firebase แล้ว");
       renderSync();
+      showPlanoraLogin("ออกจากระบบแล้ว กรุณาเข้าสู่ระบบอีกครั้ง");
     }
 
     function shouldAutoSync() {
@@ -5522,18 +6154,24 @@
       };
       const scopeCards = `
         <div class="dashboard-scope-cards">
+    ${scopeCostCard({
+      title: "ภาพรวมทั้งโครงการ",
+      subtitle: "ทุกแผนและทุกเบิกงวด",
+      note: "รวมข้อมูลทั้งโครงการ",
+      summary: main,
+      ratioOverride: main.laborValue ? main.total / main.laborValue : 0,
+      budgetOverride: main.laborValue,
+      ratioLabel: "จากต้นทุนค่าแรง"
+    })}
           ${scopeCostCard({
-            title: "ภาพรวมทั้งโครงการ",
-            subtitle: "ทุกแผนและทุกเบิกงวด",
-            note: "รวมข้อมูลทั้งโครงการ",
-            summary: main
-          })}
-          ${scopeCostCard({
-            title: `เฉพาะเบิกงวดครั้งที่ ${esc(claimNo)}`,
-            subtitle: "รวมแผนต่อของเบิกงวดเดียวกัน",
-            note: "ไม่คิดงวดซ้ำภายในเบิกงวดเดียวกัน",
-            summary: claim
-          })}
+      title: `เฉพาะเบิกงวดครั้งที่ ${esc(claimNo)}`,
+      subtitle: "รวมแผนต่อของเบิกงวดเดียวกัน",
+      note: "ไม่คิดงวดซ้ำภายในเบิกงวดเดียวกัน",
+      summary: claim,
+      ratioOverride: claim.laborValue ? claim.total / claim.laborValue : 0,
+      budgetOverride: claim.laborValue,
+      ratioLabel: "จากต้นทุนค่าแรง"
+    })}
            ${scopeCostCard({
              title: `แผนที่เปิดอยู่ · ${esc(planTypeLabel())}`,
              subtitle: esc(workPlanLabel()),
@@ -11088,9 +11726,20 @@
       if (event.target?.id === "attendanceInboundDialog") closeAttendanceInboundDialog();
     });
 
-    renderAll();
-    if (hasLocalDirty()) scheduleAutoSync("init-dirty");
-    scheduleAutoPull("init");
+    $("#planoraLoginForm")?.addEventListener("submit", submitPlanoraLogin);
+    $("#planoraPasswordToggle")?.addEventListener("click", () => {
+      const input = $("#planoraPassword");
+      const button = $("#planoraPasswordToggle");
+      if (!input || !button) return;
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      button.setAttribute("aria-label", showing ? "แสดงรหัสผ่าน" : "ซ่อนรหัสผ่าน");
+      button.setAttribute("aria-pressed", showing ? "false" : "true");
+      button.classList.toggle("is-visible", !showing);
+    });
+    $("#planoraForgotPassword")?.addEventListener("click", sendPlanoraPasswordReset);
+
+    initializePlanoraApp();
   </script>
 </body>
 </html>
