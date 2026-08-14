@@ -30,7 +30,14 @@
       --danger: oklch(0.53 0.18 28);
       --shadow: 0 8px 18px oklch(0.16 0.02 160 / 0.08);
       --radius: 8px;
-      --nav-width: 224px;
+      --nav-width: 272px;
+      --nav-collapsed-width: 76px;
+      --sidebar-navy: #0D1B2A;
+      --sidebar-navy-deep: #06264A;
+      --sidebar-navy-mid: #132A45;
+      --sidebar-orange: #FF7A00;
+      --sidebar-blue: #2563EB;
+      --sidebar-bg: #F1F5F9;
       font-family: Tahoma, "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
       color: var(--ink);
       background: var(--bg);
@@ -115,58 +122,264 @@
       display: grid;
       grid-template-columns: var(--nav-width) minmax(0, 1fr);
       min-height: 100vh;
+      background: var(--sidebar-bg);
+      transition: grid-template-columns 180ms ease;
+    }
+    .app.sidebar-collapsed {
+      grid-template-columns: var(--nav-collapsed-width) minmax(0, 1fr);
     }
     .sidebar {
-      border-right: 1px solid var(--line);
-      background: var(--surface);
-      padding: 16px 12px;
       position: sticky;
       top: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       height: 100vh;
-      overflow: auto;
+      padding: 24px 16px 18px;
+      overflow: hidden;
+      color: #fff;
+      background:
+        linear-gradient(145deg, rgba(37, 99, 235, .08), transparent 34%),
+        linear-gradient(315deg, rgba(255, 122, 0, .16), transparent 22%),
+        linear-gradient(180deg, var(--sidebar-navy), var(--sidebar-navy-deep));
+      box-shadow: 10px 0 32px rgba(13, 27, 42, .16);
+    }
+    .sidebar::after {
+      content: "";
+      position: absolute;
+      right: -52px;
+      bottom: -18px;
+      width: 190px;
+      height: 74px;
+      background: var(--sidebar-orange);
+      transform: skewX(-31deg) rotate(-7deg);
+      opacity: .95;
+      pointer-events: none;
     }
     .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 8px 14px;
-      border-bottom: 1px solid var(--line);
-      margin-bottom: 12px;
-    }
-    .brand-mark {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
+      position: relative;
+      z-index: 1;
       display: grid;
+      grid-template-columns: 50px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      padding: 2px 8px 22px;
+    }
+    .brand-mark,
+    .planora-mark {
+      display: grid;
+      width: 48px;
+      height: 48px;
       place-items: center;
-      background: var(--primary);
-      color: white;
-      font-weight: 800;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 27px;
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, #fff 0 42%, var(--sidebar-orange) 43% 65%, #132A45 66%);
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    }
+    .brand-copy {
+      min-width: 0;
+    }
+    .brand strong {
+      display: block;
+      color: #fff;
+      font-size: 28px;
+      line-height: 1;
       letter-spacing: 0;
     }
     .brand small {
-      color: var(--muted);
-      font-weight: 700;
+      display: block;
+      margin-top: 6px;
+      color: rgba(255,255,255,.78);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .sidebar-mobile-close,
+    .sidebar-collapse-toggle,
+    .mobile-menu-button {
+      display: inline-grid;
+      width: 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      place-items: center;
+      border-color: rgba(255,255,255,.16);
+      color: #fff;
+      background: rgba(255,255,255,.08);
+    }
+    .sidebar-mobile-close { display: none; }
+    .sidebar-collapse-toggle:hover,
+    .mobile-menu-button:hover {
+      border-color: rgba(255,255,255,.28);
+      background: rgba(255,255,255,.14);
+    }
+    .sidebar-scroll {
+      position: relative;
+      z-index: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 0 2px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.28) transparent;
     }
     .nav {
       display: grid;
-      gap: 4px;
+      gap: 7px;
+    }
+    .nav-section {
+      display: grid;
+      gap: 7px;
+    }
+    .nav-divider {
+      height: 1px;
+      margin: 12px 8px;
+      background: rgba(255,255,255,.18);
     }
     .nav button {
-      justify-content: flex-start;
+      position: relative;
       display: flex;
+      min-height: 44px;
       align-items: center;
-      gap: 9px;
+      justify-content: flex-start;
+      gap: 13px;
+      padding: 10px 12px;
       border-color: transparent;
+      border-radius: 8px;
+      color: rgba(255,255,255,.86);
       background: transparent;
-      color: var(--muted);
       text-align: left;
       font-weight: 700;
+      transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+    }
+    .nav button::before {
+      content: "";
+      position: absolute;
+      left: -16px;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 0 5px 5px 0;
+      background: transparent;
+    }
+    .nav button:hover {
+      color: #fff;
+      background: rgba(255,255,255,.08);
+    }
+    .nav button:focus-visible {
+      outline: 3px solid rgba(255,122,0,.45);
+      outline-offset: 2px;
     }
     .nav button[aria-selected="true"] {
-      background: var(--primary-soft);
-      color: var(--primary);
-      border-color: oklch(0.82 0.05 160);
+      color: #fff;
+      border-color: transparent;
+      background: rgba(255,255,255,.12);
+    }
+    .nav button[aria-selected="true"]::before {
+      background: var(--sidebar-orange);
+    }
+    .nav-icon {
+      display: inline-grid;
+      width: 24px;
+      height: 24px;
+      flex: 0 0 24px;
+      place-items: center;
+    }
+    .nav-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .nav-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sidebar-user {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 8px 0;
+      border-top: 1px solid rgba(255,255,255,.2);
+    }
+    .sidebar-avatar {
+      display: grid;
+      width: 46px;
+      height: 46px;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #8DC1E9, #5A93C4);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.24);
+    }
+    .sidebar-user strong,
+    .sidebar-user span {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sidebar-user strong {
+      color: #fff;
+      font-size: 13px;
+    }
+    .sidebar-user span {
+      margin-top: 3px;
+      color: rgba(255,255,255,.76);
+      font-size: 12px;
+    }
+    .app.sidebar-collapsed .sidebar {
+      padding-inline: 10px;
+    }
+    .app.sidebar-collapsed .brand {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      gap: 0;
+      padding-inline: 0;
+    }
+    .app.sidebar-collapsed .brand-copy,
+    .app.sidebar-collapsed .sidebar-collapse-toggle,
+    .app.sidebar-collapsed .nav-label,
+    .app.sidebar-collapsed .sidebar-user-copy,
+    .app.sidebar-collapsed .sidebar-user-toggle {
+      display: none;
+    }
+    .app.sidebar-collapsed .brand-mark,
+    .app.sidebar-collapsed .planora-mark {
+      width: 46px;
+      height: 46px;
+    }
+    .app.sidebar-collapsed .nav button {
+      justify-content: center;
+      padding-inline: 0;
+    }
+    .app.sidebar-collapsed .nav button::before {
+      left: -10px;
+    }
+    .app.sidebar-collapsed .sidebar-user {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      padding-inline: 0;
+    }
+    .app.sidebar-collapsed .nav-divider {
+      margin-inline: 12px;
+    }
+    .sidebar-backdrop {
+      display: none;
     }
     .main {
       min-width: 0;
@@ -185,6 +398,30 @@
       align-items: center;
       gap: 12px;
       backdrop-filter: blur(10px);
+    }
+    .topbar-title {
+      min-width: 0;
+    }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .desktop-sidebar-toggle {
+      display: inline-grid;
+      width: 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      place-items: center;
+      color: var(--sidebar-navy);
+      background: #fff;
+    }
+    .mobile-menu-button {
+      display: none;
+      color: var(--sidebar-navy);
+      border-color: var(--line);
+      background: #fff;
     }
     .topbar .meta {
       display: flex;
@@ -2684,9 +2921,85 @@
     }
     @media (max-width: 900px) {
       .app { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-      .topbar { display: grid; align-items: stretch; }
-      .mobile-tabs { display: block; }
+      .app.sidebar-collapsed { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 80;
+        width: min(86vw, 330px);
+        height: 100dvh;
+        border-radius: 0 14px 14px 0;
+        transform: translateX(-105%);
+        transition: transform 200ms ease;
+      }
+      body.sidebar-drawer-open .sidebar {
+        transform: translateX(0);
+      }
+      .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        display: block;
+        background: rgba(13, 27, 42, .38);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms ease;
+        backdrop-filter: blur(4px);
+      }
+      body.sidebar-drawer-open .sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      body.sidebar-drawer-open {
+        overflow: hidden;
+      }
+      .brand {
+        grid-template-columns: 50px minmax(0, 1fr) auto;
+      }
+      .brand-copy,
+      .sidebar-user-copy,
+      .sidebar-user-toggle,
+      .nav-label,
+      .app.sidebar-collapsed .brand-copy,
+      .app.sidebar-collapsed .sidebar-user-copy,
+      .app.sidebar-collapsed .sidebar-user-toggle,
+      .app.sidebar-collapsed .nav-label {
+        display: block;
+      }
+      .app.sidebar-collapsed .brand {
+        grid-template-columns: 50px minmax(0, 1fr) auto;
+        justify-items: stretch;
+        padding-inline: 8px;
+      }
+      .app.sidebar-collapsed .nav button {
+        justify-content: flex-start;
+        padding: 10px 12px;
+      }
+      .app.sidebar-collapsed .nav button::before {
+        left: -16px;
+      }
+      .app.sidebar-collapsed .sidebar-user {
+        grid-template-columns: 46px minmax(0, 1fr) auto;
+        justify-items: stretch;
+        padding-inline: 8px;
+      }
+      .sidebar-mobile-close {
+        display: inline-grid;
+      }
+      .sidebar-collapse-toggle,
+      .desktop-sidebar-toggle {
+        display: none;
+      }
+      .topbar {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+      }
+      .topbar-actions { justify-content: end; }
+      .mobile-menu-button { display: inline-grid; }
+      .mobile-tabs { display: none; }
       .content { padding: 12px; }
       .external-manager-grid { grid-template-columns: 1fr; }
       .external-building-pane { display: none; }
@@ -2726,6 +3039,7 @@
     }
     @media (max-width: 560px) {
       .topbar { padding: 10px 12px; }
+      .sidebar { width: min(90vw, 320px); }
       .split, .metric-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
       .external-manager-toolbar,
@@ -2781,18 +3095,19 @@
 </style>
 <style>
   :root {
-    --planora-navy: #071d3b;
-    --planora-navy-2: #0d315b;
-    --planora-orange: #f28a1b;
-    --planora-ink: #10233f;
-    --planora-muted: #66758a;
-    --planora-line: #dbe3ec;
+    --planora-navy: #0D1B2A;
+    --planora-navy-2: #132A45;
+    --planora-orange: #FF7A00;
+    --planora-blue: #2563EB;
+    --planora-ink: #071B35;
+    --planora-muted: #5B6980;
+    --planora-line: #DCE5EF;
   }
 
   body.auth-pending,
   body.auth-required {
     overflow: hidden;
-    background: #f3f6fa;
+    background: #F1F5F9;
   }
 
   body.auth-pending .app,
@@ -2809,10 +3124,10 @@
     inset: 0;
     z-index: 10000;
     display: grid;
-    grid-template-columns: minmax(420px, 1.08fr) minmax(420px, .92fr);
+    grid-template-columns: minmax(600px, 1.55fr) minmax(390px, .75fr);
     min-height: 100dvh;
     color: var(--planora-ink);
-    background: #f4f7fb;
+    background: #F1F5F9;
   }
 
   .planora-hero {
@@ -2820,84 +3135,91 @@
     display: flex;
     min-height: 100dvh;
     overflow: hidden;
-    color: #fff;
+    color: var(--planora-ink);
     background:
-      linear-gradient(180deg, rgba(4, 24, 52, .76), rgba(4, 24, 52, .96)),
-      url("https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1800&q=86") center/cover no-repeat;
+      linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.88) 33%, rgba(255,255,255,.3) 58%, rgba(255,255,255,0) 100%),
+      linear-gradient(180deg, rgba(111,173,230,.28), rgba(255,255,255,0) 44%),
+      url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1900&q=88") center right/cover no-repeat;
   }
 
+  .planora-hero::before,
   .planora-hero::after {
     content: "";
     position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,.05), transparent 42%);
     pointer-events: none;
+  }
+
+  .planora-hero::before {
+    left: -6%;
+    right: -8%;
+    bottom: -6%;
+    height: 28%;
+    background: var(--planora-navy);
+    clip-path: polygon(0 34%, 38% 100%, 100% 66%, 100% 100%, 0 100%);
+    z-index: 1;
+  }
+
+  .planora-hero::after {
+    right: -3%;
+    bottom: 15%;
+    width: 28%;
+    height: 7%;
+    background: var(--planora-orange);
+    clip-path: polygon(18% 0, 100% 0, 100% 100%, 0 100%);
+    z-index: 2;
   }
 
   .planora-hero-inner {
     position: relative;
-    z-index: 1;
-    display: flex;
-    width: min(100%, 760px);
+    z-index: 3;
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    width: min(100%, 980px);
     min-height: 100%;
-    margin: 0 auto;
-    padding: clamp(38px, 6vw, 78px);
-    flex-direction: column;
+    padding: clamp(34px, 4.4vw, 58px);
   }
 
-  .planora-brand {
+  .planora-brand,
+  .planora-mobile-brand {
     display: flex;
     align-items: center;
-    gap: 16px;
-  }
-
-  .planora-mark {
-    display: grid;
-    width: 58px;
-    height: 58px;
-    place-items: center;
-    border-radius: 8px;
-    color: #fff;
-    font-size: 36px;
-    font-weight: 900;
-    line-height: 1;
-    background: linear-gradient(135deg, #fff 0 46%, var(--planora-orange) 47% 68%, #14345e 69%);
-    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    gap: 14px;
   }
 
   .planora-brand-name {
     margin: 0;
-    color: #fff;
-    font-size: clamp(32px, 3vw, 48px);
-    font-weight: 800;
+    color: var(--planora-ink);
+    font-size: 40px;
+    font-weight: 900;
     line-height: 1;
   }
 
   .planora-descriptor {
-    margin-top: 8px;
-    color: rgba(255,255,255,.84);
-    font-size: 15px;
+    margin-top: 7px;
+    color: #263B59;
+    font-size: 14px;
   }
 
   .planora-hero-copy {
-    margin-top: clamp(62px, 10vh, 120px);
+    align-self: center;
+    max-width: 500px;
+    padding-bottom: clamp(20px, 5vh, 70px);
   }
 
   .planora-hero-copy h2 {
     margin: 0;
-    max-width: 540px;
-    color: #fff;
-    font-size: clamp(30px, 3.4vw, 50px);
-    line-height: 1.2;
+    color: var(--planora-ink);
+    font-size: 36px;
+    line-height: 1.35;
     letter-spacing: 0;
   }
 
   .planora-hero-copy h2 span { color: var(--planora-orange); }
 
   .planora-hero-copy > p {
-    max-width: 520px;
-    margin: 22px 0 0;
-    color: rgba(255,255,255,.78);
+    max-width: 470px;
+    margin: 18px 0 0;
+    color: #142947;
     font-size: 16px;
     line-height: 1.75;
   }
@@ -2905,7 +3227,7 @@
   .planora-benefits {
     display: grid;
     gap: 16px;
-    margin: 34px 0 0;
+    margin: 28px 0 0;
     padding: 0;
     list-style: none;
   }
@@ -2913,68 +3235,103 @@
   .planora-benefits li {
     display: flex;
     align-items: center;
-    gap: 14px;
-    color: rgba(255,255,255,.9);
+    gap: 13px;
+    color: #132A45;
+    font-weight: 700;
   }
 
   .planora-benefit-icon {
-    display: grid;
-    width: 32px;
-    height: 32px;
-    flex: 0 0 32px;
+    display: inline-grid;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
     place-items: center;
-    border: 1px solid rgba(242,138,27,.74);
-    border-radius: 7px;
     color: var(--planora-orange);
-    font-weight: 800;
+  }
+
+  .planora-benefit-icon svg,
+  .planora-auth-note svg,
+  .planora-lock svg,
+  .planora-input-icon svg,
+  .planora-password-toggle svg,
+  .planora-submit-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .planora-trust-strip {
+    position: relative;
+    z-index: 3;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
     margin-top: auto;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,.19);
-    border-radius: 8px;
-    background: rgba(255,255,255,.18);
+    padding-top: 18px;
   }
 
   .planora-trust-item {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
     min-width: 0;
-    padding: 16px;
-    color: rgba(255,255,255,.84);
-    background: rgba(5,29,61,.76);
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 8px;
+    color: rgba(255,255,255,.86);
+    background: rgba(255,255,255,.06);
+  }
+
+  .planora-trust-icon {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    color: #fff;
+  }
+
+  .planora-trust-icon svg {
+    width: 26px;
+    height: 26px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .planora-trust-item strong {
     display: block;
-    margin-bottom: 3px;
     color: #fff;
     font-size: 13px;
   }
 
-  .planora-trust-item span { font-size: 11px; }
+  .planora-trust-item span {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+  }
 
   .planora-login-side {
     display: grid;
     min-height: 100dvh;
-    padding: clamp(28px, 5vw, 72px);
+    padding: clamp(28px, 5vw, 68px);
     place-items: center;
-    background:
-      linear-gradient(rgba(255,255,255,.92), rgba(255,255,255,.92)),
-      linear-gradient(90deg, #e9eef5 1px, transparent 1px),
-      linear-gradient(#e9eef5 1px, transparent 1px);
-    background-size: auto, 34px 34px, 34px 34px;
+    background: #F8FAFC;
   }
 
   .planora-login-card {
-    width: min(100%, 470px);
-    padding: clamp(30px, 4vw, 48px);
-    border: 1px solid rgba(219,227,236,.8);
-    border-radius: 18px;
+    width: min(100%, 430px);
+    padding: clamp(30px, 4vw, 44px);
+    border: 1px solid rgba(210,222,236,.86);
+    border-radius: 14px;
     background: rgba(255,255,255,.98);
-    box-shadow: 0 24px 70px rgba(23, 45, 75, .14);
+    box-shadow: 0 18px 44px rgba(13, 27, 42, .13);
   }
 
   .planora-login-card .planora-mobile-brand { display: none; }
@@ -2987,31 +3344,35 @@
     place-items: center;
     border-radius: 50%;
     color: var(--planora-navy);
-    font-size: 28px;
-    background: #f0f4f9;
+    background: #EEF3F9;
   }
 
   .planora-login-card h1 {
     margin: 0;
     color: var(--planora-ink);
-    font-size: 29px;
+    font-size: 30px;
     text-align: center;
   }
 
   .planora-login-lead {
-    margin: 9px 0 28px;
+    margin: 8px 0 24px;
     color: var(--planora-muted);
     text-align: center;
   }
 
-  .planora-login-form { display: grid; gap: 18px; }
+  .planora-login-form {
+    display: grid;
+    gap: 17px;
+    padding-top: 20px;
+    border-top: 1px solid var(--planora-line);
+  }
 
   .planora-field { display: grid; gap: 8px; }
 
   .planora-field label {
     color: var(--planora-ink);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
   }
 
   .planora-input-wrap { position: relative; }
@@ -3019,8 +3380,8 @@
   .planora-input-wrap input {
     width: 100%;
     height: 48px;
-    padding: 0 46px 0 15px;
-    border: 1px solid #cfd9e5;
+    padding: 0 46px;
+    border: 1px solid #D3DEE9;
     border-radius: 7px;
     color: var(--planora-ink);
     font: inherit;
@@ -3028,33 +3389,41 @@
     outline: none;
   }
 
+  .planora-input-wrap input::placeholder { color: #5C6D84; }
+
   .planora-input-wrap input:focus {
-    border-color: var(--planora-navy-2);
-    box-shadow: 0 0 0 3px rgba(13,49,91,.1);
+    border-color: var(--planora-blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.14);
   }
 
   .planora-input-icon,
   .planora-password-toggle {
     position: absolute;
     top: 50%;
-    right: 13px;
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
     transform: translateY(-50%);
-    color: #718096;
+    color: #64748B;
   }
 
+  .planora-input-icon { left: 14px; }
+
   .planora-password-toggle {
-    display: grid;
+    right: 13px;
     width: 34px;
     height: 34px;
+    min-height: 34px;
     padding: 0;
-    place-items: center;
     border: 0;
     border-radius: 5px;
     background: transparent;
     cursor: pointer;
   }
 
-  .planora-password-toggle:hover { background: #eef3f8; }
+  .planora-password-toggle svg { width: 18px; height: 18px; }
+  .planora-password-toggle:hover { background: #EEF3F8; }
 
   .planora-login-options {
     display: flex;
@@ -3068,7 +3437,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--planora-muted);
+    color: #2E405C;
   }
 
   .planora-remember input { width: 16px; height: 16px; accent-color: var(--planora-navy); }
@@ -3076,7 +3445,7 @@
   .planora-forgot {
     padding: 0;
     border: 0;
-    color: #2369c4;
+    color: #176BE5;
     font: inherit;
     background: transparent;
     cursor: pointer;
@@ -3085,7 +3454,7 @@
   .planora-submit {
     display: inline-flex;
     width: 100%;
-    min-height: 50px;
+    min-height: 52px;
     align-items: center;
     justify-content: center;
     gap: 10px;
@@ -3096,11 +3465,12 @@
     font-weight: 800;
     background: var(--planora-navy);
     cursor: pointer;
-    box-shadow: 0 8px 20px rgba(7,29,59,.17);
+    box-shadow: 0 8px 18px rgba(13, 27, 42, .18);
   }
 
-  .planora-submit:hover { background: #0c2b54; }
+  .planora-submit:hover { background: #10233F; }
   .planora-submit:disabled { cursor: wait; opacity: .72; }
+  .planora-submit-icon { display: inline-grid; width: 18px; height: 18px; place-items: center; }
 
   .planora-spinner {
     display: none;
@@ -3113,6 +3483,7 @@
   }
 
   .planora-submit.is-loading .planora-spinner { display: block; }
+  .planora-submit.is-loading .planora-submit-icon { display: none; }
   @keyframes planora-spin { to { transform: rotate(360deg); } }
 
   .planora-login-error,
@@ -3126,28 +3497,36 @@
 
   .planora-login-error.is-visible {
     display: block;
-    border: 1px solid #f0b7b2;
-    color: #a52a23;
-    background: #fff3f2;
+    border: 1px solid #F0B7B2;
+    color: #A52A23;
+    background: #FFF3F2;
   }
 
   .planora-login-info.is-visible {
     display: block;
-    border: 1px solid #b8d8c9;
-    color: #17603c;
-    background: #eef9f3;
+    border: 1px solid #B8D8C9;
+    color: #17603C;
+    background: #EEF9F3;
   }
 
   .planora-auth-note {
-    margin-top: 28px;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    margin-top: 26px;
     padding: 14px;
-    border: 1px solid #d9e5f2;
     border-radius: 8px;
-    color: #516176;
+    color: #34465F;
     font-size: 12px;
     line-height: 1.55;
-    text-align: center;
-    background: #f7faff;
+    background: #F3F6FA;
+  }
+
+  .planora-auth-note svg {
+    width: 28px;
+    height: 28px;
+    color: var(--planora-navy);
   }
 
   .planora-auth-note strong { color: var(--planora-navy); }
@@ -3160,75 +3539,93 @@
     text-align: center;
   }
 
+  .planora-login-footer {
+    margin-top: 24px;
+    color: #617088;
+    font-size: 12px;
+    text-align: center;
+  }
+
   body.auth-pending .planora-auth-loading { display: block; }
   body.auth-pending .planora-login-form { opacity: .48; pointer-events: none; }
 
-  @media (max-width: 900px) {
+  @media (max-width: 1100px) {
     .planora-login {
-      position: fixed;
-      display: block;
+      grid-template-columns: minmax(0, 1fr);
       overflow-y: auto;
-      background: #f3f6fa;
     }
-
+    .planora-login-side {
+      min-height: auto;
+      padding: 0 22px 30px;
+      background: #F1F5F9;
+    }
     .planora-hero {
-      min-height: 245px;
-      background-position: center 45%;
+      min-height: 330px;
+      background-position: center top;
     }
-
     .planora-hero-inner {
-      min-height: 245px;
-      padding: 26px 24px 72px;
+      min-height: 330px;
+      padding: 26px 24px 118px;
       align-items: center;
       text-align: center;
     }
-
     .planora-hero .planora-brand,
-    .planora-hero-copy > p,
+    .planora-hero-copy,
     .planora-benefits,
     .planora-trust-strip { display: none; }
-
-    .planora-hero-copy { margin: auto 0 0; }
-    .planora-hero-copy h2 { max-width: 360px; font-size: 27px; }
-
-    .planora-login-side {
-      min-height: auto;
-      padding: 0 18px 28px;
-      place-items: start center;
-      background: transparent;
-    }
-
     .planora-login-card {
-      margin-top: -48px;
-      padding: 28px 22px;
-      border-radius: 16px;
+      margin-top: -82px;
     }
-
     .planora-login-card .planora-mobile-brand {
       display: flex;
-      margin-bottom: 25px;
-      align-items: center;
+      margin-bottom: 22px;
       justify-content: center;
-      gap: 11px;
     }
-
-    .planora-mobile-brand .planora-mark { width: 45px; height: 45px; font-size: 27px; }
-    .planora-mobile-brand .planora-brand-name { color: var(--planora-navy); font-size: 31px; }
-    .planora-mobile-brand .planora-descriptor { color: var(--planora-muted); font-size: 11px; }
+    .planora-mobile-brand .planora-brand-name {
+      color: var(--planora-navy);
+      font-size: 30px;
+    }
+    .planora-mobile-brand .planora-descriptor {
+      color: #31445F;
+      font-size: 11px;
+    }
   }
 
   @media (max-width: 480px) {
-    .planora-hero { min-height: 210px; }
-    .planora-hero-inner { min-height: 210px; padding-inline: 18px; }
-    .planora-hero-copy h2 { font-size: 23px; }
+    .planora-hero { min-height: 285px; }
+    .planora-hero-inner { min-height: 285px; padding-inline: 18px; }
     .planora-login-side { padding-inline: 12px; }
     .planora-login-card { padding: 24px 18px; }
     .planora-login-card h1 { font-size: 25px; }
     .planora-login-options { align-items: flex-start; }
+    .planora-auth-note { grid-template-columns: 30px minmax(0, 1fr); }
   }
 </style>
 </head>
 <body class="auth-pending">
+  <svg class="icon-sprite" aria-hidden="true" focusable="false" style="display:none">
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="M3 10.8 12 3l9 7.8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+    <symbol id="icon-box" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5"/><path d="M12 12v9"/></symbol>
+    <symbol id="icon-clipboard" viewBox="0 0 24 24"><path d="M9 5h6"/><path d="M9 3h6v4H9z"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M8 13h8M8 17h6"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-machine" viewBox="0 0 24 24"><path d="M3 17h18"/><path d="M5 17 8 8h5l3 9"/><path d="M9 8V5h4v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M14 12h4l3 5"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 16h8M8 12h3"/></symbol>
+    <symbol id="icon-sync" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12A9 9 0 0 1 18.5 5.8L21 8"/><path d="M3 16h5M16 8h5"/></symbol>
+    <symbol id="icon-backup" viewBox="0 0 24 24"><path d="M7 7V5a2 2 0 0 1 2-2h6l4 4v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-2"/><path d="M15 3v5h5"/><path d="M3 12h9"/><path d="m7 8-4 4 4 4"/></symbol>
+    <symbol id="icon-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="m9.5 15.5 1.8 1.8 3.7-4"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-5"/></symbol>
+    <symbol id="icon-cloud" viewBox="0 0 24 24"><path d="M17.5 18H7a5 5 0 1 1 1.1-9.88 6 6 0 0 1 11.4 2.4A3.8 3.8 0 0 1 17.5 18Z"/></symbol>
+    <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+    <symbol id="icon-mobile" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  </svg>
   <section class="planora-login" id="planoraLogin" aria-label="เข้าสู่ระบบ Planora">
     <div class="planora-hero">
       <div class="planora-hero-inner">
@@ -3243,16 +3640,17 @@
           <h2>วางแผนงานก่อสร้าง<br>ควบคุมต้นทุน <span>ได้อย่างมีประสิทธิภาพ</span></h2>
           <p>บริหารแผนงาน แรงงาน ค่าแรง และเครื่องจักร พร้อมติดตามต้นทุนในมุมมองเดียว</p>
           <ul class="planora-benefits">
-            <li><span class="planora-benefit-icon">1</span>วางแผนงานรายวันและงวดงาน</li>
-            <li><span class="planora-benefit-icon">2</span>ควบคุมแรงงานและค่าแรง</li>
-            <li><span class="planora-benefit-icon">3</span>ติดตามต้นทุนและงบประมาณ</li>
-            <li><span class="planora-benefit-icon">4</span>รายงานครบ จบในที่เดียว</li>
+            <li><span class="planora-benefit-icon"><svg><use href="#icon-calendar"></use></svg></span>วางแผนงานรายวันและงวดงาน</li>
+            <li><span class="planora-benefit-icon"><svg><use href="#icon-users"></use></svg></span>ควบคุมแรงงานและค่าแรง</li>
+            <li><span class="planora-benefit-icon"><svg><use href="#icon-sync"></use></svg></span>ติดตามความคืบหน้าและต้นทุนแบบเรียลไทม์</li>
+            <li><span class="planora-benefit-icon"><svg><use href="#icon-file"></use></svg></span>รายงานครบ จบในที่เดียว</li>
           </ul>
         </div>
         <div class="planora-trust-strip" aria-label="จุดเด่นของระบบ">
-          <div class="planora-trust-item"><strong>ปลอดภัย</strong><span>Firebase Authentication</span></div>
-          <div class="planora-trust-item"><strong>ซิงก์อัตโนมัติ</strong><span>ใช้งานต่อได้ทุกอุปกรณ์</span></div>
-          <div class="planora-trust-item"><strong>สำรองข้อมูลได้</strong><span>ดูแลข้อมูลโครงการได้ง่าย</span></div>
+          <div class="planora-trust-item"><span class="planora-trust-icon"><svg><use href="#icon-shield"></use></svg></span><span><strong>ปลอดภัย</strong><span>ด้วย Firebase Security</span></span></div>
+          <div class="planora-trust-item"><span class="planora-trust-icon"><svg><use href="#icon-cloud"></use></svg></span><span><strong>ซิงก์ข้อมูลอัตโนมัติ</strong><span>ทุกอุปกรณ์</span></span></div>
+          <div class="planora-trust-item"><span class="planora-trust-icon"><svg><use href="#icon-database"></use></svg></span><span><strong>สำรองข้อมูลได้</strong><span>มั่นใจ ไม่หาย</span></span></div>
+          <div class="planora-trust-item"><span class="planora-trust-icon"><svg><use href="#icon-mobile"></use></svg></span><span><strong>ใช้งานได้ทุกอุปกรณ์</strong><span>คอมพิวเตอร์ แท็บเล็ต และมือถือ</span></span></div>
         </div>
       </div>
     </div>
@@ -3265,7 +3663,7 @@
             <div class="planora-descriptor">Project WorkPlan &amp; Cost Control</div>
           </div>
         </div>
-        <div class="planora-lock" aria-hidden="true">&#128274;</div>
+        <div class="planora-lock" aria-hidden="true"><svg><use href="#icon-lock"></use></svg></div>
         <h1>เข้าสู่ระบบ</h1>
         <p class="planora-login-lead">เข้าสู่ระบบเพื่อใช้งาน Planora</p>
         <div class="planora-auth-loading" id="planoraAuthLoading">กำลังตรวจสอบสถานะการเข้าสู่ระบบ...</div>
@@ -3274,14 +3672,14 @@
             <label for="planoraEmail">อีเมล</label>
             <div class="planora-input-wrap">
               <input id="planoraEmail" type="email" autocomplete="username" placeholder="กรอกอีเมลของคุณ" required>
-              <span class="planora-input-icon" aria-hidden="true">@</span>
+              <span class="planora-input-icon" aria-hidden="true"><svg><use href="#icon-mail"></use></svg></span>
             </div>
           </div>
           <div class="planora-field">
             <label for="planoraPassword">รหัสผ่าน</label>
             <div class="planora-input-wrap">
               <input id="planoraPassword" type="password" autocomplete="current-password" placeholder="กรอกรหัสผ่านของคุณ" required>
-              <button class="planora-password-toggle" id="planoraPasswordToggle" type="button" aria-label="แสดงรหัสผ่าน">&#128065;</button>
+              <button class="planora-password-toggle" id="planoraPasswordToggle" type="button" aria-label="แสดงรหัสผ่าน"><svg><use href="#icon-eye"></use></svg></button>
             </div>
           </div>
           <div class="planora-login-options">
@@ -3292,31 +3690,50 @@
           <div class="planora-login-info" id="planoraLoginInfo" role="status"></div>
           <button class="planora-submit" id="planoraLoginSubmit" type="submit">
             <span class="planora-spinner" aria-hidden="true"></span>
+            <span class="planora-submit-icon" aria-hidden="true"><svg><use href="#icon-arrow-right"></use></svg></span>
             <span class="planora-submit-label">เข้าสู่ระบบ</span>
           </button>
         </form>
-        <div class="planora-auth-note"><strong>ระบบใช้ Firebase Authentication</strong><br>ข้อมูลของคุณได้รับการปกป้องด้วยบัญชีที่ได้รับอนุญาต</div>
+        <div class="planora-auth-note"><svg aria-hidden="true"><use href="#icon-shield"></use></svg><span><strong>ระบบใช้ Firebase Authentication</strong><br>ข้อมูลของคุณจะถูกเข้ารหัสและปลอดภัย</span></div>
+        <div class="planora-login-footer">© 2026 Planora · Developed by Haris</div>
       </div>
     </div>
   </section>
-  <div class="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+  <div class="app" id="appShell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">TM</div>
-        <div>
-          <strong>Planora</strong><br>
+        <div class="brand-mark" aria-hidden="true">P</div>
+        <div class="brand-copy">
+          <strong>Planora</strong>
           <small>Project WorkPlan &amp; Cost Control</small>
         </div>
+        <button class="sidebar-collapse-toggle" id="sidebarCollapseBtn" type="button" aria-label="ย่อเมนูด้านข้าง" title="ย่อเมนูด้านข้าง"><svg class="nav-icon"><use href="#icon-chevron"></use></svg></button>
+        <button class="sidebar-mobile-close" id="sidebarCloseBtn" type="button" aria-label="ปิดเมนู"><svg class="nav-icon"><use href="#icon-close"></use></svg></button>
       </div>
-      <nav class="nav" id="desktopNav"></nav>
+      <div class="sidebar-scroll">
+        <nav class="nav" id="desktopNav"></nav>
+      </div>
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">TM</div>
+        <div class="sidebar-user-copy">
+          <strong>บริษัท ทีแมน จำกัด</strong>
+          <span>Owner</span>
+        </div>
+        <button class="sidebar-user-toggle" type="button" aria-label="ข้อมูลผู้ใช้งาน"><svg class="nav-icon"><use href="#icon-chevron"></use></svg></button>
+      </div>
     </aside>
     <main class="main">
       <header class="topbar">
-        <div>
+        <button class="mobile-menu-button" id="mobileSidebarOpenBtn" type="button" aria-label="เปิดเมนู"><svg class="nav-icon"><use href="#icon-menu"></use></svg></button>
+        <div class="topbar-title">
           <h1 id="pageTitle">สรุปโครงการ</h1>
           <div class="meta" id="topMeta"></div>
         </div>
-        <select class="mobile-tabs" id="mobileNav" aria-label="เลือกแท็บ"></select>
+        <div class="topbar-actions">
+          <button class="desktop-sidebar-toggle" id="desktopSidebarToggle" type="button" aria-label="ย่อเมนูด้านข้าง" title="ย่อเมนูด้านข้าง"><svg class="nav-icon"><use href="#icon-chevron"></use></svg></button>
+          <select class="mobile-tabs" id="mobileNav" aria-label="เลือกแท็บ"></select>
+        </div>
       </header>
       <div class="content">
         <section class="tab-panel active" id="tab-dashboard"></section>
@@ -3440,6 +3857,7 @@
     const SYNC_DEVICE_KEY = `${STORAGE_KEY}.deviceId`;
     const SYNC_DIRTY_KEY = `${STORAGE_KEY}.syncDirtyAt`;
     const SYNC_DIRTY_HASH_KEY = `${STORAGE_KEY}.syncDirtyHash`;
+    const SIDEBAR_COLLAPSED_KEY = `${STORAGE_KEY}.sidebarCollapsed`;
     const AUTO_SYNC_DELAY_MS = 2500;
     const AUTO_PULL_INTERVAL_MS = 15000;
     const tabs = [
@@ -3475,6 +3893,7 @@
     const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 
     let activeTab = "dashboard";
+    let sidebarCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
     let state = null;
     let cellDraft = null;
     let splitDraft = null;
@@ -3803,6 +4222,7 @@
       setPlanoraLoginBusy(true);
       try {
         await firebaseSignIn(email, password);
+        await pullCloudAfterLogin();
         showPlanoraApp();
         renderAll();
         if (hasLocalDirty()) scheduleAutoSync("login-dirty");
@@ -6005,11 +6425,66 @@
       return "blank";
     }
 
+    function navIcon(id) {
+      const map = {
+        dashboard: "home",
+        plan: "grid",
+        periods: "box",
+        periodData: "clipboard",
+        attendance: "calendar",
+        workers: "users",
+        machines: "machine",
+        holidays: "calendar",
+        report: "file",
+        sync: "sync",
+        backup: "backup"
+      };
+      return `<svg><use href="#icon-${map[id] || "grid"}"></use></svg>`;
+    }
+
+    function renderNavSection(rows) {
+      return `<div class="nav-section">${rows.map(([id, label]) => `
+        <button data-tab="${id}" aria-selected="${activeTab === id}" title="${esc(label)}">
+          <span class="nav-icon" aria-hidden="true">${navIcon(id)}</span>
+          <span class="nav-label">${esc(label)}</span>
+        </button>
+      `).join("")}</div>`;
+    }
+
+    function applySidebarState() {
+      const app = $("#appShell");
+      if (app) app.classList.toggle("sidebar-collapsed", sidebarCollapsed);
+      const labels = sidebarCollapsed ? ["ขยายเมนูด้านข้าง", "ขยายเมนูด้านข้าง"] : ["ย่อเมนูด้านข้าง", "ย่อเมนูด้านข้าง"];
+      [$("#sidebarCollapseBtn"), $("#desktopSidebarToggle")].forEach((button, index) => {
+        if (!button) return;
+        button.setAttribute("aria-label", labels[index]);
+        button.title = labels[index];
+        button.style.transform = sidebarCollapsed ? "rotate(180deg)" : "";
+      });
+    }
+
+    function toggleSidebarCollapsed() {
+      sidebarCollapsed = !sidebarCollapsed;
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? "1" : "0");
+      applySidebarState();
+    }
+
+    function openMobileSidebar() {
+      document.body.classList.add("sidebar-drawer-open");
+    }
+
+    function closeMobileSidebar() {
+      document.body.classList.remove("sidebar-drawer-open");
+    }
+
     function renderNav() {
       const desktop = $("#desktopNav");
       const mobile = $("#mobileNav");
-      desktop.innerHTML = tabs.map(([id, label]) => `<button data-tab="${id}" aria-selected="${activeTab === id}">${label}</button>`).join("");
+      const primary = tabs.slice(0, 9);
+      const utility = tabs.slice(9);
+      desktop.innerHTML = `${renderNavSection(primary)}<div class="nav-divider"></div>${renderNavSection(utility)}`;
       mobile.innerHTML = tabs.map(([id, label]) => `<option value="${id}" ${activeTab === id ? "selected" : ""}>${label}</option>`).join("");
+      applySidebarState();
       $("#pageTitle").textContent = tabs.find(([id]) => id === activeTab)?.[1] || "TMAN WorkPlan";
       $("#topMeta").innerHTML = [
         workPlanLabel(),
@@ -6034,6 +6509,7 @@
       }
       activeTab = tab;
       $$(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${tab}`));
+      closeMobileSidebar();
       renderNav();
       renderActiveTab();
     }
@@ -8139,8 +8615,8 @@
         state.sync.lastCloudUpdatedAt = cloud?.updatedAt || "";
         if (cloud?.revision && n(cloud.revision) > n(state.sync.lastRevision)) {
           if (options.auto) {
-            setSyncStatus("Cloud à¹ƒà¸«à¸¡à¹ˆà¸à¸§à¹ˆà¸²");
-            showToast("Cloud à¹ƒà¸«à¸¡à¹ˆà¸à¸§à¹ˆà¸² à¸«à¸¢à¸¸à¸” Auto Sync à¹„à¸§à¹‰à¸à¹ˆà¸­à¸™");
+            setSyncStatus("Cloud ใหม่กว่า");
+            showToast("Cloud ใหม่กว่า หยุด Auto Sync ไว้ก่อน");
             return;
           }
           setSyncStatus("Cloud ใหม่กว่า");
@@ -8156,6 +8632,58 @@
         console.error(error);
         setSyncStatus("ซิงค์ผิดพลาด", error.message || "ตรวจ Cloud ไม่สำเร็จ");
         showToast(error.message || "ตรวจ Cloud ไม่สำเร็จ");
+      }
+    }
+
+    async function pullCloudAfterLogin() {
+      if (!authReady() || syncBusy) return false;
+      if (hasLocalDirty()) {
+        setSyncStatus("เข้าสู่ระบบแล้ว รอส่งข้อมูลเครื่องนี้ก่อน");
+        return false;
+      }
+      syncBusy = true;
+      try {
+        setSyncStatus("เข้าสู่ระบบแล้ว กำลังดึงข้อมูลจาก Cloud");
+        const cloud = await fetchCloudPayload();
+        const cloudRevision = n(cloud?.revision);
+        const localRevision = n(state.sync?.lastRevision);
+        state.sync.lastCloudUpdatedAt = cloud?.updatedAt || "";
+        if (!cloud?.data || !cloudRevision) {
+          setSyncStatus("เข้าสู่ระบบแล้ว");
+          return false;
+        }
+        if (cloudRevision <= localRevision) {
+          state.sync.lastRevision = Math.max(localRevision, cloudRevision);
+          state.sync.lastSyncedAt = cloud.updatedAt || state.sync.lastSyncedAt || new Date().toISOString();
+          setSyncStatus("ข้อมูลตรงกับ Cloud");
+          return false;
+        }
+        const sync = normalizeSyncSettings(state.sync);
+        const backupStamp = saveSyncBackup("before-login-pull-cloud");
+        const next = normalizeState(cloud.data);
+        next.sync = {
+          ...sync,
+          lastRevision: cloudRevision,
+          lastCloudUpdatedAt: cloud.updatedAt || "",
+          lastSyncedAt: new Date().toISOString(),
+          status: "ดึงจาก Cloud หลังเข้าสู่ระบบแล้ว",
+          error: ""
+        };
+        state = normalizeState(next);
+        clearLocalDirty();
+        lastBusinessHash = syncBusinessHash();
+        undoStack = [];
+        redoStack = [];
+        saveState({ skipAutoSync: true });
+        showToast(`ดึงข้อมูลจาก Cloud หลังเข้าสู่ระบบแล้ว สำรองเดิมไว้ ${backupStamp}`);
+        return true;
+      } catch (error) {
+        console.error(error);
+        setSyncStatus("เข้าสู่ระบบแล้ว แต่ดึง Cloud ไม่สำเร็จ", error.message || "ดึงจาก Cloud หลังเข้าสู่ระบบไม่สำเร็จ");
+        showToast(error.message || "ดึงจาก Cloud หลังเข้าสู่ระบบไม่สำเร็จ");
+        return false;
+      } finally {
+        syncBusy = false;
       }
     }
 
@@ -8302,47 +8830,6 @@
       } finally {
         syncBusy = false;
       }
-    }
-
-    function renderSync() {
-      const el = $("#tab-sync");
-      const sync = normalizeSyncSettings(state.sync);
-      state.sync = sync;
-      const ready = sync.databaseUrl && sync.workspaceCode;
-      el.innerHTML = `
-        <div class="section sync-panel">
-          <div class="panel-head">
-            <div>
-              <h2>ซิงค์ข้อมูล Cloud</h2>
-              <p>ใช้ข้อมูลชุดเดียวกันบนมือถือ แท็บเล็ต และโน้ตบุ๊ก ผ่าน Firebase Realtime Database</p>
-            </div>
-            <span class="pill ${sync.status === "ซิงค์สำเร็จ" ? "green" : sync.status.includes("ผิดพลาด") ? "red" : "amber"}">${esc(sync.status)}</span>
-          </div>
-          <div class="panel-body">
-            <div class="sync-status">
-              <div class="metric"><span>Workspace Code</span><strong>${esc(sync.workspaceCode || "-")}</strong></div>
-              <div class="metric"><span>Revision เครื่องนี้</span><strong>${money(sync.lastRevision, 0)}</strong></div>
-              <div class="metric"><span>Cloud อัปเดตล่าสุด</span><strong>${esc(syncLabel(sync.lastCloudUpdatedAt))}</strong></div>
-              <div class="metric"><span>สำรองก่อนดึงล่าสุด</span><strong>${esc(latestSyncBackupLabel())}</strong></div>
-            </div>
-            <div class="form-grid">
-              <label style="grid-column:1/-1"><span>Firebase Database URL</span><input data-sync-field="databaseUrl" value="${esc(sync.databaseUrl)}" placeholder="https://...firebaseio.com"></label>
-              <label><span>Workspace Code</span><input data-sync-field="workspaceCode" value="${esc(sync.workspaceCode)}" placeholder="tman-main"></label>
-              <label><span>ชื่อเครื่องนี้</span><input data-sync-field="deviceName" value="${esc(sync.deviceName)}" placeholder="notebook, phone, tablet"></label>
-              <label><span>Device ID</span><input value="${esc(sync.deviceId)}" readonly></label>
-            </div>
-            ${sync.error ? `<div class="error" style="margin-top:10px">${esc(sync.error)}</div>` : ""}
-            <div class="inline-list" style="margin-top:12px">
-              <button data-action="sync-check" ${ready ? "" : "disabled"}>ตรวจ Cloud</button>
-              <button class="primary" data-action="sync-push" ${ready ? "" : "disabled"}>ส่งข้อมูลขึ้น Cloud</button>
-              <button data-action="sync-pull" ${ready ? "" : "disabled"}>ดึงข้อมูลจาก Cloud</button>
-            </div>
-            <div class="sync-help" style="margin-top:12px">
-              เริ่มใช้งานแนะนำ: เครื่องหลักกดส่งข้อมูลขึ้น Cloud ก่อน จากนั้นมือถือหรือเครื่องอื่นกดดึงข้อมูลจาก Cloud ระบบจะสำรองข้อมูลเดิมอัตโนมัติก่อนดึงทับ
-            </div>
-          </div>
-        </div>
-      `;
     }
 
     function renderSync() {
@@ -11738,6 +12225,14 @@
       button.classList.toggle("is-visible", !showing);
     });
     $("#planoraForgotPassword")?.addEventListener("click", sendPlanoraPasswordReset);
+    $("#sidebarCollapseBtn")?.addEventListener("click", toggleSidebarCollapsed);
+    $("#desktopSidebarToggle")?.addEventListener("click", toggleSidebarCollapsed);
+    $("#mobileSidebarOpenBtn")?.addEventListener("click", openMobileSidebar);
+    $("#sidebarCloseBtn")?.addEventListener("click", closeMobileSidebar);
+    $("#sidebarBackdrop")?.addEventListener("click", closeMobileSidebar);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeMobileSidebar();
+    });
 
     initializePlanoraApp();
   </script>
