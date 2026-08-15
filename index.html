@@ -3139,7 +3139,7 @@
     background:
       linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.88) 33%, rgba(255,255,255,.3) 58%, rgba(255,255,255,0) 100%),
       linear-gradient(180deg, rgba(111,173,230,.28), rgba(255,255,255,0) 44%),
-      url("https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1900&q=88") center right/cover no-repeat;
+      url("assets/planora-building-ref.webp") center right/contain no-repeat;
   }
 
   .planora-hero::before,
@@ -3600,6 +3600,520 @@
     .planora-login-options { align-items: flex-start; }
     .planora-auth-note { grid-template-columns: 30px minmax(0, 1fr); }
   }
+
+  /* Login reference pass: match the latest Planora desktop/mobile mockup. */
+  .planora-login {
+    display: block;
+    padding: 8px;
+    overflow: hidden;
+    background: #F4F7FB;
+  }
+
+  .planora-hero {
+    position: absolute;
+    inset: 8px;
+    min-height: auto;
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(13, 27, 42, .16);
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.72) 31%, rgba(255,255,255,.26) 52%, rgba(255,255,255,0) 78%),
+      url("assets/planora-building-ref.webp") calc(50% + 38px) calc(100% - 154px) / min(31vw, 350px) auto no-repeat,
+      radial-gradient(circle at 21% 10%, rgba(255,255,255,.58), rgba(255,255,255,0) 24%),
+      linear-gradient(180deg, #8FC8F8 0%, #DFF0FF 38%, #F7F3EE 76%, #E9F4FF 100%);
+  }
+
+  .planora-hero::before {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 31%;
+    background: var(--planora-navy);
+    clip-path: polygon(0 0, 25% 39%, 100% 29%, 100% 100%, 0 100%);
+    z-index: 1;
+  }
+
+  .planora-hero::after {
+    right: 31.5%;
+    bottom: 22%;
+    width: min(21vw, 250px);
+    height: 38px;
+    background: var(--planora-orange);
+    clip-path: polygon(17% 0, 100% 0, 100% 100%, 0 100%);
+    z-index: 2;
+  }
+
+  .planora-hero-inner {
+    width: 100%;
+    min-height: 100%;
+    padding: clamp(36px, 4.2vw, 54px) clamp(34px, 4.2vw, 48px) 42px;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .planora-brand,
+  .planora-hero-copy,
+  .planora-trust-strip {
+    position: relative;
+    z-index: 3;
+  }
+
+  .planora-logo-wordmark {
+    display: block;
+    width: clamp(210px, 18vw, 265px);
+    height: auto;
+    object-fit: contain;
+  }
+
+  .planora-brand .planora-mark,
+  .planora-mobile-brand .planora-mark,
+  .planora-brand .planora-brand-text,
+  .planora-mobile-brand .planora-brand-text {
+    display: none;
+  }
+
+  .planora-hero-copy {
+    align-self: center;
+    max-width: min(43vw, 470px);
+    padding-bottom: clamp(48px, 8vh, 92px);
+  }
+
+  .planora-hero-copy h2 {
+    font-size: clamp(28px, 3.25vw, 43px);
+    line-height: 1.34;
+    font-weight: 900;
+  }
+
+  .planora-hero-copy > p {
+    max-width: 460px;
+    margin-top: 17px;
+    color: #0D1B2A;
+    font-size: clamp(14px, 1.2vw, 16px);
+    font-weight: 700;
+    line-height: 1.7;
+  }
+
+  .planora-benefits {
+    gap: 14px;
+    margin-top: 25px;
+  }
+
+  .planora-benefits li {
+    gap: 12px;
+    color: #0D1B2A;
+    font-size: clamp(13px, 1.08vw, 15px);
+    font-weight: 800;
+  }
+
+  .planora-benefit-icon {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+  }
+
+  .planora-trust-strip {
+    width: min(58vw, 720px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding-top: 0;
+  }
+
+  .planora-trust-item {
+    grid-template-columns: 34px minmax(0, 1fr);
+    min-height: 72px;
+    padding: 12px 14px;
+    border-color: rgba(255,255,255,.18);
+    background: rgba(255,255,255,.055);
+  }
+
+  .planora-trust-item strong {
+    font-size: clamp(11px, .95vw, 13px);
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+
+  .planora-trust-item span span {
+    font-size: clamp(9px, .78vw, 11px);
+    line-height: 1.35;
+  }
+
+  .planora-login-side {
+    position: absolute;
+    z-index: 4;
+    top: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: min(34vw, 438px);
+    min-height: 0;
+    padding: 0 clamp(28px, 3.3vw, 46px) 0 0;
+    place-items: center end;
+    background: transparent;
+  }
+
+  .planora-login-card {
+    width: min(100%, 374px);
+    padding: clamp(30px, 3.2vw, 42px) clamp(24px, 2.7vw, 36px);
+    border: 0;
+    border-radius: 16px;
+    background: #FFFFFF;
+    box-shadow: 0 18px 40px rgba(13, 27, 42, .14);
+  }
+
+  .planora-lock {
+    width: 66px;
+    height: 66px;
+    margin-bottom: 18px;
+    color: var(--planora-navy);
+    background: #EEF3F9;
+  }
+
+  .planora-lock svg {
+    width: 36px;
+    height: 36px;
+    stroke-width: 2.2;
+  }
+
+  .planora-login-card h1 {
+    font-size: clamp(26px, 2.4vw, 31px);
+    font-weight: 900;
+  }
+
+  .planora-login-lead {
+    margin: 7px 0 22px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .planora-login-form {
+    gap: 15px;
+    padding-top: 19px;
+  }
+
+  .planora-field {
+    gap: 8px;
+  }
+
+  .planora-field label {
+    font-size: 13px;
+  }
+
+  .planora-input-wrap input {
+    height: 48px;
+    border-color: #D8E0EA;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .planora-login-options {
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .planora-submit {
+    min-height: 52px;
+    border-radius: 7px;
+    box-shadow: none;
+  }
+
+  .planora-auth-note {
+    margin-top: 26px;
+    padding: 14px;
+    border-radius: 8px;
+    background: #F3F6FA;
+  }
+
+  .planora-login-divider {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 14px;
+    align-items: center;
+    margin: 21px 0 0;
+    color: #64748B;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .planora-login-divider span {
+    height: 1px;
+    background: #E1E7EF;
+  }
+
+  .planora-login-divider em {
+    font-style: normal;
+  }
+
+  .planora-login-footer {
+    margin-top: 22px;
+    color: #0D1B2A;
+    font-weight: 600;
+  }
+
+  @media (max-width: 1120px) {
+    .planora-login-side {
+      width: min(38vw, 420px);
+      padding-right: 28px;
+    }
+
+    .planora-hero {
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.91) 0%, rgba(255,255,255,.72) 35%, rgba(255,255,255,.18) 66%, rgba(255,255,255,0) 100%),
+        url("assets/planora-building-ref.webp") calc(50% + 12px) calc(100% - 144px) / min(34vw, 320px) auto no-repeat,
+        radial-gradient(circle at 21% 10%, rgba(255,255,255,.58), rgba(255,255,255,0) 24%),
+        linear-gradient(180deg, #8FC8F8 0%, #DFF0FF 38%, #F7F3EE 76%, #E9F4FF 100%);
+    }
+
+    .planora-trust-strip {
+      width: min(57vw, 630px);
+    }
+  }
+
+  @media (max-width: 760px) {
+    body.auth-pending,
+    body.auth-required {
+      overflow: hidden;
+      background: #FFFFFF;
+    }
+
+    .planora-login {
+      display: block;
+      padding: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: #FFFFFF;
+    }
+
+    .planora-hero {
+      position: relative;
+      inset: auto;
+      min-height: 316px;
+      border-radius: 0;
+      box-shadow: none;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.12) 58%, rgba(255,255,255,0) 100%),
+        url("assets/planora-building-ref.webp") center bottom 42px / min(62vw, 270px) auto no-repeat,
+        linear-gradient(180deg, #A9D6FF 0%, #EFF7FF 58%, #F7EFE8 100%);
+    }
+
+    .planora-hero::before {
+      height: 95px;
+      clip-path: polygon(0 40%, 35% 78%, 100% 67%, 100% 100%, 0 100%);
+    }
+
+    .planora-hero::after {
+      right: 0;
+      bottom: 64px;
+      width: 35%;
+      height: 41px;
+      clip-path: polygon(23% 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    .planora-hero-inner {
+      min-height: 316px;
+      padding: 46px 20px 0;
+      place-items: start center;
+      text-align: center;
+    }
+
+    .planora-hero .planora-brand {
+      display: flex;
+      justify-content: center;
+    }
+
+    .planora-logo-wordmark {
+      width: min(58vw, 230px);
+    }
+
+    .planora-hero-copy,
+    .planora-benefits,
+    .planora-trust-strip {
+      display: none;
+    }
+
+    .planora-login-side {
+      position: relative;
+      inset: auto;
+      z-index: 5;
+      width: 100%;
+      min-height: auto;
+      margin-top: -26px;
+      padding: 0 14px 24px;
+      place-items: stretch;
+      background: transparent;
+    }
+
+    .planora-login-card {
+      width: 100%;
+      max-width: 402px;
+      margin: 0 auto;
+      padding: 36px 34px 22px;
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(13, 27, 42, .16);
+    }
+
+    .planora-login-card .planora-mobile-brand {
+      display: none;
+    }
+
+    .planora-lock {
+      width: 78px;
+      height: 78px;
+      margin-bottom: 18px;
+    }
+
+    .planora-lock svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .planora-login-card h1 {
+      font-size: 32px;
+    }
+
+    .planora-login-lead {
+      margin-bottom: 29px;
+      font-size: 19px;
+      font-weight: 500;
+    }
+
+    .planora-login-form {
+      gap: 20px;
+      padding-top: 28px;
+    }
+
+    .planora-field {
+      gap: 12px;
+    }
+
+    .planora-field label {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .planora-input-wrap input {
+      height: 56px;
+      padding: 0 50px;
+      font-size: 18px;
+    }
+
+    .planora-input-icon {
+      left: 17px;
+      width: 27px;
+      height: 27px;
+    }
+
+    .planora-password-toggle {
+      right: 12px;
+      width: 40px;
+      height: 40px;
+    }
+
+    .planora-login-options {
+      gap: 16px;
+      font-size: 18px;
+    }
+
+    .planora-remember input {
+      width: 22px;
+      height: 22px;
+    }
+
+    .planora-forgot {
+      white-space: nowrap;
+    }
+
+    .planora-submit {
+      min-height: 58px;
+      border-radius: 8px;
+      font-size: 20px;
+    }
+
+    .planora-auth-note {
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 28px;
+      padding: 19px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .planora-login-divider {
+      margin-top: 28px;
+      font-size: 16px;
+    }
+
+    .planora-auth-note svg {
+      width: 42px;
+      height: 42px;
+    }
+
+    .planora-login-footer {
+      margin-top: 22px;
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .planora-login-card {
+      padding-inline: 22px;
+    }
+
+    .planora-login-card h1 {
+      font-size: 28px;
+    }
+
+    .planora-login-lead,
+    .planora-input-wrap input,
+    .planora-login-options {
+      font-size: 16px;
+    }
+  }
+
+  /* Golden reference alignment: keep the live form, use the approved ref as the visual stage. */
+  .planora-hero {
+    background: url("assets/planora-login-desktop-reference.webp") center center / 100% 100% no-repeat;
+  }
+
+  .planora-hero::before,
+  .planora-hero::after,
+  .planora-hero-inner {
+    display: none;
+  }
+
+  .planora-login-side {
+    left: 8px;
+    width: auto;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .planora-login-card {
+    position: absolute;
+    top: 11.1%;
+    right: 3.9%;
+    width: 31%;
+    min-width: 300px;
+    height: 77.4%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    pointer-events: auto;
+  }
+
+  @media (max-width: 760px) {
+    .planora-hero {
+      display: block;
+      background: url("assets/planora-login-mobile-hero-clean-reference.webp") center top / cover no-repeat;
+    }
+
+    .planora-login-card {
+      position: relative;
+      inset: auto;
+      width: 100%;
+      min-width: 0;
+      height: auto;
+      display: block;
+    }
+  }
 </style>
 </head>
 <body class="auth-pending">
@@ -3630,8 +4144,8 @@
     <div class="planora-hero">
       <div class="planora-hero-inner">
         <div class="planora-brand">
-          <div class="planora-mark" aria-hidden="true">P</div>
-          <div>
+          <img class="planora-logo-wordmark" src="assets/planora-logo-ref.webp" alt="Planora Project WorkPlan &amp; Cost Control">
+          <div class="planora-brand-text">
             <p class="planora-brand-name">Planora</p>
             <div class="planora-descriptor">Project WorkPlan &amp; Cost Control</div>
           </div>
@@ -3657,8 +4171,8 @@
     <div class="planora-login-side">
       <div class="planora-login-card">
         <div class="planora-mobile-brand">
-          <div class="planora-mark" aria-hidden="true">P</div>
-          <div>
+          <img class="planora-logo-wordmark" src="assets/planora-logo-ref.webp" alt="Planora Project WorkPlan &amp; Cost Control">
+          <div class="planora-brand-text">
             <p class="planora-brand-name">Planora</p>
             <div class="planora-descriptor">Project WorkPlan &amp; Cost Control</div>
           </div>
@@ -3694,6 +4208,7 @@
             <span class="planora-submit-label">เข้าสู่ระบบ</span>
           </button>
         </form>
+        <div class="planora-login-divider" aria-hidden="true"><span></span><em>หรือ</em><span></span></div>
         <div class="planora-auth-note"><svg aria-hidden="true"><use href="#icon-shield"></use></svg><span><strong>ระบบใช้ Firebase Authentication</strong><br>ข้อมูลของคุณจะถูกเข้ารหัสและปลอดภัย</span></div>
         <div class="planora-login-footer">© 2026 Planora · Developed by Haris</div>
       </div>
