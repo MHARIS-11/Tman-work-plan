@@ -2415,6 +2415,306 @@
     .status-select {
       min-width: 132px;
     }
+    .prep-shell {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+    .prep-toolbar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .prep-toolbar .muted,
+    .prep-detail-title .muted {
+      margin-top: 4px;
+    }
+    .prep-work-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .prep-work-card {
+      display: grid;
+      gap: 12px;
+      width: 100%;
+      min-height: 178px;
+      padding: 14px;
+      text-align: left;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .prep-work-card:hover,
+    .prep-work-card:focus-visible {
+      border-color: var(--primary-2);
+      background: var(--surface);
+    }
+    .prep-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .prep-card-head strong {
+      display: block;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+    .prep-card-meta {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .prep-date-grid,
+    .prep-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+    .prep-date-grid span,
+    .prep-summary-grid span {
+      display: grid;
+      gap: 2px;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .prep-date-grid strong,
+    .prep-summary-grid strong {
+      color: var(--ink);
+      font-size: 13px;
+    }
+    .prep-progress {
+      display: grid;
+      gap: 7px;
+    }
+    .prep-progress-track {
+      height: 9px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+    .prep-progress-bar {
+      height: 100%;
+      width: var(--prep-progress, 0%);
+      background: var(--primary);
+      border-radius: inherit;
+    }
+    .prep-progress-caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .prep-empty {
+      display: grid;
+      place-items: center;
+      min-height: 260px;
+      padding: 28px;
+      text-align: center;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .prep-empty-inner {
+      display: grid;
+      gap: 10px;
+      max-width: 440px;
+      justify-items: center;
+    }
+    .prep-empty-icon {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius);
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 24px;
+      font-weight: 900;
+    }
+    .prep-detail-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .prep-detail-title {
+      display: grid;
+      gap: 8px;
+    }
+    .prep-back {
+      justify-self: start;
+    }
+    .prep-status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .prep-status-badge[data-status="ready"] {
+      color: var(--primary);
+      background: var(--success-soft);
+      border-color: oklch(0.73 0.08 142);
+    }
+    .prep-status-badge[data-status="inProgress"] {
+      color: oklch(0.38 0.11 235);
+      background: var(--info-soft);
+      border-color: oklch(0.72 0.07 235);
+    }
+    .prep-status-badge[data-status="blocked"] {
+      color: var(--danger);
+      background: oklch(0.96 0.026 28);
+      border-color: oklch(0.78 0.11 28);
+    }
+    .prep-items-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .prep-items-table th,
+    .prep-items-table td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+    .prep-items-table th {
+      color: var(--muted);
+      font-size: 12px;
+      background: var(--surface);
+    }
+    .prep-item-title {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--primary);
+      font-weight: 900;
+      text-align: left;
+      min-height: auto;
+    }
+    .prep-item-title:hover {
+      border-color: transparent;
+      text-decoration: underline;
+    }
+    .prep-items-mobile {
+      display: none;
+      gap: 10px;
+    }
+    .prep-item-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+    .prep-item-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .prep-item-card .prep-item-title {
+      font-size: 15px;
+    }
+    .prep-item-detail {
+      display: grid;
+      gap: 12px;
+    }
+    .prep-field-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px;
+    }
+    .prep-field {
+      display: grid;
+      gap: 3px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .prep-field span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .prep-field strong {
+      color: var(--ink);
+      font-size: 13px;
+    }
+    .prep-description {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      white-space: pre-wrap;
+    }
+    .prep-note-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(160px, 220px) auto;
+      gap: 8px;
+      align-items: end;
+    }
+    .prep-notes-block {
+      display: grid;
+      gap: 10px;
+      padding-top: 4px;
+    }
+    .prep-notes-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .prep-notes-head h3,
+    .prep-notes-head p {
+      margin: 0;
+    }
+    .prep-note-list {
+      display: grid;
+      gap: 8px;
+    }
+    .prep-note {
+      display: grid;
+      gap: 4px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .prep-note-meta {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .prep-dialog-error {
+      color: var(--danger);
+      font-weight: 800;
+    }
     dialog {
       border: 1px solid var(--line);
       border-radius: 10px;
@@ -3013,6 +3313,15 @@
       .attendance-table .col-seq { width: 52px; }
       .attendance-table .col-code { width: 78px; left: 52px; }
       .attendance-table .col-name { width: 160px; left: 130px; }
+      .prep-note-form {
+        grid-template-columns: 1fr;
+      }
+      .prep-items-desktop {
+        display: none;
+      }
+      .prep-items-mobile {
+        display: grid;
+      }
       .plan-grid { max-height: calc(100vh - 260px); }
       .work-table { min-width: 3810px; }
       .work-table .sticky {
@@ -3042,6 +3351,24 @@
       .sidebar { width: min(90vw, 320px); }
       .split, .metric-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
+      .prep-toolbar,
+      .prep-detail-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .prep-toolbar button,
+      .prep-detail-head button {
+        width: 100%;
+      }
+      .prep-empty {
+        min-height: 220px;
+        padding: 20px;
+      }
+      .prep-date-grid,
+      .prep-summary-grid,
+      .prep-field-list {
+        grid-template-columns: 1fr;
+      }
       .external-manager-toolbar,
       .external-detail-head {
         align-items: stretch;
@@ -4127,6 +4454,7 @@
       <div class="content">
         <section class="tab-panel active" id="tab-dashboard"></section>
         <section class="tab-panel" id="tab-plan"></section>
+        <section class="tab-panel" id="tab-prep"></section>
         <section class="tab-panel" id="tab-periods"></section>
         <section class="tab-panel" id="tab-periodData"></section>
         <section class="tab-panel" id="tab-attendance"></section>
@@ -4226,6 +4554,21 @@
     </div>
   </dialog>
 
+  <dialog id="prepDialog" class="split-dialog" aria-labelledby="prepDialogTitle">
+    <div class="dialog-head">
+      <div>
+        <h2 id="prepDialogTitle">เตรียมงานล่วงหน้า</h2>
+        <p class="muted" id="prepDialogMeta"></p>
+      </div>
+      <button type="button" class="ghost" data-action="close-prep-dialog" aria-label="ปิด">ปิด</button>
+    </div>
+    <div class="dialog-body" id="prepDialogBody"></div>
+    <div class="dialog-actions">
+      <button type="button" class="ghost" data-action="close-prep-dialog">ยกเลิก</button>
+      <button type="button" id="prepDialogSave" class="primary" data-action="save-prep-dialog">บันทึก</button>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -4252,6 +4595,7 @@
     const tabs = [
       ["dashboard", "สรุปโครงการ"],
       ["plan", "แผนงวดงาน"],
+      ["prep", "เตรียมงานล่วงหน้า"],
       ["periods", "งวดงานทั้งหมด"],
       ["periodData", "ข้อมูลงวดงาน"],
       ["attendance", "วันมาทำงาน"],
@@ -4262,6 +4606,24 @@
       ["sync", "ซิงค์ข้อมูล"],
       ["backup", "สำรองข้อมูล"]
     ];
+    const PREP_CATEGORIES = [
+      "Design",
+      "Coordination",
+      "Shop Drawing",
+      "Approval",
+      "Procurement",
+      "Site Readiness",
+      "QA/QC & Safety",
+      "Resources",
+      "Other"
+    ];
+    const PREP_STATUSES = [
+      ["notStarted", "ยังไม่เริ่ม"],
+      ["inProgress", "กำลังดำเนินการ"],
+      ["blocked", "ติดปัญหา"],
+      ["ready", "พร้อมแล้ว"]
+    ];
+    const PREP_STATUS_LABELS = Object.fromEntries(PREP_STATUSES);
 
     const $ = (selector, root = document) => root.querySelector(selector);
     const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -4286,6 +4648,8 @@
     let state = null;
     let cellDraft = null;
     let splitDraft = null;
+    let prepDialogContext = null;
+    let prepSaving = false;
     let fillDrag = null;
     let selectDrag = null;
     let undoStack = [];
@@ -4361,7 +4725,9 @@
           borrowMonth: "",
           borrowDraft: {},
           externalWorkerBuildingId: "",
-          periodDataBuilding: ""
+          periodDataBuilding: "",
+          prepWorkId: "",
+          prepItemId: ""
         },
         sync: {
           databaseUrl: DEFAULT_SYNC_URL,
@@ -4384,6 +4750,7 @@
         borrowedWorkers: [],
         attendanceComments: {},
         inboundAttendanceAssignments: {},
+        prepWorks: [],
         periods: [],
         periodTemplates: {},
         machineUsage: {}
@@ -4806,6 +5173,63 @@
       return normalized;
     }
 
+    function normalizePrepStatus(status = "") {
+      return PREP_STATUS_LABELS[status] ? status : "notStarted";
+    }
+
+    function normalizePrepDate(value = "") {
+      const date = String(value || "").trim();
+      return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "";
+    }
+
+    function normalizePrepNotes(notes = [], itemId = "") {
+      if (!Array.isArray(notes)) return [];
+      return notes.map((note) => ({
+        id: note?.id || uid("pn"),
+        readinessItemId: String(note?.readinessItemId || itemId || "").trim(),
+        content: String(note?.content || "").trim(),
+        createdBy: String(note?.createdBy || "").trim(),
+        createdAt: String(note?.createdAt || new Date().toISOString()).trim()
+      })).filter((note) => note.id && note.content);
+    }
+
+    function normalizePrepItems(items = [], workId = "") {
+      if (!Array.isArray(items)) return [];
+      return items.map((item) => {
+        const id = item?.id || uid("pi");
+        return {
+          id,
+          workId: String(item?.workId || workId || "").trim(),
+          title: String(item?.title || "").trim(),
+          description: String(item?.description || "").trim(),
+          category: PREP_CATEGORIES.includes(item?.category) ? item.category : "",
+          owner: String(item?.owner || "").trim(),
+          requiredDate: normalizePrepDate(item?.requiredDate),
+          status: normalizePrepStatus(item?.status),
+          notes: normalizePrepNotes(item?.notes, id),
+          createdAt: String(item?.createdAt || new Date().toISOString()).trim(),
+          updatedAt: String(item?.updatedAt || item?.createdAt || new Date().toISOString()).trim()
+        };
+      }).filter((item) => item.id && item.title);
+    }
+
+    function normalizePrepWorks(works = []) {
+      if (!Array.isArray(works)) return [];
+      return works.map((work) => {
+        const id = work?.id || uid("pw");
+        return {
+          id,
+          name: String(work?.name || "").trim(),
+          area: String(work?.area || "").trim(),
+          plannedStartDate: normalizePrepDate(work?.plannedStartDate),
+          plannedFinishDate: normalizePrepDate(work?.plannedFinishDate),
+          items: normalizePrepItems(work?.items, id),
+          createdAt: String(work?.createdAt || new Date().toISOString()).trim(),
+          updatedAt: String(work?.updatedAt || work?.createdAt || new Date().toISOString()).trim()
+        };
+      }).filter((work) => work.id && work.name);
+    }
+
     function legacyItemData(periods = []) {
       const itemData = {};
       periods.forEach((period) => {
@@ -4909,6 +5333,7 @@
       })).filter((row) => row.id) : [];
       next.attendanceComments = normalizeAttendanceComments(next.attendanceComments);
       next.inboundAttendanceAssignments = normalizeInboundAttendanceAssignments(next.inboundAttendanceAssignments);
+      next.prepWorks = normalizePrepWorks(next.prepWorks);
       next.periods = Array.isArray(next.periods) ? next.periods : [];
       next.periods.forEach((period) => {
         period.building = String(period.building || "").trim();
@@ -4957,6 +5382,11 @@
         next.manual[building] = next.manual[building] || { initialLaborCost: 0, initialMachineCost: 0, note: "" };
       });
       next.ui = next.ui || {};
+      next.ui.prepWorkId = String(next.ui.prepWorkId || "");
+      next.ui.prepItemId = String(next.ui.prepItemId || "");
+      if (!next.prepWorks.some((work) => work.id === next.ui.prepWorkId)) next.ui.prepWorkId = "";
+      const selectedPrepWork = next.prepWorks.find((work) => work.id === next.ui.prepWorkId);
+      if (!selectedPrepWork?.items.some((item) => item.id === next.ui.prepItemId)) next.ui.prepItemId = "";
       next.sync = normalizeSyncSettings(next.sync);
       if (!Array.isArray(next.workPlans) || !next.workPlans.length) {
         const firstId = "wp_1";
@@ -6818,6 +7248,7 @@
       const map = {
         dashboard: "home",
         plan: "grid",
+        prep: "clipboard",
         periods: "box",
         periodData: "clipboard",
         attendance: "calendar",
@@ -6869,12 +7300,23 @@
     function renderNav() {
       const desktop = $("#desktopNav");
       const mobile = $("#mobileNav");
-      const primary = tabs.slice(0, 9);
-      const utility = tabs.slice(9);
+      const primary = tabs.slice(0, 10);
+      const utility = tabs.slice(10);
       desktop.innerHTML = `${renderNavSection(primary)}<div class="nav-divider"></div>${renderNavSection(utility)}`;
       mobile.innerHTML = tabs.map(([id, label]) => `<option value="${id}" ${activeTab === id ? "selected" : ""}>${label}</option>`).join("");
       applySidebarState();
       $("#pageTitle").textContent = tabs.find(([id]) => id === activeTab)?.[1] || "TMAN WorkPlan";
+      if (activeTab === "prep") {
+        const works = state.prepWorks || [];
+        const itemCount = works.reduce((sum, work) => sum + (work.items?.length || 0), 0);
+        $("#topMeta").innerHTML = [
+          "V1",
+          `${money(works.length, 0)} งาน`,
+          `${money(itemCount, 0)} หัวข้อ`,
+          "ใช้ Sync / Persistence เดิม"
+        ].map((x) => `<span>${x}</span>`).join("");
+        return;
+      }
       $("#topMeta").innerHTML = [
         workPlanLabel(),
         `อัปเดต ${esc(dateLabel(planUpdateDate()))}`,
@@ -6906,6 +7348,7 @@
     function renderActiveTab() {
       if (activeTab === "dashboard") renderDashboard();
       if (activeTab === "plan") renderPlan();
+      if (activeTab === "prep") renderPrep();
       if (activeTab === "periods") renderPeriods();
       if (activeTab === "periodData") renderPeriodData();
       if (activeTab === "attendance") renderAttendance();
@@ -6915,6 +7358,260 @@
       if (activeTab === "report") renderReport();
       if (activeTab === "sync") renderSync();
       if (activeTab === "backup") renderBackup();
+    }
+
+    function prepStatusLabel(status = "notStarted") {
+      return PREP_STATUS_LABELS[normalizePrepStatus(status)] || PREP_STATUS_LABELS.notStarted;
+    }
+
+    function prepStatusOptions(current = "notStarted") {
+      const active = normalizePrepStatus(current);
+      return PREP_STATUSES.map(([value, label]) => `<option value="${value}" ${active === value ? "selected" : ""}>${esc(label)}</option>`).join("");
+    }
+
+    function prepDateText(date = "") {
+      return normalizePrepDate(date) ? dateLabel(date) : "-";
+    }
+
+    function prepCreatedText(value = "") {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "-";
+      return date.toLocaleString("th-TH", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    }
+
+    function prepStats(work = {}) {
+      const items = Array.isArray(work.items) ? work.items : [];
+      const total = items.length;
+      const ready = items.filter((item) => item.status === "ready").length;
+      const blocked = items.filter((item) => item.status === "blocked").length;
+      const inProgress = items.filter((item) => item.status === "inProgress").length;
+      const percent = total ? Math.round(ready / total * 100) : 0;
+      let label = "ยังไม่ได้เริ่มเตรียม";
+      let status = "notStarted";
+      if (blocked) {
+        label = "มีหัวข้อติดปัญหา";
+        status = "blocked";
+      } else if (total && ready === total) {
+        label = "พร้อมแล้ว";
+        status = "ready";
+      } else if (ready || inProgress) {
+        label = "กำลังเตรียม";
+        status = "inProgress";
+      }
+      return { total, ready, blocked, inProgress, percent, label, status };
+    }
+
+    function prepSelectedWork() {
+      const id = state.ui?.prepWorkId || "";
+      return (state.prepWorks || []).find((work) => work.id === id) || null;
+    }
+
+    function prepSelectedItem(work = prepSelectedWork()) {
+      const id = state.ui?.prepItemId || "";
+      return work?.items?.find((item) => item.id === id) || null;
+    }
+
+    function renderPrepEmpty(type = "work") {
+      const isWork = type === "work";
+      return `
+        <div class="prep-empty">
+          <div class="prep-empty-inner">
+            <span class="prep-empty-icon" aria-hidden="true">${isWork ? "+" : "✓"}</span>
+            <h2>${isWork ? "ยังไม่มีงานที่ต้องเตรียม" : "ยังไม่มีหัวข้อเตรียมความพร้อม"}</h2>
+            <p class="muted">${isWork ? "เริ่มต้นด้วยการเพิ่มงานที่ต้องการวางแผนและเตรียมความพร้อมก่อนเริ่มก่อสร้าง" : "เพิ่มเรื่องที่ต้องตรวจสอบ ประสานงาน หรือเคลียร์ก่อนเริ่มงาน"}</p>
+            <button type="button" class="primary" data-action="${isWork ? "open-prep-work-dialog" : "open-prep-item-dialog"}">${isWork ? "+ เพิ่มงาน" : "+ เพิ่มหัวข้อ"}</button>
+          </div>
+        </div>`;
+    }
+
+    function renderPrepWorkCard(work) {
+      const stats = prepStats(work);
+      return `
+        <button type="button" class="prep-work-card" data-action="open-prep-work" data-prep-work-id="${esc(work.id)}">
+          <span class="prep-card-head">
+            <span>
+              <strong>${esc(work.name)}</strong>
+              <span class="prep-card-meta">${work.area ? esc(work.area) : "ไม่ได้ระบุพื้นที่"}</span>
+            </span>
+            <span class="prep-status-badge" data-status="${stats.status}">${esc(stats.label)}</span>
+          </span>
+          <span class="prep-date-grid">
+            <span>เริ่มงาน<strong>${esc(prepDateText(work.plannedStartDate))}</strong></span>
+            <span>เสร็จ<strong>${esc(prepDateText(work.plannedFinishDate))}</strong></span>
+          </span>
+          <span class="prep-progress">
+            <span class="prep-progress-track" aria-hidden="true"><span class="prep-progress-bar" style="--prep-progress:${stats.percent}%"></span></span>
+            <span class="prep-progress-caption"><span>${stats.ready} / ${stats.total} หัวข้อพร้อม</span><strong>${stats.total ? `${stats.percent}%` : "0 / 0"}</strong></span>
+          </span>
+        </button>`;
+    }
+
+    function renderPrepItemDesktopRows(work) {
+      return (work.items || []).map((item) => `
+        <tr>
+          <td><button type="button" class="prep-item-title" data-action="open-prep-item-detail" data-prep-item-id="${esc(item.id)}">${esc(item.title)}</button></td>
+          <td>${esc(item.category || "-")}</td>
+          <td>${esc(item.owner || "-")}</td>
+          <td>${esc(prepDateText(item.requiredDate))}</td>
+          <td>
+            <select class="status-select" data-prep-status data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}" aria-label="สถานะ ${esc(item.title)}">
+              ${prepStatusOptions(item.status)}
+            </select>
+          </td>
+        </tr>`).join("");
+    }
+
+    function renderPrepItemMobileCards(work) {
+      return (work.items || []).map((item) => `
+        <article class="prep-item-card">
+          <div class="prep-item-card-head">
+            <button type="button" class="prep-item-title" data-action="open-prep-item-detail" data-prep-item-id="${esc(item.id)}">${esc(item.title)}</button>
+            <span class="prep-status-badge" data-status="${esc(item.status)}">${esc(prepStatusLabel(item.status))}</span>
+          </div>
+          <div class="prep-field-list">
+            <div class="prep-field"><span>หมวดหมู่</span><strong>${esc(item.category || "-")}</strong></div>
+            <div class="prep-field"><span>ผู้รับผิดชอบ</span><strong>${esc(item.owner || "-")}</strong></div>
+            <div class="prep-field"><span>กำหนดเสร็จ</span><strong>${esc(prepDateText(item.requiredDate))}</strong></div>
+          </div>
+          <select data-prep-status data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}" aria-label="สถานะ ${esc(item.title)}">
+            ${prepStatusOptions(item.status)}
+          </select>
+        </article>`).join("");
+    }
+
+    function renderPrepItemDetail(work, item) {
+      const notes = [...(item.notes || [])].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      return `
+        <div class="panel prep-item-detail">
+          <div class="panel-head">
+            <div>
+              <h2>${esc(item.title)}</h2>
+              <p class="muted">รายละเอียดหัวข้อเตรียมความพร้อม</p>
+            </div>
+            <button type="button" data-action="edit-prep-item" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">แก้ไขหัวข้อ</button>
+          </div>
+          <div class="panel-body prep-item-detail">
+            <div class="prep-field-list">
+              <div class="prep-field"><span>หมวดหมู่</span><strong>${esc(item.category || "-")}</strong></div>
+              <div class="prep-field"><span>ผู้รับผิดชอบ</span><strong>${esc(item.owner || "-")}</strong></div>
+              <div class="prep-field"><span>Required Date</span><strong>${esc(prepDateText(item.requiredDate))}</strong></div>
+              <div class="prep-field"><span>สถานะ</span><strong>${esc(prepStatusLabel(item.status))}</strong></div>
+            </div>
+            <div class="prep-description">${item.description ? esc(item.description) : "ยังไม่มีรายละเอียด"}</div>
+            <div class="prep-notes-block">
+              <div class="prep-notes-head">
+                <div>
+                  <h3>บันทึก / ความคืบหน้า</h3>
+                  <p class="muted">เพิ่ม update ที่เกี่ยวข้องกับหัวข้อนี้</p>
+                </div>
+              </div>
+              <div class="prep-item-detail">
+                <div class="prep-note-form">
+                  <label><span>บันทึก</span><textarea id="prepNoteContent" placeholder="พิมพ์ความคืบหน้าหรือสิ่งที่ต้องติดตาม"></textarea></label>
+                  <label><span>ผู้บันทึก</span><input id="prepNoteBy" value="${esc(firebaseAuthState?.email || "")}" placeholder="ชื่อหรืออีเมล"></label>
+                  <button type="button" class="primary" data-action="add-prep-note" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">เพิ่ม Note</button>
+                </div>
+                ${notes.length ? `
+                  <div class="prep-note-list">
+                    ${notes.map((note) => `
+                      <article class="prep-note">
+                        <div class="prep-note-meta">${esc(prepCreatedText(note.createdAt))} · ${esc(note.createdBy || "ไม่ระบุผู้บันทึก")}</div>
+                        <p>${esc(note.content)}</p>
+                      </article>`).join("")}
+                  </div>` : `
+                  <div class="prep-empty" style="min-height:140px">
+                    <div class="prep-empty-inner">
+                      <h3>ยังไม่มีบันทึก</h3>
+                      <p class="muted">เพิ่มความคืบหน้าหรือประเด็นที่ต้องติดตามเมื่อเริ่มประสานงาน</p>
+                    </div>
+                  </div>`}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderPrepWorkDetail(work) {
+      const stats = prepStats(work);
+      const selectedItem = prepSelectedItem(work);
+      return `
+        <div class="prep-shell">
+          <button type="button" class="ghost prep-back" data-action="back-prep-list">← กลับไปเตรียมงานล่วงหน้า</button>
+          <div class="prep-detail-head">
+            <div class="prep-detail-title">
+              <h2>${esc(work.name)}</h2>
+              <p class="muted">${work.area ? esc(work.area) : "ยังไม่ได้ระบุพื้นที่"}</p>
+            </div>
+            <button type="button" class="primary" data-action="open-prep-item-dialog">+ เพิ่มหัวข้อ</button>
+          </div>
+          <div class="panel">
+            <div class="panel-body">
+              <div class="prep-summary-grid">
+                <span>พื้นที่<strong>${esc(work.area || "-")}</strong></span>
+                <span>วันที่คาดว่าจะเริ่ม<strong>${esc(prepDateText(work.plannedStartDate))}</strong></span>
+                <span>วันที่คาดว่าจะเสร็จ<strong>${esc(prepDateText(work.plannedFinishDate))}</strong></span>
+                <span>จำนวนหัวข้อ<strong>${stats.total}</strong></span>
+                <span>หัวข้อที่พร้อม<strong>${stats.ready}</strong></span>
+                <span>ความพร้อม<strong>${stats.total ? `${stats.percent}%` : "0 / 0"}</strong></span>
+              </div>
+              <div class="prep-progress" style="margin-top:12px">
+                <div class="prep-progress-track" aria-hidden="true"><span class="prep-progress-bar" style="--prep-progress:${stats.percent}%"></span></div>
+                <div class="prep-progress-caption"><span>${stats.ready} / ${stats.total} หัวข้อพร้อม</span><span class="prep-status-badge" data-status="${stats.status}">${esc(stats.label)}</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>หัวข้อเตรียมความพร้อม</h2>
+                <p class="muted">ติดตามสิ่งที่ต้องตรวจสอบ ประสานงาน หรือเคลียร์ก่อนเริ่มงาน</p>
+              </div>
+              <button type="button" class="primary" data-action="open-prep-item-dialog">+ เพิ่มหัวข้อ</button>
+            </div>
+            <div class="panel-body">
+              ${work.items.length ? `
+                <div class="prep-items-desktop">
+                  <table class="prep-items-table">
+                    <thead>
+                      <tr>
+                        <th>หัวข้อ</th>
+                        <th>หมวดหมู่</th>
+                        <th>ผู้รับผิดชอบ</th>
+                        <th>กำหนดเสร็จ</th>
+                        <th>สถานะ</th>
+                      </tr>
+                    </thead>
+                    <tbody>${renderPrepItemDesktopRows(work)}</tbody>
+                  </table>
+                </div>
+                <div class="prep-items-mobile">${renderPrepItemMobileCards(work)}</div>` : renderPrepEmpty("item")}
+            </div>
+          </div>
+          ${selectedItem ? renderPrepItemDetail(work, selectedItem) : ""}
+        </div>`;
+    }
+
+    function renderPrep() {
+      const el = $("#tab-prep");
+      if (!el) return;
+      state.prepWorks = normalizePrepWorks(state.prepWorks);
+      const selectedWork = prepSelectedWork();
+      if (selectedWork) {
+        el.innerHTML = renderPrepWorkDetail(selectedWork);
+        return;
+      }
+      const works = state.prepWorks || [];
+      el.innerHTML = `
+        <div class="prep-shell">
+          <div class="prep-toolbar">
+            <div>
+              <h2>เตรียมงานล่วงหน้า</h2>
+              <p class="muted">สร้างงานที่กำลังจะเกิดขึ้น และติดตามหัวข้อเตรียมความพร้อมก่อนเริ่มก่อสร้างจริง</p>
+            </div>
+            <button type="button" class="primary" data-action="open-prep-work-dialog">+ เพิ่มงาน</button>
+          </div>
+          ${works.length ? `<div class="prep-work-grid">${works.map(renderPrepWorkCard).join("")}</div>` : renderPrepEmpty("work")}
+        </div>`;
     }
 
     function renderDashboard() {
@@ -10611,6 +11308,205 @@
       showToast(`รวมกลับเป็นงวด ${mainNo} แล้ว`);
     }
 
+    function openPrepWorkDialog() {
+      prepDialogContext = { type: "work" };
+      $("#prepDialogTitle").textContent = "เพิ่มงาน";
+      $("#prepDialogMeta").textContent = "สร้างงานที่ต้องเตรียมความพร้อมก่อนเริ่มก่อสร้าง";
+      $("#prepDialogBody").innerHTML = `
+        <div class="form-grid">
+          <label><span>ชื่องาน *</span><input id="prepWorkName" placeholder="งานฐานราก" autocomplete="off"></label>
+          <label><span>พื้นที่</span><input id="prepWorkArea" placeholder="Zone A, ชั้น 1, อาคาร A" autocomplete="off"></label>
+          <label><span>วันที่คาดว่าจะเริ่มงาน</span><input id="prepWorkStart" type="date"></label>
+          <label><span>วันที่คาดว่าจะเสร็จ</span><input id="prepWorkFinish" type="date"></label>
+        </div>
+        <p class="prep-dialog-error" id="prepDialogError"></p>`;
+      $("#prepDialogSave").textContent = "สร้างงาน";
+      $("#prepDialog").showModal();
+      requestAnimationFrame(() => $("#prepWorkName")?.focus());
+    }
+
+    function openPrepItemDialog(workId = state.ui.prepWorkId, itemId = "") {
+      const work = (state.prepWorks || []).find((row) => row.id === workId);
+      if (!work) return showToast("เลือกงานก่อนเพิ่มหัวข้อ");
+      const item = itemId ? work.items.find((row) => row.id === itemId) : null;
+      prepDialogContext = { type: "item", workId: work.id, itemId: item?.id || "" };
+      $("#prepDialogTitle").textContent = item ? "แก้ไขหัวข้อ" : "เพิ่มหัวข้อ";
+      $("#prepDialogMeta").textContent = work.name;
+      $("#prepDialogBody").innerHTML = `
+        <div class="form-grid">
+          <label><span>ชื่อหัวข้อ *</span><input id="prepItemTitle" value="${esc(item?.title || "")}" placeholder="Workshop โครงสร้าง" autocomplete="off"></label>
+          <label><span>หมวดหมู่</span>
+            <select id="prepItemCategory">
+              <option value="">ไม่ระบุ</option>
+              ${PREP_CATEGORIES.map((category) => `<option value="${esc(category)}" ${item?.category === category ? "selected" : ""}>${esc(category)}</option>`).join("")}
+            </select>
+          </label>
+          <label><span>ผู้รับผิดชอบ</span><input id="prepItemOwner" value="${esc(item?.owner || "")}" placeholder="Somchai" autocomplete="off"></label>
+          <label><span>Required Date</span><input id="prepItemRequiredDate" type="date" value="${esc(item?.requiredDate || "")}"></label>
+          <label><span>สถานะ</span>
+            <select id="prepItemStatus">${prepStatusOptions(item?.status || "notStarted")}</select>
+          </label>
+        </div>
+        <label><span>รายละเอียด</span><textarea id="prepItemDescription" placeholder="รายละเอียดสิ่งที่ต้องตรวจสอบหรือประสานงาน">${esc(item?.description || "")}</textarea></label>
+        <p class="prep-dialog-error" id="prepDialogError"></p>`;
+      $("#prepDialogSave").textContent = item ? "บันทึกหัวข้อ" : "สร้างหัวข้อ";
+      $("#prepDialog").showModal();
+      requestAnimationFrame(() => $("#prepItemTitle")?.focus());
+    }
+
+    function closePrepDialog() {
+      prepDialogContext = null;
+      prepSaving = false;
+      $("#prepDialog")?.close();
+    }
+
+    function setPrepDialogBusy(busy) {
+      prepSaving = Boolean(busy);
+      const save = $("#prepDialogSave");
+      if (save) {
+        save.disabled = prepSaving;
+        save.textContent = prepSaving ? "กำลังบันทึก..." : (prepDialogContext?.type === "work" ? "สร้างงาน" : (prepDialogContext?.itemId ? "บันทึกหัวข้อ" : "สร้างหัวข้อ"));
+      }
+      $("#prepDialog")?.querySelectorAll("input, select, textarea, button").forEach((control) => {
+        if (control.dataset.action !== "close-prep-dialog") control.disabled = prepSaving;
+      });
+    }
+
+    function setPrepDialogError(message = "") {
+      const el = $("#prepDialogError");
+      if (el) el.textContent = message;
+    }
+
+    async function savePrepDialog() {
+      if (prepSaving || !prepDialogContext) return;
+      setPrepDialogError("");
+      setPrepDialogBusy(true);
+      try {
+        const now = new Date().toISOString();
+        if (prepDialogContext.type === "work") {
+          const name = $("#prepWorkName")?.value.trim() || "";
+          const area = $("#prepWorkArea")?.value.trim() || "";
+          const plannedStartDate = normalizePrepDate($("#prepWorkStart")?.value);
+          const plannedFinishDate = normalizePrepDate($("#prepWorkFinish")?.value);
+          if (!name) {
+            setPrepDialogError("กรอกชื่องานก่อน");
+            $("#prepWorkName")?.focus();
+            return;
+          }
+          if (plannedStartDate && plannedFinishDate && plannedFinishDate < plannedStartDate) {
+            setPrepDialogError("วันที่คาดว่าจะเสร็จต้องไม่อยู่ก่อนวันเริ่มงาน");
+            $("#prepWorkFinish")?.focus();
+            return;
+          }
+          recordHistory("เพิ่มงานเตรียมล่วงหน้า");
+          const work = { id: uid("pw"), name, area, plannedStartDate, plannedFinishDate, items: [], createdAt: now, updatedAt: now };
+          state.prepWorks.push(work);
+          state.ui.prepWorkId = work.id;
+          state.ui.prepItemId = "";
+          saveState();
+          closePrepDialog();
+          renderPrep();
+          showToast("เพิ่มงานแล้ว");
+          return;
+        }
+        if (prepDialogContext.type === "item") {
+          const work = (state.prepWorks || []).find((row) => row.id === prepDialogContext.workId);
+          if (!work) throw new Error("ไม่พบงานที่เลือก");
+          const title = $("#prepItemTitle")?.value.trim() || "";
+          const description = $("#prepItemDescription")?.value.trim() || "";
+          const category = PREP_CATEGORIES.includes($("#prepItemCategory")?.value) ? $("#prepItemCategory").value : "";
+          const owner = $("#prepItemOwner")?.value.trim() || "";
+          const requiredDate = normalizePrepDate($("#prepItemRequiredDate")?.value);
+          const status = normalizePrepStatus($("#prepItemStatus")?.value);
+          if (!title) {
+            setPrepDialogError("กรอกชื่อหัวข้อก่อน");
+            $("#prepItemTitle")?.focus();
+            return;
+          }
+          const existing = prepDialogContext.itemId ? work.items.find((row) => row.id === prepDialogContext.itemId) : null;
+          recordHistory(existing ? "แก้ไขหัวข้อเตรียมความพร้อม" : "เพิ่มหัวข้อเตรียมความพร้อม");
+          if (existing) {
+            Object.assign(existing, { title, description, category, owner, requiredDate, status, updatedAt: now });
+            state.ui.prepItemId = existing.id;
+          } else {
+            const item = { id: uid("pi"), workId: work.id, title, description, category, owner, requiredDate, status, notes: [], createdAt: now, updatedAt: now };
+            work.items.push(item);
+            state.ui.prepItemId = item.id;
+          }
+          work.updatedAt = now;
+          saveState();
+          closePrepDialog();
+          renderPrep();
+          showToast(existing ? "บันทึกหัวข้อแล้ว" : "เพิ่มหัวข้อแล้ว");
+        }
+      } catch (error) {
+        console.error(error);
+        setPrepDialogError(error.message || "บันทึกไม่สำเร็จ");
+      } finally {
+        if ($("#prepDialog")?.open) setPrepDialogBusy(false);
+      }
+    }
+
+    function openPrepWork(workId = "") {
+      const work = (state.prepWorks || []).find((row) => row.id === workId);
+      if (!work) return showToast("ไม่พบงานนี้");
+      state.ui.prepWorkId = work.id;
+      state.ui.prepItemId = "";
+      saveState({ skipAutoSync: true });
+      renderPrep();
+    }
+
+    function backPrepList() {
+      state.ui.prepWorkId = "";
+      state.ui.prepItemId = "";
+      saveState({ skipAutoSync: true });
+      renderPrep();
+    }
+
+    function openPrepItemDetail(itemId = "") {
+      const work = prepSelectedWork();
+      const item = work?.items?.find((row) => row.id === itemId);
+      if (!item) return showToast("ไม่พบหัวข้อนี้");
+      state.ui.prepItemId = item.id;
+      saveState({ skipAutoSync: true });
+      renderPrep();
+    }
+
+    function updatePrepStatus(workId, itemId, status) {
+      const work = (state.prepWorks || []).find((row) => row.id === workId);
+      const item = work?.items?.find((row) => row.id === itemId);
+      if (!item) return showToast("ไม่พบหัวข้อนี้");
+      const nextStatus = normalizePrepStatus(status);
+      if (item.status === nextStatus) return;
+      recordHistory("เปลี่ยนสถานะหัวข้อเตรียมความพร้อม");
+      item.status = nextStatus;
+      item.updatedAt = new Date().toISOString();
+      work.updatedAt = item.updatedAt;
+      saveState();
+      renderPrep();
+    }
+
+    function addPrepNote(workId, itemId) {
+      const work = (state.prepWorks || []).find((row) => row.id === workId);
+      const item = work?.items?.find((row) => row.id === itemId);
+      if (!item) return showToast("ไม่พบหัวข้อนี้");
+      const content = $("#prepNoteContent")?.value.trim() || "";
+      const createdBy = $("#prepNoteBy")?.value.trim() || firebaseAuthState?.email || "";
+      if (!content) {
+        $("#prepNoteContent")?.focus();
+        return showToast("พิมพ์บันทึกก่อน");
+      }
+      const now = new Date().toISOString();
+      recordHistory("เพิ่ม Note เตรียมงาน");
+      item.notes = Array.isArray(item.notes) ? item.notes : [];
+      item.notes.push({ id: uid("pn"), readinessItemId: item.id, content, createdBy, createdAt: now });
+      item.updatedAt = now;
+      work.updatedAt = now;
+      saveState();
+      renderPrep();
+      showToast("เพิ่ม Note แล้ว");
+    }
+
     function handleClick(event) {
       if (inboundDatePickerState && !event.target.closest?.("#inboundDatePicker, [data-action='open-inbound-date-picker']")) closeInboundDatePicker();
       const attendanceCell = event.target.closest?.("[data-attendance-comment-cell]");
@@ -10651,6 +11547,15 @@
       const action = button.dataset.action;
       if (!action) return;
 
+      if (action === "open-prep-work-dialog") return openPrepWorkDialog();
+      if (action === "open-prep-work") return openPrepWork(button.dataset.prepWorkId);
+      if (action === "back-prep-list") return backPrepList();
+      if (action === "open-prep-item-dialog") return openPrepItemDialog(state.ui.prepWorkId);
+      if (action === "open-prep-item-detail") return openPrepItemDetail(button.dataset.prepItemId);
+      if (action === "edit-prep-item") return openPrepItemDialog(button.dataset.prepWorkId, button.dataset.prepItemId);
+      if (action === "add-prep-note") return addPrepNote(button.dataset.prepWorkId, button.dataset.prepItemId);
+      if (action === "close-prep-dialog") return closePrepDialog();
+      if (action === "save-prep-dialog") return savePrepDialog();
       if (action === "open-report") return setActiveTab("report");
       if (action === "open-selected-cell") return openSelectedCell();
       if (action === "clear-selected-cells") return clearSelectedCells();
@@ -10969,6 +11874,7 @@
     function handleChange(event) {
       const target = event.target;
       if (target.id === "mobileNav") return setActiveTab(target.value);
+      if (target.dataset.prepStatus !== undefined) return updatePrepStatus(target.dataset.prepWorkId, target.dataset.prepItemId, target.value);
       if (target.dataset.inboundWorkerToggle) return updateAttendanceInboundDraft(target);
       if (target.id === "externalBuildingSelect") {
         state.ui.externalWorkerBuildingId = target.value;
@@ -12600,6 +13506,13 @@
     });
     $("#attendanceInboundDialog").addEventListener("click", (event) => {
       if (event.target?.id === "attendanceInboundDialog") closeAttendanceInboundDialog();
+    });
+    $("#prepDialog").addEventListener("close", () => {
+      prepDialogContext = null;
+      prepSaving = false;
+    });
+    $("#prepDialog").addEventListener("click", (event) => {
+      if (event.target?.id === "prepDialog") closePrepDialog();
     });
 
     $("#planoraLoginForm")?.addEventListener("submit", submitPlanoraLogin);
