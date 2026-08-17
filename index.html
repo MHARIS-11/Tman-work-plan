@@ -11309,6 +11309,7 @@
     }
 
     function openPrepWorkDialog() {
+      prepSaving = false;
       prepDialogContext = { type: "work" };
       $("#prepDialogTitle").textContent = "เพิ่มงาน";
       $("#prepDialogMeta").textContent = "สร้างงานที่ต้องเตรียมความพร้อมก่อนเริ่มก่อสร้าง";
@@ -11322,12 +11323,15 @@
         <p class="prep-dialog-error" id="prepDialogError"></p>`;
       $("#prepDialogSave").textContent = "สร้างงาน";
       $("#prepDialog").showModal();
+      setPrepDialogBusy(false);
       requestAnimationFrame(() => $("#prepWorkName")?.focus());
     }
 
     function openPrepItemDialog(workId = state.ui.prepWorkId, itemId = "") {
       const work = (state.prepWorks || []).find((row) => row.id === workId);
       if (!work) return showToast("เลือกงานก่อนเพิ่มหัวข้อ");
+      prepSaving = false;
+      work.items = Array.isArray(work.items) ? work.items : [];
       const item = itemId ? work.items.find((row) => row.id === itemId) : null;
       prepDialogContext = { type: "item", workId: work.id, itemId: item?.id || "" };
       $("#prepDialogTitle").textContent = item ? "แก้ไขหัวข้อ" : "เพิ่มหัวข้อ";
@@ -11351,6 +11355,7 @@
         <p class="prep-dialog-error" id="prepDialogError"></p>`;
       $("#prepDialogSave").textContent = item ? "บันทึกหัวข้อ" : "สร้างหัวข้อ";
       $("#prepDialog").showModal();
+      setPrepDialogBusy(false);
       requestAnimationFrame(() => $("#prepItemTitle")?.focus());
     }
 
@@ -11377,8 +11382,21 @@
       if (el) el.textContent = message;
     }
 
+    function ensurePrepDialogContext() {
+      if (prepDialogContext) return prepDialogContext;
+      if ($("#prepItemTitle")) {
+        prepDialogContext = { type: "item", workId: state.ui.prepWorkId || "", itemId: "" };
+        return prepDialogContext;
+      }
+      if ($("#prepWorkName")) {
+        prepDialogContext = { type: "work" };
+        return prepDialogContext;
+      }
+      return null;
+    }
+
     async function savePrepDialog() {
-      if (prepSaving || !prepDialogContext) return;
+      if (prepSaving || !ensurePrepDialogContext()) return;
       setPrepDialogError("");
       setPrepDialogBusy(true);
       try {
@@ -11412,6 +11430,7 @@
         if (prepDialogContext.type === "item") {
           const work = (state.prepWorks || []).find((row) => row.id === prepDialogContext.workId);
           if (!work) throw new Error("ไม่พบงานที่เลือก");
+          work.items = Array.isArray(work.items) ? work.items : [];
           const title = $("#prepItemTitle")?.value.trim() || "";
           const description = $("#prepItemDescription")?.value.trim() || "";
           const category = PREP_CATEGORIES.includes($("#prepItemCategory")?.value) ? $("#prepItemCategory").value : "";
@@ -13514,6 +13533,7 @@
     $("#prepDialog").addEventListener("click", (event) => {
       if (event.target?.id === "prepDialog") closePrepDialog();
     });
+    $("#prepDialogSave")?.addEventListener("click", savePrepDialog);
 
     $("#planoraLoginForm")?.addEventListener("submit", submitPlanoraLogin);
     $("#planoraPasswordToggle")?.addEventListener("click", () => {
