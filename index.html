@@ -2417,8 +2417,30 @@
     }
     .prep-shell {
       display: grid;
-      gap: 14px;
+      gap: 16px;
       min-width: 0;
+    }
+    .prep-page-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .prep-page-title {
+      display: grid;
+      gap: 4px;
+    }
+    .prep-page-title h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    .prep-page-title p {
+      margin: 0;
     }
     .prep-toolbar {
       display: flex;
@@ -2431,9 +2453,118 @@
     .prep-detail-title .muted {
       margin-top: 4px;
     }
+    .prep-table-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+    .prep-table-scroll {
+      overflow: auto;
+    }
+    .prep-work-table {
+      width: 100%;
+      min-width: 1040px;
+      border-collapse: collapse;
+    }
+    .prep-work-table th,
+    .prep-work-table td {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+    .prep-work-table tbody tr:hover td {
+      background: oklch(0.98 0.008 235);
+    }
+    .prep-work-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+    .prep-work-table th {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+      background: linear-gradient(180deg, var(--surface), var(--bg));
+      white-space: nowrap;
+    }
+    .prep-work-table .prep-col-index {
+      width: 70px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 900;
+    }
+    .prep-work-title {
+      display: grid;
+      gap: 3px;
+      min-width: 220px;
+    }
+    .prep-work-title strong {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.3;
+    }
+    .prep-work-title span,
+    .prep-date-cell span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .prep-date-cell {
+      display: grid;
+      gap: 3px;
+      white-space: nowrap;
+    }
+    .prep-date-main {
+      color: var(--ink);
+      font-weight: 900;
+    }
+    .prep-count-cell {
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .prep-pending-count {
+      color: var(--danger);
+      font-weight: 900;
+      text-align: center;
+    }
+    .prep-row-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .prep-row-actions button {
+      min-height: 34px;
+    }
+    .prep-row-actions .ghost {
+      color: var(--primary);
+      background: var(--bg);
+    }
+    .prep-delete-button {
+      border-color: oklch(0.84 0.05 28);
+      color: var(--danger);
+      background: oklch(0.98 0.014 28);
+    }
+    .prep-delete-button:hover,
+    .prep-delete-button:focus-visible {
+      border-color: var(--danger);
+      background: oklch(0.96 0.026 28);
+    }
+    .prep-table-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--bg);
+    }
     .prep-work-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 12px;
     }
     .prep-work-card {
@@ -2552,10 +2683,26 @@
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--surface), var(--bg));
     }
     .prep-detail-title {
       display: grid;
       gap: 8px;
+    }
+    .prep-detail-title h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+    .prep-detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .prep-back {
       justify-self: start;
@@ -2591,6 +2738,7 @@
     }
     .prep-items-table {
       width: 100%;
+      min-width: 760px;
       border-collapse: collapse;
     }
     .prep-items-table th,
@@ -2604,6 +2752,9 @@
       color: var(--muted);
       font-size: 12px;
       background: var(--surface);
+    }
+    .prep-items-table tbody tr:hover td {
+      background: oklch(0.98 0.008 235);
     }
     .prep-item-title {
       padding: 0;
@@ -3352,13 +3503,19 @@
       .split, .metric-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
       .prep-toolbar,
+      .prep-page-head,
       .prep-detail-head {
         align-items: stretch;
         flex-direction: column;
       }
       .prep-toolbar button,
+      .prep-page-head button,
       .prep-detail-head button {
         width: 100%;
+      }
+      .prep-detail-actions {
+        display: grid;
+        grid-template-columns: 1fr;
       }
       .prep-empty {
         min-height: 220px;
@@ -7424,6 +7581,79 @@
         </div>`;
     }
 
+    function prepWorkSubtitle(work = {}) {
+      return work.area ? work.area : "Work Package";
+    }
+
+    function prepStartHint(date = "") {
+      const normalized = normalizePrepDate(date);
+      if (!normalized) return "-";
+      const today = new Date(localISODate(new Date()));
+      const target = new Date(normalized);
+      const diff = Math.round((target - today) / 86400000);
+      if (diff === 0) return "วันนี้";
+      if (diff > 0) return `อีก ${diff} วัน`;
+      return `ผ่านมาแล้ว ${Math.abs(diff)} วัน`;
+    }
+
+    function renderPrepWorkRow(work, index) {
+      const stats = prepStats(work);
+      const issueText = stats.blocked ? String(stats.blocked) : "-";
+      return `
+        <tr>
+          <td class="prep-col-index">${index + 1}</td>
+          <td>
+            <div class="prep-work-title">
+              <strong>${esc(work.name)}</strong>
+              <span>${esc(prepWorkSubtitle(work))}</span>
+            </div>
+          </td>
+          <td>${esc(work.area || "-")}</td>
+          <td>
+            <div class="prep-date-cell">
+              <strong class="prep-date-main">${esc(prepDateText(work.plannedStartDate))}</strong>
+              <span>${esc(prepStartHint(work.plannedStartDate))}</span>
+            </div>
+          </td>
+          <td class="prep-count-cell">${stats.total} รายการ</td>
+          <td><span class="prep-status-badge" data-status="${stats.status}">${esc(stats.label)}</span></td>
+          <td class="prep-pending-count">${esc(issueText)}</td>
+          <td>
+            <div class="prep-row-actions">
+              <button type="button" class="ghost" data-action="open-prep-work" data-prep-work-id="${esc(work.id)}">ดูรายละเอียด</button>
+              <button type="button" class="prep-delete-button" data-action="delete-prep-work" data-prep-work-id="${esc(work.id)}" aria-label="ลบงาน ${esc(work.name)}">ลบงาน</button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    function renderPrepWorkTable(works = []) {
+      return `
+        <div class="prep-table-card">
+          <div class="prep-table-scroll">
+            <table class="prep-work-table">
+              <thead>
+                <tr>
+                  <th class="prep-col-index">ลำดับ</th>
+                  <th>งาน / Work Package</th>
+                  <th>พื้นที่ / Zone</th>
+                  <th>วันที่จะเริ่มงาน</th>
+                  <th>รายการเตรียม</th>
+                  <th>สถานะ</th>
+                  <th>ประเด็นค้าง</th>
+                  <th>ดำเนินการ</th>
+                </tr>
+              </thead>
+              <tbody>${works.map(renderPrepWorkRow).join("")}</tbody>
+            </table>
+          </div>
+          <div class="prep-table-foot">
+            <span>แสดง 1 - ${works.length} จาก ${works.length} รายการ</span>
+            <span>เตรียมงานล่วงหน้า</span>
+          </div>
+        </div>`;
+    }
+
     function renderPrepWorkCard(work) {
       const stats = prepStats(work);
       return `
@@ -7542,7 +7772,10 @@
               <h2>${esc(work.name)}</h2>
               <p class="muted">${work.area ? esc(work.area) : "ยังไม่ได้ระบุพื้นที่"}</p>
             </div>
-            <button type="button" class="primary" data-action="open-prep-item-dialog">+ เพิ่มหัวข้อ</button>
+            <div class="prep-detail-actions">
+              <button type="button" class="primary" data-action="open-prep-item-dialog">+ เพิ่มหัวข้อ</button>
+              <button type="button" class="prep-delete-button" data-action="delete-prep-work" data-prep-work-id="${esc(work.id)}">ลบงาน</button>
+            </div>
           </div>
           <div class="panel">
             <div class="panel-body">
@@ -7603,14 +7836,14 @@
       const works = state.prepWorks || [];
       el.innerHTML = `
         <div class="prep-shell">
-          <div class="prep-toolbar">
-            <div>
+          <div class="prep-page-head">
+            <div class="prep-page-title">
               <h2>เตรียมงานล่วงหน้า</h2>
               <p class="muted">สร้างงานที่กำลังจะเกิดขึ้น และติดตามหัวข้อเตรียมความพร้อมก่อนเริ่มก่อสร้างจริง</p>
             </div>
             <button type="button" class="primary" data-action="open-prep-work-dialog">+ เพิ่มงาน</button>
           </div>
-          ${works.length ? `<div class="prep-work-grid">${works.map(renderPrepWorkCard).join("")}</div>` : renderPrepEmpty("work")}
+          ${works.length ? renderPrepWorkTable(works) : renderPrepEmpty("work")}
         </div>`;
     }
 
@@ -11526,6 +11759,25 @@
       showToast("เพิ่ม Note แล้ว");
     }
 
+    function deletePrepWork(workId = "") {
+      const work = (state.prepWorks || []).find((row) => row.id === workId);
+      if (!work) return showToast("ไม่พบงานนี้");
+      const itemCount = Array.isArray(work.items) ? work.items.length : 0;
+      const message = itemCount
+        ? `ลบงาน "${work.name}" และหัวข้อทั้งหมด ${itemCount} รายการ?`
+        : `ลบงาน "${work.name}"?`;
+      if (!confirm(message)) return;
+      recordHistory("ลบงานเตรียมล่วงหน้า");
+      state.prepWorks = (state.prepWorks || []).filter((row) => row.id !== work.id);
+      if (state.ui.prepWorkId === work.id) {
+        state.ui.prepWorkId = "";
+        state.ui.prepItemId = "";
+      }
+      saveState();
+      renderPrep();
+      showToast("ลบงานแล้ว");
+    }
+
     function handleClick(event) {
       if (inboundDatePickerState && !event.target.closest?.("#inboundDatePicker, [data-action='open-inbound-date-picker']")) closeInboundDatePicker();
       const attendanceCell = event.target.closest?.("[data-attendance-comment-cell]");
@@ -11573,6 +11825,7 @@
       if (action === "open-prep-item-detail") return openPrepItemDetail(button.dataset.prepItemId);
       if (action === "edit-prep-item") return openPrepItemDialog(button.dataset.prepWorkId, button.dataset.prepItemId);
       if (action === "add-prep-note") return addPrepNote(button.dataset.prepWorkId, button.dataset.prepItemId);
+      if (action === "delete-prep-work") return deletePrepWork(button.dataset.prepWorkId);
       if (action === "close-prep-dialog") return closePrepDialog();
       if (action === "save-prep-dialog") return savePrepDialog();
       if (action === "open-report") return setActiveTab("report");
