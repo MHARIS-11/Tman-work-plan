@@ -2679,14 +2679,11 @@
     }
     .prep-detail-head {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
-      padding: 16px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: linear-gradient(180deg, var(--surface), var(--bg));
+      padding: 0 0 4px;
     }
     .prep-detail-title {
       display: grid;
@@ -2706,6 +2703,116 @@
     }
     .prep-back {
       justify-self: start;
+      padding-left: 0;
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+    .prep-detail-summary {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(118px, 1fr));
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .prep-detail-summary > span {
+      display: grid;
+      align-content: center;
+      gap: 7px;
+      min-height: 88px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+    .prep-detail-summary small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .prep-detail-summary strong {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.25;
+    }
+    .prep-detail-summary .is-alert strong {
+      color: var(--danger);
+    }
+    .prep-progress-panel {
+      display: grid;
+      grid-template-columns: auto minmax(180px, 1fr) 46px;
+      align-items: center;
+      gap: 16px;
+      padding: 13px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+    .prep-detail-tabs {
+      display: flex;
+      align-items: stretch;
+      gap: 22px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--line);
+      scrollbar-width: thin;
+    }
+    .prep-detail-tabs button {
+      flex: 0 0 auto;
+      min-height: 44px;
+      padding: 9px 4px;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .prep-detail-tabs button:hover,
+    .prep-detail-tabs button:focus-visible {
+      border-color: transparent;
+      border-bottom-color: var(--line-strong);
+      color: var(--ink);
+      background: transparent;
+    }
+    .prep-detail-tabs button.is-active {
+      border-bottom-color: var(--primary-2);
+      color: var(--primary-2);
+    }
+    .prep-detail-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      min-width: 0;
+    }
+    .prep-detail-workspace.has-panel {
+      grid-template-columns: minmax(0, 1fr) minmax(330px, 380px);
+    }
+    .prep-checklist-panel {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+    .prep-checklist-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .prep-checklist-toolbar h2,
+    .prep-checklist-toolbar p {
+      margin: 0;
+    }
+    .prep-checklist-toolbar h2 {
+      font-size: 18px;
+    }
+    .prep-checklist-body {
+      min-width: 0;
+      overflow: auto;
     }
     .prep-status-badge {
       display: inline-flex;
@@ -2738,7 +2845,7 @@
     }
     .prep-items-table {
       width: 100%;
-      min-width: 760px;
+      min-width: 980px;
       border-collapse: collapse;
     }
     .prep-items-table th,
@@ -2752,9 +2859,19 @@
       color: var(--muted);
       font-size: 12px;
       background: var(--surface);
+      white-space: nowrap;
     }
     .prep-items-table tbody tr:hover td {
       background: oklch(0.98 0.008 235);
+    }
+    .prep-items-table tbody tr.is-selected td {
+      background: var(--primary-soft);
+    }
+    .prep-item-index {
+      width: 62px;
+      color: var(--muted);
+      font-weight: 900;
+      text-align: center !important;
     }
     .prep-item-title {
       padding: 0;
@@ -2768,6 +2885,32 @@
     .prep-item-title:hover {
       border-color: transparent;
       text-decoration: underline;
+    }
+    .prep-item-summary {
+      display: block;
+      max-width: 34ch;
+      margin-top: 3px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .prep-item-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .prep-item-actions button {
+      min-height: 32px;
+      padding: 6px 9px;
+    }
+    .prep-detail-button {
+      color: var(--primary-2);
+      background: var(--bg);
     }
     .prep-items-mobile {
       display: none;
@@ -2789,6 +2932,103 @@
     }
     .prep-item-card .prep-item-title {
       font-size: 15px;
+    }
+    .prep-side-panel {
+      position: sticky;
+      top: 12px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      max-height: calc(100vh - 112px);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+    .prep-side-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .prep-side-head h2 {
+      margin: 5px 0 0;
+      font-size: 19px;
+      line-height: 1.3;
+    }
+    .prep-side-kicker {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .icon-button.prep-side-close {
+      width: 34px;
+      min-width: 34px;
+      min-height: 34px;
+      padding: 0;
+      border-color: transparent;
+      background: transparent;
+      font-size: 24px;
+      line-height: 1;
+    }
+    .prep-side-scroll {
+      overflow: auto;
+      padding: 16px;
+    }
+    .prep-side-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .prep-side-section {
+      display: grid;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .prep-side-section:last-child {
+      border-bottom: 0;
+    }
+    .prep-side-section h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+    .prep-side-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .prep-side-meta span {
+      display: grid;
+      gap: 4px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .prep-side-meta small {
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .prep-side-note-form {
+      display: grid;
+      gap: 8px;
+      padding-top: 4px;
+    }
+    .prep-side-note-form textarea {
+      min-height: 84px;
+    }
+    .prep-side-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      background: var(--bg);
     }
     .prep-item-detail {
       display: grid;
@@ -3370,6 +3610,22 @@
       opacity: 1;
       transform: translateY(0);
     }
+    @media (max-width: 1200px) {
+      .prep-detail-workspace.has-panel {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .prep-side-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 70;
+        width: min(92vw, 420px);
+        max-height: 100dvh;
+        border-radius: 0;
+        box-shadow: -4px 0 8px rgba(8, 29, 57, 0.12);
+      }
+    }
     @media (max-width: 900px) {
       .app { grid-template-columns: 1fr; }
       .app.sidebar-collapsed { grid-template-columns: 1fr; }
@@ -3473,6 +3729,12 @@
       .prep-items-mobile {
         display: grid;
       }
+      .prep-detail-summary {
+        grid-template-columns: repeat(7, minmax(150px, 1fr));
+      }
+      .prep-checklist-toolbar {
+        align-items: flex-start;
+      }
       .plan-grid { max-height: calc(100vh - 260px); }
       .work-table { min-width: 3810px; }
       .work-table .sticky {
@@ -3516,6 +3778,23 @@
       .prep-detail-actions {
         display: grid;
         grid-template-columns: 1fr;
+      }
+      .prep-progress-panel {
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+      .prep-progress-panel .prep-progress-track {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+      .prep-checklist-toolbar {
+        display: grid;
+      }
+      .prep-checklist-toolbar button {
+        width: 100%;
+      }
+      .prep-side-panel {
+        width: 100vw;
       }
       .prep-empty {
         min-height: 220px;
@@ -5359,7 +5638,7 @@
           workId: String(item?.workId || workId || "").trim(),
           title: String(item?.title || "").trim(),
           description: String(item?.description || "").trim(),
-          category: PREP_CATEGORIES.includes(item?.category) ? item.category : "",
+          category: String(item?.category || "").trim(),
           owner: String(item?.owner || "").trim(),
           requiredDate: normalizePrepDate(item?.requiredDate),
           status: normalizePrepStatus(item?.status),
@@ -7677,9 +7956,13 @@
     }
 
     function renderPrepItemDesktopRows(work) {
-      return (work.items || []).map((item) => `
-        <tr>
-          <td><button type="button" class="prep-item-title" data-action="open-prep-item-detail" data-prep-item-id="${esc(item.id)}">${esc(item.title)}</button></td>
+      return (work.items || []).map((item, index) => `
+        <tr class="${state.ui.prepItemId === item.id ? "is-selected" : ""}">
+          <td class="prep-item-index">${index + 1}</td>
+          <td>
+            <button type="button" class="prep-item-title" data-action="open-prep-item-detail" data-prep-item-id="${esc(item.id)}">${esc(item.title)}</button>
+            ${item.description ? `<span class="prep-item-summary">${esc(item.description)}</span>` : ""}
+          </td>
           <td>${esc(item.category || "-")}</td>
           <td>${esc(item.owner || "-")}</td>
           <td>${esc(prepDateText(item.requiredDate))}</td>
@@ -7687,6 +7970,12 @@
             <select class="status-select" data-prep-status data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}" aria-label="สถานะ ${esc(item.title)}">
               ${prepStatusOptions(item.status)}
             </select>
+          </td>
+          <td>
+            <div class="prep-item-actions">
+              <button type="button" class="ghost prep-detail-button" data-action="open-prep-item-detail" data-prep-item-id="${esc(item.id)}">รายละเอียด</button>
+              <button type="button" class="prep-delete-button" data-action="delete-prep-item" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}" aria-label="ลบหัวข้อ ${esc(item.title)}">ลบ</button>
+            </div>
           </td>
         </tr>`).join("");
     }
@@ -7706,121 +7995,138 @@
           <select data-prep-status data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}" aria-label="สถานะ ${esc(item.title)}">
             ${prepStatusOptions(item.status)}
           </select>
+          <div class="prep-item-actions">
+            <button type="button" class="ghost prep-detail-button" data-action="open-prep-item-detail" data-prep-item-id="${esc(item.id)}">รายละเอียด</button>
+            <button type="button" class="prep-delete-button" data-action="delete-prep-item" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">ลบหัวข้อ</button>
+          </div>
         </article>`).join("");
     }
 
     function renderPrepItemDetail(work, item) {
       const notes = [...(item.notes || [])].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
       return `
-        <div class="panel prep-item-detail">
-          <div class="panel-head">
+        <aside class="prep-side-panel" aria-label="รายละเอียดหัวข้อ ${esc(item.title)}">
+          <div class="prep-side-head">
             <div>
+              <span class="prep-side-kicker">รายละเอียดหัวข้อเตรียมความพร้อม</span>
               <h2>${esc(item.title)}</h2>
-              <p class="muted">รายละเอียดหัวข้อเตรียมความพร้อม</p>
             </div>
-            <button type="button" data-action="edit-prep-item" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">แก้ไขหัวข้อ</button>
+            <button type="button" class="icon-button prep-side-close" data-action="close-prep-item-detail" aria-label="ปิดรายละเอียด">×</button>
           </div>
-          <div class="panel-body prep-item-detail">
-            <div class="prep-field-list">
-              <div class="prep-field"><span>หมวดหมู่</span><strong>${esc(item.category || "-")}</strong></div>
-              <div class="prep-field"><span>ผู้รับผิดชอบ</span><strong>${esc(item.owner || "-")}</strong></div>
-              <div class="prep-field"><span>Required Date</span><strong>${esc(prepDateText(item.requiredDate))}</strong></div>
-              <div class="prep-field"><span>สถานะ</span><strong>${esc(prepStatusLabel(item.status))}</strong></div>
+          <div class="prep-side-scroll">
+            <div class="prep-side-status-row">
+              <span class="prep-status-badge" data-status="${esc(item.status)}">${esc(prepStatusLabel(item.status))}</span>
+              <span class="muted">${esc(item.category || "ไม่ระบุหมวดหมู่")}</span>
             </div>
-            <div class="prep-description">${item.description ? esc(item.description) : "ยังไม่มีรายละเอียด"}</div>
-            <div class="prep-notes-block">
+            <section class="prep-side-section">
+              <h3>รายละเอียด</h3>
+              <div class="prep-description">${item.description ? esc(item.description) : "ยังไม่มีรายละเอียด"}</div>
+              <div class="prep-side-meta">
+                <span><small>ผู้รับผิดชอบ</small><strong>${esc(item.owner || "-")}</strong></span>
+                <span><small>กำหนดเสร็จ</small><strong>${esc(prepDateText(item.requiredDate))}</strong></span>
+              </div>
+            </section>
+            <section class="prep-side-section">
               <div class="prep-notes-head">
-                <div>
-                  <h3>บันทึก / ความคืบหน้า</h3>
-                  <p class="muted">เพิ่ม update ที่เกี่ยวข้องกับหัวข้อนี้</p>
-                </div>
+                <h3>การดำเนินการล่าสุด</h3>
+                <span class="muted">${notes.length} รายการ</span>
               </div>
-              <div class="prep-item-detail">
-                <div class="prep-note-form">
-                  <label><span>บันทึก</span><textarea id="prepNoteContent" placeholder="พิมพ์ความคืบหน้าหรือสิ่งที่ต้องติดตาม"></textarea></label>
-                  <label><span>ผู้บันทึก</span><input id="prepNoteBy" value="${esc(firebaseAuthState?.email || "")}" placeholder="ชื่อหรืออีเมล"></label>
-                  <button type="button" class="primary" data-action="add-prep-note" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">เพิ่ม Note</button>
-                </div>
-                ${notes.length ? `
-                  <div class="prep-note-list">
-                    ${notes.map((note) => `
-                      <article class="prep-note">
-                        <div class="prep-note-meta">${esc(prepCreatedText(note.createdAt))} · ${esc(note.createdBy || "ไม่ระบุผู้บันทึก")}</div>
-                        <p>${esc(note.content)}</p>
-                      </article>`).join("")}
-                  </div>` : `
-                  <div class="prep-empty" style="min-height:140px">
-                    <div class="prep-empty-inner">
-                      <h3>ยังไม่มีบันทึก</h3>
-                      <p class="muted">เพิ่มความคืบหน้าหรือประเด็นที่ต้องติดตามเมื่อเริ่มประสานงาน</p>
-                    </div>
-                  </div>`}
+              ${notes.length ? `
+                <div class="prep-note-list">
+                  ${notes.map((note) => `
+                    <article class="prep-note">
+                      <div class="prep-note-meta">${esc(prepCreatedText(note.createdAt))}</div>
+                      <p>${esc(note.content)}</p>
+                      <small>${esc(note.createdBy || "ไม่ระบุผู้บันทึก")}</small>
+                    </article>`).join("")}
+                </div>` : `<p class="muted">ยังไม่มีบันทึกความคืบหน้า</p>`}
+              <div class="prep-side-note-form">
+                <label><span>เพิ่มบันทึก</span><textarea id="prepNoteContent" placeholder="ความคืบหน้าหรือสิ่งที่ต้องติดตาม"></textarea></label>
+                <input id="prepNoteBy" value="${esc(firebaseAuthState?.email || "")}" placeholder="ชื่อผู้บันทึก">
+                <button type="button" class="primary" data-action="add-prep-note" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">เพิ่มบันทึก</button>
               </div>
-            </div>
+            </section>
           </div>
-        </div>`;
+          <div class="prep-side-actions">
+            <button type="button" data-action="edit-prep-item" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">แก้ไขหัวข้อ</button>
+            <button type="button" class="prep-delete-button" data-action="delete-prep-item" data-prep-work-id="${esc(work.id)}" data-prep-item-id="${esc(item.id)}">ลบหัวข้อ</button>
+          </div>
+        </aside>`;
     }
 
     function renderPrepWorkDetail(work) {
       const stats = prepStats(work);
       const selectedItem = prepSelectedItem(work);
+      const ownerCount = new Set((work.items || []).map((item) => String(item.owner || "").trim()).filter(Boolean)).size;
+      const noteCount = (work.items || []).reduce((sum, item) => sum + (item.notes?.length || 0), 0);
       return `
         <div class="prep-shell">
-          <button type="button" class="ghost prep-back" data-action="back-prep-list">← กลับไปเตรียมงานล่วงหน้า</button>
+          <button type="button" class="ghost prep-back" data-action="back-prep-list">← เตรียมงานล่วงหน้า</button>
           <div class="prep-detail-head">
             <div class="prep-detail-title">
               <h2>${esc(work.name)}</h2>
-              <p class="muted">${work.area ? esc(work.area) : "ยังไม่ได้ระบุพื้นที่"}</p>
+              <p class="muted">ข้อมูลรายละเอียดงานเตรียมล่วงหน้า</p>
             </div>
             <div class="prep-detail-actions">
               <button type="button" class="primary" data-action="open-prep-item-dialog">+ เพิ่มหัวข้อ</button>
               <button type="button" class="prep-delete-button" data-action="delete-prep-work" data-prep-work-id="${esc(work.id)}">ลบงาน</button>
             </div>
           </div>
-          <div class="panel">
-            <div class="panel-body">
-              <div class="prep-summary-grid">
-                <span>พื้นที่<strong>${esc(work.area || "-")}</strong></span>
-                <span>วันที่คาดว่าจะเริ่ม<strong>${esc(prepDateText(work.plannedStartDate))}</strong></span>
-                <span>วันที่คาดว่าจะเสร็จ<strong>${esc(prepDateText(work.plannedFinishDate))}</strong></span>
-                <span>จำนวนหัวข้อ<strong>${stats.total}</strong></span>
-                <span>หัวข้อที่พร้อม<strong>${stats.ready}</strong></span>
-                <span>ความพร้อม<strong>${stats.total ? `${stats.percent}%` : "0 / 0"}</strong></span>
-              </div>
-              <div class="prep-progress" style="margin-top:12px">
-                <div class="prep-progress-track" aria-hidden="true"><span class="prep-progress-bar" style="--prep-progress:${stats.percent}%"></span></div>
-                <div class="prep-progress-caption"><span>${stats.ready} / ${stats.total} หัวข้อพร้อม</span><span class="prep-status-badge" data-status="${stats.status}">${esc(stats.label)}</span></div>
-              </div>
-            </div>
+          <div class="prep-detail-summary">
+            <span><small>พื้นที่</small><strong>${esc(work.area || "-")}</strong></span>
+            <span><small>วันที่คาดว่าจะเริ่มงาน</small><strong>${esc(prepDateText(work.plannedStartDate))}</strong></span>
+            <span><small>วันที่คาดว่าจะเสร็จ</small><strong>${esc(prepDateText(work.plannedFinishDate))}</strong></span>
+            <span><small>จำนวนหัวข้อ</small><strong>${stats.total} รายการ</strong></span>
+            <span><small>หัวข้อพร้อมแล้ว</small><strong>${stats.ready} รายการ</strong></span>
+            <span class="is-alert"><small>ประเด็นค้าง</small><strong>${stats.blocked} รายการ</strong></span>
+            <span><small>สถานะงาน</small><span class="prep-status-badge" data-status="${stats.status}">${esc(stats.label)}</span></span>
           </div>
-          <div class="panel">
-            <div class="panel-head">
-              <div>
-                <h2>หัวข้อเตรียมความพร้อม</h2>
-                <p class="muted">ติดตามสิ่งที่ต้องตรวจสอบ ประสานงาน หรือเคลียร์ก่อนเริ่มงาน</p>
-              </div>
-              <button type="button" class="primary" data-action="open-prep-item-dialog">+ เพิ่มหัวข้อ</button>
-            </div>
-            <div class="panel-body">
-              ${work.items.length ? `
-                <div class="prep-items-desktop">
-                  <table class="prep-items-table">
-                    <thead>
-                      <tr>
-                        <th>หัวข้อ</th>
-                        <th>หมวดหมู่</th>
-                        <th>ผู้รับผิดชอบ</th>
-                        <th>กำหนดเสร็จ</th>
-                        <th>สถานะ</th>
-                      </tr>
-                    </thead>
-                    <tbody>${renderPrepItemDesktopRows(work)}</tbody>
-                  </table>
+          <div class="prep-progress-panel">
+            <strong>ความพร้อมรวม</strong>
+            <div class="prep-progress-track" aria-label="ความพร้อม ${stats.percent}%"><span class="prep-progress-bar" style="--prep-progress:${stats.percent}%"></span></div>
+            <strong>${stats.percent}%</strong>
+          </div>
+          <nav class="prep-detail-tabs" aria-label="ส่วนข้อมูลรายละเอียดงานเตรียมล่วงหน้า">
+            <button type="button" class="is-active">Checklist (${stats.total})</button>
+            <button type="button" data-action="prep-placeholder-tab">ประเด็นค้าง (${stats.blocked})</button>
+            <button type="button" data-action="prep-placeholder-tab">ผู้เกี่ยวข้อง (${ownerCount})</button>
+            <button type="button" data-action="prep-placeholder-tab">เอกสาร (0)</button>
+            <button type="button" data-action="prep-placeholder-tab">การประชุม (0)</button>
+            <button type="button" data-action="prep-placeholder-tab">ประวัติการดำเนินการ (${noteCount})</button>
+          </nav>
+          <div class="prep-detail-workspace ${selectedItem ? "has-panel" : ""}">
+            <section class="prep-checklist-panel">
+              <div class="prep-checklist-toolbar">
+                <div>
+                  <h2>Checklist</h2>
+                  <p class="muted">หัวข้อเตรียมความพร้อมก่อนเริ่มงาน</p>
                 </div>
-                <div class="prep-items-mobile">${renderPrepItemMobileCards(work)}</div>` : renderPrepEmpty("item")}
-            </div>
+                <button type="button" class="primary" data-action="open-prep-item-dialog">+ เพิ่มหัวข้อ</button>
+              </div>
+              <div class="prep-checklist-body">
+                ${work.items.length ? `
+                  <div class="prep-items-desktop">
+                    <table class="prep-items-table">
+                      <thead>
+                        <tr>
+                          <th>ลำดับ</th>
+                          <th>รายการเตรียมความพร้อม</th>
+                          <th>หมวดหมู่</th>
+                          <th>ผู้รับผิดชอบ</th>
+                          <th>กำหนดเสร็จ</th>
+                          <th>สถานะ</th>
+                          <th>ดำเนินการ</th>
+                        </tr>
+                      </thead>
+                      <tbody>${renderPrepItemDesktopRows(work)}</tbody>
+                    </table>
+                  </div>
+                  <div class="prep-items-mobile">${renderPrepItemMobileCards(work)}</div>` : renderPrepEmpty("item")}
+              </div>
+              ${work.items.length ? `<div class="prep-table-foot"><span>แสดง 1 - ${work.items.length} จาก ${work.items.length} รายการ</span><span>Checklist</span></div>` : ""}
+            </section>
+            ${selectedItem ? renderPrepItemDetail(work, selectedItem) : ""}
           </div>
-          ${selectedItem ? renderPrepItemDetail(work, selectedItem) : ""}
         </div>`;
     }
 
@@ -11566,6 +11872,10 @@
       prepSaving = false;
       work.items = Array.isArray(work.items) ? work.items : [];
       const item = itemId ? work.items.find((row) => row.id === itemId) : null;
+      const categories = [...new Set([
+        ...PREP_CATEGORIES,
+        ...(state.prepWorks || []).flatMap((row) => (row.items || []).map((entry) => String(entry.category || "").trim()))
+      ].filter(Boolean))];
       prepDialogContext = { type: "item", workId: work.id, itemId: item?.id || "" };
       $("#prepDialogTitle").textContent = item ? "แก้ไขหัวข้อ" : "เพิ่มหัวข้อ";
       $("#prepDialogMeta").textContent = work.name;
@@ -11573,10 +11883,10 @@
         <div class="form-grid">
           <label><span>ชื่อหัวข้อ *</span><input id="prepItemTitle" value="${esc(item?.title || "")}" placeholder="Workshop โครงสร้าง" autocomplete="off"></label>
           <label><span>หมวดหมู่</span>
-            <select id="prepItemCategory">
-              <option value="">ไม่ระบุ</option>
-              ${PREP_CATEGORIES.map((category) => `<option value="${esc(category)}" ${item?.category === category ? "selected" : ""}>${esc(category)}</option>`).join("")}
-            </select>
+            <input id="prepItemCategory" list="prepCategoryOptions" value="${esc(item?.category || "")}" placeholder="เลือกหรือพิมพ์หมวดหมู่ใหม่" autocomplete="off">
+            <datalist id="prepCategoryOptions">
+              ${categories.map((category) => `<option value="${esc(category)}"></option>`).join("")}
+            </datalist>
           </label>
           <label><span>ผู้รับผิดชอบ</span><input id="prepItemOwner" value="${esc(item?.owner || "")}" placeholder="Somchai" autocomplete="off"></label>
           <label><span>Required Date</span><input id="prepItemRequiredDate" type="date" value="${esc(item?.requiredDate || "")}"></label>
@@ -11666,7 +11976,7 @@
           work.items = Array.isArray(work.items) ? work.items : [];
           const title = $("#prepItemTitle")?.value.trim() || "";
           const description = $("#prepItemDescription")?.value.trim() || "";
-          const category = PREP_CATEGORIES.includes($("#prepItemCategory")?.value) ? $("#prepItemCategory").value : "";
+          const category = $("#prepItemCategory")?.value.trim() || "";
           const owner = $("#prepItemOwner")?.value.trim() || "";
           const requiredDate = normalizePrepDate($("#prepItemRequiredDate")?.value);
           const status = normalizePrepStatus($("#prepItemStatus")?.value);
@@ -11724,6 +12034,12 @@
       renderPrep();
     }
 
+    function closePrepItemDetail() {
+      state.ui.prepItemId = "";
+      saveState({ skipAutoSync: true });
+      renderPrep();
+    }
+
     function updatePrepStatus(workId, itemId, status) {
       const work = (state.prepWorks || []).find((row) => row.id === workId);
       const item = work?.items?.find((row) => row.id === itemId);
@@ -11757,6 +12073,20 @@
       saveState();
       renderPrep();
       showToast("เพิ่ม Note แล้ว");
+    }
+
+    function deletePrepItem(workId = "", itemId = "") {
+      const work = (state.prepWorks || []).find((row) => row.id === workId);
+      const item = work?.items?.find((row) => row.id === itemId);
+      if (!item) return showToast("ไม่พบหัวข้อนี้");
+      if (!confirm(`ลบหัวข้อ "${item.title}"?`)) return;
+      recordHistory("ลบหัวข้อเตรียมความพร้อม");
+      work.items = (work.items || []).filter((row) => row.id !== item.id);
+      work.updatedAt = new Date().toISOString();
+      if (state.ui.prepItemId === item.id) state.ui.prepItemId = "";
+      saveState();
+      renderPrep();
+      showToast("ลบหัวข้อแล้ว");
     }
 
     function deletePrepWork(workId = "") {
@@ -11823,9 +12153,12 @@
       if (action === "back-prep-list") return backPrepList();
       if (action === "open-prep-item-dialog") return openPrepItemDialog(state.ui.prepWorkId);
       if (action === "open-prep-item-detail") return openPrepItemDetail(button.dataset.prepItemId);
+      if (action === "close-prep-item-detail") return closePrepItemDetail();
       if (action === "edit-prep-item") return openPrepItemDialog(button.dataset.prepWorkId, button.dataset.prepItemId);
       if (action === "add-prep-note") return addPrepNote(button.dataset.prepWorkId, button.dataset.prepItemId);
+      if (action === "delete-prep-item") return deletePrepItem(button.dataset.prepWorkId, button.dataset.prepItemId);
       if (action === "delete-prep-work") return deletePrepWork(button.dataset.prepWorkId);
+      if (action === "prep-placeholder-tab") return showToast("แท็บนี้จะเพิ่มรายละเอียดในอัปเดตถัดไป");
       if (action === "close-prep-dialog") return closePrepDialog();
       if (action === "save-prep-dialog") return savePrepDialog();
       if (action === "open-report") return setActiveTab("report");
