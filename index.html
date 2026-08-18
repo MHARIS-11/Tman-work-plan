@@ -31,7 +31,7 @@
       --danger: oklch(0.53 0.18 28);
       --shadow: 0 8px 18px oklch(0.16 0.02 160 / 0.08);
       --radius: 8px;
-      --nav-width: 272px;
+      --nav-width: 320px;
       --nav-collapsed-width: 76px;
       --sidebar-navy: #0D1B2A;
       --sidebar-navy-deep: #06264A;
@@ -161,9 +161,9 @@
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: 50px minmax(0, 1fr) auto;
+      grid-template-columns: 50px minmax(0, 1fr) 38px;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       min-width: 0;
       padding: 2px 8px 22px;
     }
@@ -195,7 +195,7 @@
       display: block;
       margin-top: 6px;
       color: rgba(255,255,255,.78);
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 500;
       white-space: nowrap;
     }
@@ -5451,6 +5451,25 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
+    (() => {
+      const source = document.querySelector('link[rel="icon"][type="image/png"]');
+      if (!source?.href?.startsWith("data:image/png;base64,")) return;
+      try {
+        const payload = source.href.split(",", 2)[1];
+        const binary = atob(payload);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        const blobUrl = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
+        source.href = blobUrl;
+        source.sizes = "96x96";
+        const shortcut = source.cloneNode();
+        shortcut.rel = "shortcut icon";
+        shortcut.href = blobUrl;
+        document.head.append(shortcut);
+      } catch (error) {
+        console.warn("Planora favicon refresh failed", error);
+      }
+    })();
     const STORAGE_KEY = "tman.workplan.v1";
     const DEFAULT_SYNC_URL = "https://tman-workplan-default-rtdb.firebaseio.com";
     const FIREBASE_CONFIG = {
