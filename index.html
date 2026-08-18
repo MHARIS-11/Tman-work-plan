@@ -181,6 +181,18 @@
       background: linear-gradient(135deg, #fff 0 42%, var(--sidebar-orange) 43% 65%, #132A45 66%);
       box-shadow: 0 8px 18px rgba(0,0,0,.22);
     }
+    .sidebar .brand-mark {
+      overflow: hidden;
+      border-radius: 4px;
+      background: #dce8f4;
+      box-shadow: none;
+    }
+    .sidebar .brand-mark img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
     .brand-copy {
       min-width: 0;
     }
@@ -213,10 +225,24 @@
       background: rgba(255,255,255,.08);
     }
     .sidebar-mobile-close { display: none; }
+    .sidebar-collapse-toggle {
+      border-color: #ff9a3d;
+      color: #fff;
+      background: #ff7a00;
+      box-shadow: 0 2px 6px rgba(255,122,0,.3);
+    }
     .sidebar-collapse-toggle:hover,
     .mobile-menu-button:hover {
       border-color: rgba(255,255,255,.28);
       background: rgba(255,255,255,.14);
+    }
+    .sidebar-collapse-toggle:hover {
+      border-color: #ffb36b;
+      background: #e96f00;
+    }
+    .sidebar-collapse-toggle:focus-visible {
+      outline: 3px solid rgba(255,255,255,.92);
+      outline-offset: 2px;
     }
     .sidebar-scroll {
       position: relative;
@@ -5298,7 +5324,7 @@
   <div class="app" id="appShell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">P</div>
+        <div class="brand-mark" aria-hidden="true"><img id="sidebarBrandMark" alt=""></div>
         <div class="brand-copy">
           <strong>Planora</strong>
           <small>Project WorkPlan &amp; Cost Control</small>
@@ -5454,6 +5480,8 @@
     (() => {
       const source = document.querySelector('link[rel="icon"][type="image/png"]');
       if (!source?.href?.startsWith("data:image/png;base64,")) return;
+      const sidebarBrandMark = document.getElementById("sidebarBrandMark");
+      if (sidebarBrandMark) sidebarBrandMark.src = source.href;
       try {
         const payload = source.href.split(",", 2)[1];
         const binary = atob(payload);
@@ -5462,6 +5490,7 @@
         const blobUrl = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
         source.href = blobUrl;
         source.sizes = "96x96";
+        if (sidebarBrandMark) sidebarBrandMark.src = blobUrl;
         const shortcut = source.cloneNode();
         shortcut.rel = "shortcut icon";
         shortcut.href = blobUrl;
