@@ -7119,7 +7119,7 @@
       return state.manual[view];
     }
 
-    function appAccumulatedActuals(view, cutoff = planUpdateDate()) {
+    function appAccumulatedActuals(view, cutoff = planUpdateDate(), plans = state.workPlans || []) {
       const buildings = new Set(buildingsForView(view));
       const itemBuildings = itemBuildingLookup();
       const laborSeen = new Set();
@@ -7127,7 +7127,7 @@
       const dates = [];
       let labor = 0;
       let machine = 0;
-      (state.workPlans || []).forEach((plan) => {
+      plans.forEach((plan) => {
         const claimKey = claimGroupNo(plan);
         Object.entries(plan.itemData || {}).forEach(([itemId, data]) => {
           if (!buildings.has(itemBuildings.get(itemId))) return;
@@ -7167,9 +7167,9 @@
       return { firstDate, labor, machine };
     }
 
-    function accumulatedTotalsFor(view, plan = activeWorkPlan(), cutoff = planUpdateDate(plan)) {
+    function accumulatedTotalsFor(view, plan = activeWorkPlan(), cutoff = planUpdateDate(plan), plans = state.workPlans || []) {
       const manual = manualSettingsFor(view, plan);
-      const app = appAccumulatedActuals(view, cutoff);
+      const app = appAccumulatedActuals(view, cutoff, plans);
       const laborTotal = app.labor + n(manual.initialLaborCost);
       const costToUpdate = laborTotal + app.machine + n(manual.initialMachineCost);
       return {
@@ -7179,6 +7179,34 @@
         appMachine: app.machine,
         contractLaborCost: laborTotal,
         costToUpdate
+      };
+    }
+
+    function plannedLaborForecastFor(view, plan = activeWorkPlan()) {
+      const plans = state.workPlans || [];
+      const currentIndex = plan ? plans.findIndex((row) => row.id === plan.id) : -1;
+      const priorPlans = currentIndex > 0 ? plans.slice(0, currentIndex) : [];
+      const previousPlan = priorPlans[priorPlans.length - 1] || null;
+      const baseline = previousPlan
+        ? accumulatedTotalsFor(view, previousPlan, planUpdateDate(previousPlan), priorPlans).costToUpdate
+        : 0;
+      const dates = plan ? getDates(planStartDate(plan), planClaimDate(plan)) : [];
+      const periods = plan ? planPeriodsForView(plan, view) : [];
+      const plannedWorkers = dates.reduce((dateTotal, date) => dateTotal + periods.reduce((periodTotal, period) => {
+        return periodTotal + (period.items || []).reduce((itemTotal, item) => {
+          return itemTotal + n(plan?.itemData?.[item.id]?.plan?.[date]);
+        }, 0);
+      }, 0), 0);
+      const plannedLabor = plannedWorkers * 480;
+      const forecastTotal = baseline + plannedLabor;
+      const projectLaborValue = projectLaborValueFor(view);
+      return {
+        baseline,
+        plannedWorkers,
+        plannedLabor,
+        forecastTotal,
+        projectLaborValue,
+        ratio: projectLaborValue ? forecastTotal / projectLaborValue : 0
       };
     }
 
@@ -14408,10 +14436,14 @@
       const monthlyCycle = mode === "monthly" ? (cycle || selectedReportCycle()) : null;
       const dates = monthlyCycle ? getDates(monthlyCycle.start, monthlyCycle.end) : getDates();
       const dateFilter = monthlyCycle ? new Set(dates) : null;
+      const headerGroups = buildingsForView(view);
+      const headerDescriptions = headerGroups.map((building) => periodsForBuilding(building).map((period) => `งวด ${period.no} ${period.description}`));
+      const maxHeaderDescriptionLines = Math.max(0, ...headerDescriptions.map((rows) => rows.length));
+      const extraHeaderLines = Math.max(0, maxHeaderDescriptionLines - 3);
       const dateW = 42 * scale;
       const pad = 16 * scale;
       const rowH = 22 * scale;
-      const topH = (monthlyCycle ? 168 : 150) * scale;
+      const topH = ((monthlyCycle ? 168 : 150) + extraHeaderLines * 16) * scale;
       const seqW = 56 * scale;
       const itemW = 190 * scale;
       const laborValueW = 118 * scale;
@@ -14457,8 +14489,9 @@
       let claimBoxBottomY = null;
       if (claimDate && (!monthlyCycle || dates.includes(claimDate))) {
         const claimIndex = dates.indexOf(claimDate);
-        const boxW = 154 * scale;
-        const boxH = 46 * scale;
+        const forecast = plannedLaborForecastFor(view);
+        const boxW = 176 * scale;
+        const boxH = 62 * scale;
         const minBoxX = x0 + 4 * scale;
         const maxBoxX = x0 + tableW - boxW - 4 * scale;
         claimLineX = claimIndex >= 0 ? x0 + leftW + claimIndex * dateW + dateW / 2 : x0 + tableW - boxW / 2 - 12 * scale;
@@ -14472,16 +14505,18 @@
         ctx.fillText(workPlanLabel(), boxX + boxW / 2, boxY + 15 * scale);
         ctx.font = `${10 * scale}px Tahoma, sans-serif`;
         ctx.fillText(thaiDateInput(claimDate), boxX + boxW / 2, boxY + 32 * scale);
+        ctx.fillStyle = "#b45309";
+        ctx.font = `bold ${10 * scale}px Tahoma, sans-serif`;
+        ctx.fillText(`คาดการณ์ค่าแรง ${pct(forecast.ratio)}`, boxX + boxW / 2, boxY + 49 * scale);
+        ctx.fillStyle = "#111";
       }
       ctx.font = `${12 * scale}px Tahoma, sans-serif`;
       ctx.textAlign = "left";
       const detailY = y + (monthlyCycle ? 76 : 54) * scale;
-      const groups = buildingsForView(view);
-      groups.forEach((building, index) => {
-        const gx = x0 + index * (tableW / Math.max(1, groups.length));
+      headerGroups.forEach((building, index) => {
+        const gx = x0 + index * (tableW / Math.max(1, headerGroups.length));
         ctx.fillText(buildingReportLabel(building), gx + 6 * scale, detailY);
-        const desc = periodsForBuilding(building).map((p) => `งวด ${p.no} ${p.description}`).slice(0, 3);
-        desc.forEach((line, i) => fitText(ctx, line, gx + 18 * scale, detailY + (18 + i * 16) * scale, tableW / groups.length - 24 * scale));
+        headerDescriptions[index].forEach((line, i) => fitText(ctx, line, gx + 18 * scale, detailY + (18 + i * 16) * scale, tableW / headerGroups.length - 24 * scale));
       });
       y += topH - rowH * 2;
       const scheduleTopY = y;
@@ -14602,13 +14637,11 @@
       const valueW = 160 * scale;
       const sx = x0;
       const reportLaborBase = monthlyCycle ? s.availableLaborBudget : s.laborValue;
-      const reportControl = reportLaborBase * n(state.settings.controlPercent) / 100;
       const reportRatio = monthlyCycle
         ? (reportLaborBase ? s.total / reportLaborBase : 0)
         : (s.laborValue ? s.effectiveTotal / s.laborValue : 0);
       const summary = [
         ["มูลค่าค่าแรง", money(reportLaborBase, 0), "#d9e6f7"],
-        [`ค่าแรงควบคุมที่ ${money(state.settings.controlPercent, 0)}%`, money(reportControl, 0), "#ff9f9f"],
         ["ค่าแรงสะสม ณ.ปัจจุบัน (A)", money(s.laborActual, 0), "#fff0a8"],
         ["ค่าเครื่องจักรสะสม ณ.ปัจจุบัน (B)", money(s.machineActual, 0), "#b790dc"],
         ["(A) + (B)", money(s.total, 0), "#ff9f9f"]
