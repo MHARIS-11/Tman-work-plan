@@ -14438,12 +14438,9 @@
       const dateFilter = monthlyCycle ? new Set(dates) : null;
       const headerGroups = buildingsForView(view);
       const headerDescriptions = headerGroups.map((building) => periodsForBuilding(building).map((period) => `งวด ${period.no} ${period.description}`));
-      const maxHeaderDescriptionLines = Math.max(0, ...headerDescriptions.map((rows) => rows.length));
-      const extraHeaderLines = Math.max(0, maxHeaderDescriptionLines - 3);
       const dateW = 42 * scale;
       const pad = 16 * scale;
       const rowH = 22 * scale;
-      const topH = ((monthlyCycle ? 168 : 150) + extraHeaderLines * 16) * scale;
       const seqW = 56 * scale;
       const itemW = 190 * scale;
       const laborValueW = 118 * scale;
@@ -14459,8 +14456,29 @@
       const totalRows = reportPeriods.length ? 5 : 0;
       const summaryRows = 6;
       const width = leftW + dates.length * dateW + pad * 2;
-      const height = topH + (itemRows + totalRows + summaryRows + 4) * rowH + pad * 2;
+      const tableW = leftW + dates.length * dateW;
+      const groupW = tableW / Math.max(1, headerGroups.length);
+      const claimDate = planClaimDate();
+      const claimBoxVisible = Boolean(claimDate && (!monthlyCycle || dates.includes(claimDate)));
+      const claimBoxW = 176 * scale;
+      const claimBoxH = 62 * scale;
+      const claimBoxTop = 12 * scale;
       canvas.width = width;
+      const measureCtx = canvas.getContext("2d");
+      measureCtx.font = `${11 * scale}px Tahoma, sans-serif`;
+      const headerWrappedDescriptions = headerDescriptions.map((rows) => rows.flatMap((line) => wrapCanvasText(measureCtx, line, groupW - 28 * scale)));
+      const maxHeaderLines = Math.max(1, ...headerWrappedDescriptions.map((rows) => 1 + rows.length));
+      const detailLineH = 16 * scale;
+      const detailTopOffset = Math.max(
+        (monthlyCycle ? 70 : 52) * scale,
+        claimBoxVisible ? claimBoxTop + claimBoxH + 12 * scale : 0
+      );
+      const headerContentH = Math.max(
+        detailTopOffset + maxHeaderLines * detailLineH + 12 * scale,
+        claimBoxVisible ? claimBoxTop + claimBoxH + 12 * scale : 0
+      );
+      const topH = headerContentH + rowH * 2;
+      const height = topH + (itemRows + totalRows + summaryRows + 4) * rowH + pad * 2;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -14473,50 +14491,58 @@
 
       const x0 = pad;
       let y = pad;
-      const tableW = leftW + dates.length * dateW;
       ctx.strokeRect(x0, y, tableW, topH - rowH * 2);
       ctx.font = `bold ${18 * scale}px Tahoma, sans-serif`;
       ctx.textAlign = "center";
       const titleView = reportViewTitle(view);
       ctx.fillStyle = "#111";
-      ctx.fillText(`แผนงานประจำงวดโครงการ ${state.settings.projectName} ${titleView}`, x0 + tableW / 2, y + 22 * scale);
+      const titleSafeWidth = claimBoxVisible ? tableW - (claimBoxW + 24 * scale) * 2 : tableW - 24 * scale;
+      fitText(ctx, `แผนงานประจำงวดโครงการ ${state.settings.projectName} ${titleView}`, x0 + tableW / 2, y + 22 * scale, Math.max(240 * scale, titleSafeWidth), "center");
       if (monthlyCycle) {
         ctx.font = `bold ${12 * scale}px Tahoma, sans-serif`;
-        ctx.fillText(`สรุปรายเดือน ${monthlyCycle.label} (${monthlyCycle.rangeLabel})`, x0 + tableW / 2, y + 44 * scale);
+        fitText(ctx, `สรุปรายเดือน ${monthlyCycle.label} (${monthlyCycle.rangeLabel})`, x0 + tableW / 2, y + 44 * scale, Math.max(240 * scale, titleSafeWidth), "center");
       }
-      const claimDate = planClaimDate();
       let claimLineX = null;
       let claimBoxBottomY = null;
-      if (claimDate && (!monthlyCycle || dates.includes(claimDate))) {
+      if (claimBoxVisible) {
         const claimIndex = dates.indexOf(claimDate);
         const forecast = plannedLaborForecastFor(view);
-        const boxW = 176 * scale;
-        const boxH = 62 * scale;
         const minBoxX = x0 + 4 * scale;
-        const maxBoxX = x0 + tableW - boxW - 4 * scale;
-        claimLineX = claimIndex >= 0 ? x0 + leftW + claimIndex * dateW + dateW / 2 : x0 + tableW - boxW / 2 - 12 * scale;
-        const boxX = Math.max(minBoxX, Math.min(maxBoxX, claimLineX - boxW / 2));
-        const boxY = y + 12 * scale;
-        claimBoxBottomY = boxY + boxH;
+        const maxBoxX = x0 + tableW - claimBoxW - 4 * scale;
+        claimLineX = claimIndex >= 0 ? x0 + leftW + claimIndex * dateW + dateW / 2 : x0 + tableW - claimBoxW / 2 - 12 * scale;
+        const boxX = Math.max(minBoxX, Math.min(maxBoxX, claimLineX - claimBoxW / 2));
+        const boxY = y + claimBoxTop;
+        claimBoxBottomY = boxY + claimBoxH;
         ctx.strokeStyle = "#111";
-        ctx.strokeRect(boxX, boxY, boxW, boxH);
+        ctx.strokeRect(boxX, boxY, claimBoxW, claimBoxH);
         ctx.font = `bold ${10 * scale}px Tahoma, sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText(workPlanLabel(), boxX + boxW / 2, boxY + 15 * scale);
+        ctx.fillText(workPlanLabel(), boxX + claimBoxW / 2, boxY + 15 * scale);
         ctx.font = `${10 * scale}px Tahoma, sans-serif`;
-        ctx.fillText(thaiDateInput(claimDate), boxX + boxW / 2, boxY + 32 * scale);
+        ctx.fillText(thaiDateInput(claimDate), boxX + claimBoxW / 2, boxY + 32 * scale);
         ctx.fillStyle = "#b45309";
         ctx.font = `bold ${10 * scale}px Tahoma, sans-serif`;
-        ctx.fillText(`คาดการณ์ค่าแรง ${pct(forecast.ratio)}`, boxX + boxW / 2, boxY + 49 * scale);
+        ctx.fillText(`คาดการณ์ค่าแรง ${pct(forecast.ratio)}`, boxX + claimBoxW / 2, boxY + 49 * scale);
         ctx.fillStyle = "#111";
       }
-      ctx.font = `${12 * scale}px Tahoma, sans-serif`;
-      ctx.textAlign = "left";
-      const detailY = y + (monthlyCycle ? 76 : 54) * scale;
+      const detailY = y + detailTopOffset;
       headerGroups.forEach((building, index) => {
-        const gx = x0 + index * (tableW / Math.max(1, headerGroups.length));
-        ctx.fillText(buildingReportLabel(building), gx + 6 * scale, detailY);
-        headerDescriptions[index].forEach((line, i) => fitText(ctx, line, gx + 18 * scale, detailY + (18 + i * 16) * scale, tableW / headerGroups.length - 24 * scale));
+        const gx = x0 + index * groupW;
+        if (index > 0) {
+          ctx.strokeStyle = "#d1d5db";
+          ctx.beginPath();
+          ctx.moveTo(gx, detailY - 10 * scale);
+          ctx.lineTo(gx, y + topH - rowH * 2 - 8 * scale);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#111";
+        ctx.font = `bold ${12 * scale}px Tahoma, sans-serif`;
+        ctx.textAlign = "left";
+        ctx.fillText(buildingReportLabel(building), gx + 8 * scale, detailY);
+        ctx.font = `${11 * scale}px Tahoma, sans-serif`;
+        headerWrappedDescriptions[index].forEach((line, lineIndex) => {
+          ctx.fillText(line, gx + 18 * scale, detailY + (lineIndex + 1) * detailLineH);
+        });
       });
       y += topH - rowH * 2;
       const scheduleTopY = y;
@@ -14707,6 +14733,38 @@
       }
       ctx.fillText(value, x, y, maxWidth);
       ctx.font = originalFont;
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const value = String(text ?? "").trim();
+      if (!value) return [];
+      const words = value.split(/\s+/);
+      const lines = [];
+      let current = "";
+      const pushLongWord = (word) => {
+        let segment = "";
+        Array.from(word).forEach((character) => {
+          const candidate = `${segment}${character}`;
+          if (segment && ctx.measureText(candidate).width > maxWidth) {
+            lines.push(segment);
+            segment = character;
+          } else {
+            segment = candidate;
+          }
+        });
+        return segment;
+      };
+      words.forEach((word) => {
+        const candidate = current ? `${current} ${word}` : word;
+        if (ctx.measureText(candidate).width <= maxWidth) {
+          current = candidate;
+          return;
+        }
+        if (current) lines.push(current);
+        current = ctx.measureText(word).width > maxWidth ? pushLongWord(word) : word;
+      });
+      if (current) lines.push(current);
+      return lines;
     }
 
     document.addEventListener("click", handleClick);
