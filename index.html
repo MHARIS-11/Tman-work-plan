@@ -2415,11 +2415,36 @@
       min-height: 96px;
     }
     .period-sheet .period-item-table {
-      min-width: 760px;
+      min-width: 840px;
     }
     .period-item-table input {
       min-height: 32px;
       padding: 6px 8px;
+    }
+    .period-item-table .item-select-cell {
+      width: 74px;
+      text-align: center;
+    }
+    .period-item-table .item-select-cell input {
+      width: 18px;
+      height: 18px;
+      min-height: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .period-item-table tr.item-not-selected td {
+      background: var(--surface-2);
+      color: var(--muted);
+    }
+    .period-item-table tr.item-not-selected input:not([type="checkbox"]) {
+      color: var(--muted);
+    }
+    .period-item-selection-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .period-sheet .period-overview-table {
       min-width: 680px;
@@ -6233,6 +6258,12 @@
         changedAt: row.changedAt || isoToday()
       })) : [];
       plan.periodIds = Array.isArray(plan.periodIds) ? plan.periodIds : [];
+      plan.itemIdsByPeriod = plan.itemIdsByPeriod && typeof plan.itemIdsByPeriod === "object"
+        ? Object.fromEntries(Object.entries(plan.itemIdsByPeriod).map(([periodId, itemIds]) => [
+            periodId,
+            Array.isArray(itemIds) ? [...new Set(itemIds.map((itemId) => String(itemId || "")).filter(Boolean))] : []
+          ]))
+        : {};
       plan.itemData = plan.itemData || {};
       Object.values(plan.itemData).forEach((data) => {
         data.plan = data.plan || {};
@@ -6712,6 +6743,55 @@
       plan.periodIds = [...ids];
     }
 
+    function selectedItemIdsForPeriod(period, plan = activeWorkPlan()) {
+      const allIds = (period?.items || []).map((item) => item.id).filter(Boolean);
+      if (!plan || !period?.id) return allIds;
+      const selections = plan.itemIdsByPeriod || {};
+      if (!Object.prototype.hasOwnProperty.call(selections, period.id)) return allIds;
+      const available = new Set(allIds);
+      return (selections[period.id] || []).filter((itemId) => available.has(itemId));
+    }
+
+    function selectedItemsForPeriod(period, plan = activeWorkPlan()) {
+      const selected = new Set(selectedItemIdsForPeriod(period, plan));
+      return (period?.items || []).filter((item) => selected.has(item.id));
+    }
+
+    function periodItemEnabled(period, itemId, plan = activeWorkPlan()) {
+      return selectedItemIdsForPeriod(period, plan).includes(itemId);
+    }
+
+    function setPeriodItemEnabled(periodId, itemId, enabled, plan = activeWorkPlan()) {
+      const period = getPeriod(periodId);
+      if (!plan || !period || !itemId) return;
+      plan.itemIdsByPeriod = plan.itemIdsByPeriod || {};
+      const selected = new Set(selectedItemIdsForPeriod(period, plan));
+      if (enabled) selected.add(itemId);
+      else selected.delete(itemId);
+      plan.itemIdsByPeriod[periodId] = (period.items || []).map((item) => item.id).filter((id) => selected.has(id));
+    }
+
+    function setAllPeriodItems(periodId, enabled, plan = activeWorkPlan()) {
+      const period = getPeriod(periodId);
+      if (!plan || !period) return;
+      plan.itemIdsByPeriod = plan.itemIdsByPeriod || {};
+      plan.itemIdsByPeriod[periodId] = enabled ? (period.items || []).map((item) => item.id) : [];
+    }
+
+    function periodValueForItemIds(period, itemIds) {
+      const allItems = period?.items || [];
+      const selected = new Set(itemIds || []);
+      const selectedItems = allItems.filter((item) => selected.has(item.id));
+      if (selectedItems.length === allItems.length) return n(period?.periodValue);
+      const allLabor = allItems.reduce((sum, item) => sum + n(item.laborValue), 0);
+      const selectedLabor = selectedItems.reduce((sum, item) => sum + n(item.laborValue), 0);
+      return allLabor ? n(period?.periodValue) * selectedLabor / allLabor : 0;
+    }
+
+    function selectedPeriodValue(period, plan = activeWorkPlan()) {
+      return periodValueForItemIds(period, selectedItemIdsForPeriod(period, plan));
+    }
+
     const PERIOD_STATUSES = ["รอทำ", "กำลังทำ", "เสร็จแล้ว", "พักไว้", "ยกเลิก"];
 
     function periodStatusOptions(value = "") {
@@ -6955,12 +7035,12 @@
     }
 
     function periodsForBuilding(building, activeOnly = true) {
-      return state.periods.filter((period) => period.building === building && (!activeOnly || periodEnabled(period)));
+      if (!activeOnly) return state.periods.filter((period) => period.building === building);
+      return planPeriodsForView(activeWorkPlan(), building);
     }
 
     function periodsForView(view) {
-      const buildings = buildingsForView(view);
-      return state.periods.filter((period) => buildings.includes(period.building) && periodEnabled(period));
+      return planPeriodsForView(activeWorkPlan(), view);
     }
 
     function getQuickEntry(view = state.ui.planView || allBuildings()[0] || "") {
@@ -6971,7 +7051,7 @@
       if (!buildings.includes(quick.building)) quick.building = buildings[0] || "";
       const buildingPeriods = periodsForBuilding(quick.building);
       if (!buildingPeriods.some((period) => period.id === quick.periodId)) quick.periodId = buildingPeriods[0]?.id || "";
-      const period = getPeriod(quick.periodId);
+      const period = buildingPeriods.find((row) => row.id === quick.periodId);
       if (!period?.items.some((item) => item.id === quick.itemId)) quick.itemId = period?.items[0]?.id || "";
       const dates = getDates();
       if (!dates.includes(quick.date)) quick.date = dates.includes(planUpdateDate()) ? planUpdateDate() : dates[0] || "";
@@ -6985,7 +7065,7 @@
 
     function selectedQuickRefs() {
       const quick = getQuickEntry();
-      const period = getPeriod(quick.periodId);
+      const period = periodsForBuilding(quick.building).find((row) => row.id === quick.periodId);
       const item = getItem(period, quick.itemId);
       return { quick, period, item };
     }
@@ -7129,8 +7209,10 @@
       let machine = 0;
       plans.forEach((plan) => {
         const claimKey = claimGroupNo(plan);
+        const allowedItemIds = itemIdsForPlanView(plan, view);
         Object.entries(plan.itemData || {}).forEach(([itemId, data]) => {
           if (!buildings.has(itemBuildings.get(itemId))) return;
+          if (!allowedItemIds.has(itemId)) return;
           Object.entries(data?.actual || {}).forEach(([date, entries]) => {
             if (date > cutoff) return;
             let dayLabor = 0;
@@ -7433,7 +7515,9 @@
     function planPeriodsForView(plan, view) {
       const selected = new Set(plan?.periodIds || []);
       const buildings = buildingsForView(view);
-      return state.periods.filter((period) => buildings.includes(period.building) && selected.has(period.id));
+      return state.periods
+        .filter((period) => buildings.includes(period.building) && selected.has(period.id))
+        .map((period) => ({ ...period, items: selectedItemsForPeriod(period, plan) }));
     }
 
     function planDateRange(plan) {
@@ -7450,13 +7534,19 @@
       plans.forEach((plan) => {
         planPeriodsForView(plan, view).forEach((period) => {
           const key = `${includeClaimKey ? `${claimGroupNo(plan)}|` : ""}${periodMainKey(period)}`;
-          const current = groups.get(key) || { mainValue: n(period.mainValue), subValue: 0 };
-          current.mainValue = n(period.mainValue) || current.mainValue;
-          current.subValue += n(period.periodValue);
+          const current = groups.get(key) || new Map();
+          const selected = current.get(period.id) || new Set();
+          (period.items || []).forEach((item) => selected.add(item.id));
+          current.set(period.id, selected);
           groups.set(key, current);
         });
       });
-      return [...groups.values()].reduce((sum, group) => sum + (n(group.mainValue) || n(group.subValue)), 0);
+      return [...groups.values()].reduce((sum, periods) => {
+        return sum + [...periods.entries()].reduce((periodSum, [periodId, itemIds]) => {
+          const period = getPeriod(periodId);
+          return periodSum + (period ? periodValueForItemIds(period, itemIds) : 0);
+        }, 0);
+      }, 0);
     }
 
     function scopedLaborValue(view, plans, includeClaimKey = false) {
@@ -8886,7 +8976,7 @@
           <tr>
             <td><span class="status-dot ${status === "normal" ? "" : status}"></span>${esc(buildingLabel(period.building))}</td>
             <td>งวดงานที่ ${esc(period.no)}</td>
-            <td class="num">${money(period.periodValue, 0)}</td>
+            <td class="num">${money(selectedPeriodValue(getPeriod(period.id) || period), 0)}</td>
             <td class="num">${money(laborValue, 0)}</td>
             <td class="num">${money(used, 0)}</td>
             <td class="num">${money(ratio * 100, 1)}%</td>
@@ -9111,7 +9201,7 @@
       const quick = getQuickEntry(view);
       const buildingOptions = allBuildings().filter(Boolean).map((building) => `<option value="${esc(building)}" ${quick.building === building ? "selected" : ""}>${esc(buildingLabel(building))}</option>`).join("");
       const buildingPeriods = periodsForBuilding(quick.building);
-      const period = getPeriod(quick.periodId) || buildingPeriods[0];
+      const period = buildingPeriods.find((row) => row.id === quick.periodId) || buildingPeriods[0];
       const item = getItem(period, quick.itemId) || period?.items[0];
       const currentPlanned = item ? itemPlanValue(item, quick.date) : 0;
       const currentUnits = item ? itemActualUnits(item, quick.date) : 0;
@@ -9333,8 +9423,8 @@
               <div class="period-summary-strip" style="margin-top:12px">
                 <div class="metric"><span>งวดที่แสดง</span><strong>${visiblePeriods.length}</strong></div>
                 <div class="metric"><span>เลือกใช้รอบนี้</span><strong>${selectedVisible.length}</strong></div>
-                <div class="metric"><span>มูลค่างวดที่เลือก</span><strong>${money(selectedVisible.reduce((sum, row) => sum + n(row.periodValue), 0), 0)}</strong></div>
-                <div class="metric"><span>ค่าแรงงวดที่เลือก</span><strong>${money(selectedVisible.reduce((sum, row) => sum + periodLaborValue(row), 0), 0)}</strong></div>
+                <div class="metric"><span>มูลค่างวดที่เลือก</span><strong>${money(selectedVisible.reduce((sum, row) => sum + selectedPeriodValue(row), 0), 0)}</strong></div>
+                <div class="metric"><span>ค่าแรงงวดที่เลือก</span><strong>${money(selectedVisible.reduce((sum, row) => sum + selectedItemsForPeriod(row).reduce((itemSum, item) => itemSum + n(item.laborValue), 0), 0), 0)}</strong></div>
               </div>
               <p class="period-mini-note" style="margin-top:10px">กดแถวงวดหลักเพื่อดูภาพรวมงวดย่อย หรือกดแถวงวดเดียว/งวดย่อยเพื่อเปิดหน้าแก้เต็ม</p>
             </div>
@@ -9406,9 +9496,11 @@
     }
 
     function renderSingleMainPeriodRow(period) {
-      const laborValue = periodLaborValue(period);
+      const selectedItems = selectedItemsForPeriod(period);
+      const laborValue = selectedItems.reduce((sum, item) => sum + n(item.laborValue), 0);
+      const selectionText = `เลือก ${selectedItems.length}/${(period.items || []).length} รายการ`;
       const statusClass = periodStatusClass(period.status);
-      const value = n(period.periodValue) || n(period.mainValue);
+      const value = selectedPeriodValue(period) || (!(period.items || []).length ? n(period.periodValue) || n(period.mainValue) : 0);
       const percent = n(period.mainValue) ? value / n(period.mainValue) * 100 : n(period.periodPercent);
       return `
         <tr class="period-sub-row ${periodEnabled(period) ? "is-selected" : "is-disabled"}" data-period-row="${period.id}">
@@ -9421,14 +9513,16 @@
           <td><strong>${esc(periodUserTitle(period))}</strong></td>
           <td class="num">${money(value, 0)}</td>
           <td class="num">${money(laborValue, 0)}</td>
-          <td><span class="pill ${statusClass}">${esc(period.status || "รอทำ")}</span> <span class="period-mini-note">${money(percent, 1)}%</span></td>
+          <td><span class="pill ${statusClass}">${esc(period.status || "รอทำ")}</span> <span class="period-mini-note">${money(percent, 1)}% · ${selectionText}</span></td>
           <td><div class="period-actions"><button data-action="open-period-editor" data-period-id="${period.id}">เปิด</button></div></td>
         </tr>
       `;
     }
 
     function renderPeriodRow(period) {
-      const laborValue = periodLaborValue(period);
+      const selectedItems = selectedItemsForPeriod(period);
+      const laborValue = selectedItems.reduce((sum, item) => sum + n(item.laborValue), 0);
+      const selectionText = `เลือก ${selectedItems.length}/${(period.items || []).length} รายการ`;
       const statusClass = periodStatusClass(period.status);
       const subPercent = n(period.mainValue) ? n(period.periodValue) / n(period.mainValue) * 100 : 0;
       const indent = Math.min(54, Math.max(1, periodNoDepth(period)) * 18);
@@ -9441,9 +9535,9 @@
           </td>
           <td class="period-indent" style="padding-left:${indent}px"><span class="period-no">${esc(period.no)}</span></td>
           <td><strong>${esc(periodUserTitle(period))}</strong></td>
-          <td class="num">${money(period.periodValue, 0)}</td>
+          <td class="num">${money(selectedPeriodValue(period), 0)}</td>
           <td class="num">${money(laborValue, 0)}</td>
-          <td><span class="pill ${statusClass}">${esc(period.status || "รอทำ")}</span></td>
+          <td><span class="pill ${statusClass}">${esc(period.status || "รอทำ")}</span> <span class="period-mini-note">${selectionText}</span></td>
           <td><div class="period-actions"><button data-action="open-period-editor" data-period-id="${period.id}">เปิด</button></div></td>
         </tr>
       `;
@@ -9510,6 +9604,9 @@
 
     function renderPeriodEditor(period) {
       const laborValue = periodLaborValue(period);
+      const selectedItemIds = new Set(selectedItemIdsForPeriod(period));
+      const selectedItemCount = selectedItemIds.size;
+      const totalItemCount = (period.items || []).length;
       const subPercent = n(period.mainValue) ? n(period.periodValue) / n(period.mainValue) * 100 : 0;
       const laborRatio = n(period.periodValue) ? laborValue / n(period.periodValue) * 100 : 0;
       const group = fullMainGroup(period);
@@ -9528,6 +9625,7 @@
             </div>
             <div class="inline-list period-head-actions">
               <label class="check-row"><input type="checkbox" data-period-enabled="${period.id}" ${periodEnabled(period) ? "checked" : ""}> เลือกใช้รอบนี้</label>
+              <span class="pill ${selectedItemCount === totalItemCount ? "green" : "amber"}">เลือก ${selectedItemCount}/${totalItemCount} รายการ</span>
               <button class="danger" data-action="delete-period" data-period-id="${period.id}">ลบงวด</button>
               ${hasSubs ? `<button data-action="merge-period-group" data-period-main-key="${esc(period.building)}|${esc(periodMainNo(period))}">รวมกลับเป็นงวดหลัก</button>` : ""}
               <button class="primary" data-action="split-period" data-period-id="${period.id}">ซอยจากงวดนี้</button>
@@ -9564,13 +9662,21 @@
             </div>
             <div class="panel">
               <div class="panel-head">
-                <h2>รายการงานในงวดนี้</h2>
-                <button class="primary" data-action="add-item" data-period-id="${period.id}">เพิ่มรายการ</button>
+                <div>
+                  <h2>รายการงานในงวดนี้</h2>
+                  <p class="muted">เลือกรายการที่จะนำไปวางแผนในงวดรอบนี้</p>
+                </div>
+                <div class="period-item-selection-actions">
+                  <button data-action="set-period-items" data-period-id="${period.id}" data-selection-mode="all">เลือกทั้งหมด</button>
+                  <button data-action="set-period-items" data-period-id="${period.id}" data-selection-mode="none">ไม่เลือกทั้งหมด</button>
+                  <button class="primary" data-action="add-item" data-period-id="${period.id}">เพิ่มรายการ</button>
+                </div>
               </div>
               <div class="period-sheet">
                 <table class="period-item-table">
                   <thead>
                     <tr>
+                      <th class="item-select-cell">ใช้รอบนี้</th>
                       <th>#</th>
                       <th>รายการ</th>
                       <th class="num">มูลค่าค่าแรง</th>
@@ -9581,7 +9687,8 @@
                   </thead>
                   <tbody>
                     ${period.items.map((item, index) => `
-                      <tr>
+                      <tr class="${selectedItemIds.has(item.id) ? "" : "item-not-selected"}">
+                        <td class="item-select-cell"><input type="checkbox" data-period-item-enabled="${period.id}" data-item-id="${item.id}" ${selectedItemIds.has(item.id) ? "checked" : ""} aria-label="เลือก ${esc(item.name)} ใช้ในรอบนี้"></td>
                         <td>${index + 1}</td>
                         <td><input data-item-field="name" data-period-id="${period.id}" data-item-id="${item.id}" value="${esc(item.name)}"></td>
                         <td><input class="num" type="number" step="0.01" data-item-field="laborValue" data-period-id="${period.id}" data-item-id="${item.id}" value="${esc(item.laborValue)}"></td>
@@ -9591,6 +9698,7 @@
                       </tr>
                     `).join("")}
                     <tr>
+                      <td class="item-select-cell"></td>
                       <td>${period.items.length + 1}</td>
                       <td><input id="newItemName" placeholder="เพิ่มชื่อรายการ"></td>
                       <td><input id="newItemValue" class="num" type="number" min="0" step="0.01" placeholder="0"></td>
@@ -11430,7 +11538,7 @@
         delete quick.planned;
       }
       if (field === "periodId") {
-        const period = getPeriod(value);
+        const period = periodsForBuilding(quick.building).find((row) => row.id === value);
         quick.building = period?.building || quick.building;
         quick.itemId = period?.items[0]?.id || "";
         delete quick.planned;
@@ -12420,10 +12528,18 @@
       base.items = mergedItems;
       state.periods = state.periods.filter((row) => row.id === base.id || !ids.has(row.id));
       state.workPlans.forEach((plan) => {
+        const selectedItems = new Set();
+        rows.forEach((row) => {
+          if (!(plan.periodIds || []).includes(row.id)) return;
+          selectedItemIdsForPeriod(row, plan).forEach((itemId) => selectedItems.add(itemId));
+        });
         const selected = (plan.periodIds || []).some((id) => ids.has(id));
         const nextIds = (plan.periodIds || []).filter((id) => !ids.has(id));
         if (selected && !nextIds.includes(base.id)) nextIds.push(base.id);
         plan.periodIds = nextIds;
+        plan.itemIdsByPeriod = plan.itemIdsByPeriod || {};
+        ids.forEach((id) => delete plan.itemIdsByPeriod[id]);
+        if (selected) plan.itemIdsByPeriod[base.id] = mergedItems.map((item) => item.id).filter((itemId) => selectedItems.has(itemId));
       });
       state.ui.editingPeriodId = base.id;
       state.ui.editingMainPeriodKey = "";
@@ -12843,6 +12959,12 @@
       if (action === "merge-period-group") return mergePeriodGroup(button.dataset.periodMainKey);
       if (action === "apply-period-filter") return renderPeriods();
       if (action === "add-item") return addItem(button.dataset.periodId);
+      if (action === "set-period-items") {
+        setAllPeriodItems(button.dataset.periodId, button.dataset.selectionMode === "all");
+        saveState();
+        renderPeriods();
+        return;
+      }
       if (action === "enable-building-periods") return setBuildingPeriodsEnabled(button.dataset.building, true);
       if (action === "disable-building-periods") return setBuildingPeriodsEnabled(button.dataset.building, false);
       if (action === "delete-period") return deletePeriod(button.dataset.periodId);
@@ -13224,6 +13346,12 @@
         renderPeriods();
         return;
       }
+      if (target.dataset.periodItemEnabled) {
+        setPeriodItemEnabled(target.dataset.periodItemEnabled, target.dataset.itemId, target.checked);
+        saveState();
+        renderPeriods();
+        return;
+      }
       if (target.id === "newPeriodBuilding") {
         state.ui.newPeriodDraft = currentNewPeriodDraft();
         saveState();
@@ -13353,7 +13481,13 @@
       if (!period) return;
       const name = $("#newItemName")?.value.trim();
       if (!name) return showToast("กรอกรายการงานก่อน");
-      period.items.push({ id: uid("i"), name, laborValue: n($("#newItemValue")?.value), progressPct: n($("#newItemProgress")?.value), plan: {}, actual: {} });
+      const item = { id: uid("i"), name, laborValue: n($("#newItemValue")?.value), progressPct: n($("#newItemProgress")?.value), plan: {}, actual: {} };
+      period.items.push(item);
+      state.workPlans.forEach((plan) => {
+        if (!(plan.periodIds || []).includes(period.id)) return;
+        if (!Object.prototype.hasOwnProperty.call(plan.itemIdsByPeriod || {}, period.id)) return;
+        setPeriodItemEnabled(period.id, item.id, true, plan);
+      });
       saveState();
       renderPeriods();
       showToast("เพิ่มรายการแล้ว");
@@ -13399,6 +13533,9 @@
         claimDate: overrides.claimDate || planClaimDate() || planEndDate(),
         claimDateHistory: [],
         periodIds: Array.isArray(overrides.periodIds) ? [...overrides.periodIds] : [],
+        itemIdsByPeriod: overrides.itemIdsByPeriod && typeof overrides.itemIdsByPeriod === "object"
+          ? Object.fromEntries(Object.entries(overrides.itemIdsByPeriod).map(([periodId, itemIds]) => [periodId, [...(itemIds || [])]]))
+          : {},
         itemData: {},
         machineUsage: {},
         manual: cloneManual()
@@ -13429,7 +13566,8 @@
         endDate: source.endDate || planEndDate(),
         updateDate: source.updateDate || planUpdateDate(),
         claimDate: source.claimDate || planClaimDate(),
-        periodIds: source.periodIds || []
+        periodIds: source.periodIds || [],
+        itemIdsByPeriod: source.itemIdsByPeriod || {}
       });
       state.workPlans.push(plan);
       state.ui.activeWorkPlanId = plan.id;
@@ -13532,6 +13670,10 @@
     function deletePeriod(id) {
       if (!confirm("ลบงวดนี้?")) return;
       state.periods = state.periods.filter((period) => period.id !== id);
+      state.workPlans.forEach((plan) => {
+        plan.periodIds = (plan.periodIds || []).filter((periodId) => periodId !== id);
+        if (plan.itemIdsByPeriod) delete plan.itemIdsByPeriod[id];
+      });
       if (state.ui.editingPeriodId === id) state.ui.editingPeriodId = "";
       saveState();
       renderPeriods();
@@ -13545,6 +13687,9 @@
       state.periods = state.periods.filter((period) => !ids.has(period.id));
       state.workPlans.forEach((plan) => {
         plan.periodIds = (plan.periodIds || []).filter((id) => !ids.has(id));
+        ids.forEach((id) => {
+          if (plan.itemIdsByPeriod) delete plan.itemIdsByPeriod[id];
+        });
       });
       if (state.ui.editingMainPeriodKey === key) state.ui.editingMainPeriodKey = "";
       if (ids.has(state.ui.editingPeriodId)) state.ui.editingPeriodId = "";
@@ -13557,6 +13702,12 @@
       const period = getPeriod(periodId);
       if (!period) return;
       period.items = period.items.filter((item) => item.id !== itemId);
+      state.workPlans.forEach((plan) => {
+        if (plan.itemIdsByPeriod?.[periodId]) {
+          plan.itemIdsByPeriod[periodId] = plan.itemIdsByPeriod[periodId].filter((id) => id !== itemId);
+        }
+        if (plan.itemData) delete plan.itemData[itemId];
+      });
       saveState();
       renderPeriods();
     }
@@ -14461,7 +14612,8 @@
       const claimDate = planClaimDate();
       const claimBoxVisible = Boolean(claimDate && (!monthlyCycle || dates.includes(claimDate)));
       const claimBoxW = 176 * scale;
-      const claimBoxH = 62 * scale;
+      const claimBoxH = 46 * scale;
+      const forecastBoxH = 36 * scale;
       const claimBoxTop = 12 * scale;
       canvas.width = width;
       const measureCtx = canvas.getContext("2d");
@@ -14478,7 +14630,7 @@
         claimBoxVisible ? claimBoxTop + claimBoxH + 12 * scale : 0
       );
       const topH = headerContentH + rowH * 2;
-      const height = topH + (itemRows + totalRows + summaryRows + 4) * rowH + pad * 2;
+      const height = topH + (itemRows + totalRows + summaryRows + 6) * rowH + forecastBoxH + pad * 2;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -14504,26 +14656,23 @@
       }
       let claimLineX = null;
       let claimBoxBottomY = null;
+      let claimBoxX = null;
+      const forecast = claimBoxVisible ? plannedLaborForecastFor(view) : null;
       if (claimBoxVisible) {
         const claimIndex = dates.indexOf(claimDate);
-        const forecast = plannedLaborForecastFor(view);
         const minBoxX = x0 + 4 * scale;
         const maxBoxX = x0 + tableW - claimBoxW - 4 * scale;
         claimLineX = claimIndex >= 0 ? x0 + leftW + claimIndex * dateW + dateW / 2 : x0 + tableW - claimBoxW / 2 - 12 * scale;
-        const boxX = Math.max(minBoxX, Math.min(maxBoxX, claimLineX - claimBoxW / 2));
+        claimBoxX = Math.max(minBoxX, Math.min(maxBoxX, claimLineX - claimBoxW / 2));
         const boxY = y + claimBoxTop;
         claimBoxBottomY = boxY + claimBoxH;
         ctx.strokeStyle = "#111";
-        ctx.strokeRect(boxX, boxY, claimBoxW, claimBoxH);
+        ctx.strokeRect(claimBoxX, boxY, claimBoxW, claimBoxH);
         ctx.font = `bold ${10 * scale}px Tahoma, sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText(workPlanLabel(), boxX + claimBoxW / 2, boxY + 15 * scale);
+        ctx.fillText(workPlanLabel(), claimBoxX + claimBoxW / 2, boxY + 15 * scale);
         ctx.font = `${10 * scale}px Tahoma, sans-serif`;
-        ctx.fillText(thaiDateInput(claimDate), boxX + claimBoxW / 2, boxY + 32 * scale);
-        ctx.fillStyle = "#b45309";
-        ctx.font = `bold ${10 * scale}px Tahoma, sans-serif`;
-        ctx.fillText(`คาดการณ์ค่าแรง ${pct(forecast.ratio)}`, boxX + claimBoxW / 2, boxY + 49 * scale);
-        ctx.fillStyle = "#111";
+        ctx.fillText(thaiDateInput(claimDate), claimBoxX + claimBoxW / 2, boxY + 32 * scale);
       }
       const detailY = y + detailTopOffset;
       headerGroups.forEach((building, index) => {
@@ -14646,15 +14795,27 @@
       }
 
       if (claimLineX !== null && dates.includes(claimDate)) {
+        const forecastBoxY = y + 12 * scale;
         ctx.save();
         ctx.setLineDash([6 * scale, 5 * scale]);
         ctx.strokeStyle = "#111";
         ctx.lineWidth = 2 * scale;
         ctx.beginPath();
         ctx.moveTo(claimLineX, (claimBoxBottomY || scheduleTopY) + 4 * scale);
-        ctx.lineTo(claimLineX, y + rowH * 2);
+        ctx.lineTo(claimLineX, forecastBoxY - 4 * scale);
         ctx.stroke();
         ctx.restore();
+        ctx.fillStyle = "#fff7ed";
+        ctx.fillRect(claimBoxX, forecastBoxY, claimBoxW, forecastBoxH);
+        ctx.strokeStyle = "#b45309";
+        ctx.lineWidth = 1 * scale;
+        ctx.strokeRect(claimBoxX, forecastBoxY, claimBoxW, forecastBoxH);
+        ctx.fillStyle = "#b45309";
+        ctx.font = `bold ${10 * scale}px Tahoma, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(`คาดการณ์ค่าแรง ${pct(forecast?.ratio || 0)}`, claimBoxX + claimBoxW / 2, forecastBoxY + forecastBoxH / 2);
+        ctx.fillStyle = "#111";
+        y = forecastBoxY + forecastBoxH;
       }
 
       y += rowH;
