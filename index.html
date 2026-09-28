@@ -2415,7 +2415,7 @@
       min-height: 96px;
     }
     .period-sheet .period-item-table {
-      min-width: 840px;
+      min-width: 980px;
     }
     .period-item-table input {
       min-height: 32px;
@@ -3609,6 +3609,113 @@
       height: auto;
       background: white;
       display: block;
+    }
+    .report-section-switch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .claim-shell { display: grid; gap: 12px; min-width: 0; }
+    .claim-page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .claim-page-head h2 { font-size: 20px; }
+    .claim-page-head p { margin-top: 3px; color: var(--muted); font-weight: 700; }
+    .claim-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .claim-kpis { grid-template-columns: repeat(4, minmax(150px, 1fr)); }
+    .claim-workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 390px);
+      gap: 12px;
+      min-width: 0;
+      align-items: start;
+    }
+    .claim-list { overflow: hidden; }
+    .claim-list-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 120px 110px 26px;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      padding: 10px 12px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--bg);
+      text-align: left;
+    }
+    .claim-list-row:hover { background: var(--surface); }
+    .claim-list-row.active { box-shadow: inset 3px 0 var(--primary); background: oklch(0.98 0.015 160); }
+    .claim-list-row strong, .claim-list-row small { display: block; }
+    .claim-list-row small { color: var(--muted); margin-top: 2px; }
+    .claim-side { position: sticky; top: 92px; }
+    .claim-side .panel-body { display: grid; gap: 12px; }
+    .claim-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .claim-form-grid .wide { grid-column: 1 / -1; }
+    .claim-allocation-list { display: grid; gap: 7px; }
+    .claim-allocation-card {
+      display: grid;
+      gap: 7px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .claim-allocation-card-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+    .claim-allocation-card-head strong { line-height: 1.25; }
+    .claim-allocation-fields { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 7px; align-items: end; }
+    .claim-allocation-meta { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 800; }
+    .claim-balance {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+    .claim-balance > div { padding: 9px; background: var(--bg); }
+    .claim-balance span, .claim-balance strong { display: block; }
+    .claim-balance span { color: var(--muted); font-size: 10px; font-weight: 800; }
+    .claim-balance strong { margin-top: 3px; font-size: 15px; }
+    .claim-balance .mismatch strong { color: var(--danger); }
+    .claim-period-row { background: oklch(0.975 0.01 160); font-weight: 900; }
+    .claim-workspace tr.selected-row td { background: oklch(0.97 0.025 160); }
+    .claim-item-name { padding-left: 30px; }
+    .claim-item-name small { display: block; color: var(--muted); font-weight: 700; }
+    .link-button {
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--brand);
+      font-weight: 850;
+      text-align: left;
+    }
+    .link-button:hover { text-decoration: underline; }
+    .claim-period-toggle { width: 26px; height: 26px; padding: 0; margin-right: 6px; }
+    .claim-history { display: grid; gap: 8px; }
+    .claim-history-row { display: grid; grid-template-columns: 78px 1fr auto; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .claim-history-row:last-child { border-bottom: 0; }
+    .claim-history-row small { color: var(--muted); }
+    .claim-empty { padding: 30px 18px; text-align: center; color: var(--muted); }
+    @media (max-width: 1100px) {
+      .claim-workspace { grid-template-columns: 1fr; }
+      .claim-side { position: static; }
+      .claim-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .claim-list-row { grid-template-columns: 72px minmax(0, 1fr) auto; }
+      .claim-list-row > :nth-child(3), .claim-list-row > :nth-child(4) { display: none; }
+      .claim-form-grid, .claim-allocation-fields { grid-template-columns: 1fr; }
+      .claim-form-grid .wide { grid-column: auto; }
+      .claim-balance { grid-template-columns: 1fr; }
     }
     .backup-box textarea {
       min-height: 180px;
@@ -5665,6 +5772,11 @@
           manualView: "ALL",
           reportView: "ALL",
           reportMode: "full",
+          reportSection: "workplan",
+          claimView: "records",
+          selectedClaimRecordId: "",
+          claimDetailKey: "",
+          claimExpandedPeriods: {},
           reportMonthlyCycle: "",
           reportShowActualColumns: false,
           holidayMonth: "",
@@ -5704,6 +5816,7 @@
         inboundAttendanceAssignments: {},
         prepWorks: [],
         periods: [],
+        claimRecords: [],
         periodTemplates: {},
         machineUsage: {}
       };
@@ -6353,6 +6466,7 @@
         period.items.forEach((item) => {
           item.plan = item.plan || {};
           item.actual = item.actual || {};
+          item.workValue = n(item.workValue);
           item.laborValue = n(item.laborValue);
           item.progressPct = n(item.progressPct);
         });
@@ -6378,6 +6492,34 @@
         period.mainValue = n(period.mainValue) || group?.explicit || group?.sum || n(period.periodValue);
         period.periodPercent = period.mainValue ? n(period.periodValue) / n(period.mainValue) * 100 : n(period.periodPercent);
       });
+      next.claimRecords = Array.isArray(next.claimRecords) ? next.claimRecords.map((record, recordIndex) => ({
+        id: record?.id || uid("cr"),
+        claimNo: String(record?.claimNo || recordIndex + 1),
+        date: String(record?.date || isoToday()),
+        targetAmount: Math.max(0, n(record?.targetAmount)),
+        status: record?.status === "claimed" ? "claimed" : "draft",
+        note: String(record?.note || ""),
+        createdAt: String(record?.createdAt || new Date().toISOString()),
+        updatedAt: String(record?.updatedAt || record?.createdAt || new Date().toISOString()),
+        allocations: Array.isArray(record?.allocations) ? record.allocations.map((allocation) => {
+          const period = next.periods.find((row) => row.id === allocation?.periodId);
+          const item = period?.items?.find((row) => row.id === allocation?.itemId);
+          const percent = Math.max(0, n(allocation?.percent));
+          const workValueSnapshot = Math.max(0, n(allocation?.workValueSnapshot ?? item?.workValue));
+          return {
+            id: allocation?.id || uid("ca"),
+            periodId: String(allocation?.periodId || ""),
+            itemId: String(allocation?.itemId || ""),
+            buildingSnapshot: String(allocation?.buildingSnapshot || period?.building || ""),
+            periodNoSnapshot: String(allocation?.periodNoSnapshot || period?.no || ""),
+            periodTitleSnapshot: String(allocation?.periodTitleSnapshot || (period ? periodDisplayTitle(period) : "")),
+            itemNameSnapshot: String(allocation?.itemNameSnapshot || item?.name || ""),
+            workValueSnapshot,
+            percent,
+            amount: Math.max(0, n(allocation?.amount ?? (workValueSnapshot * percent / 100)))
+          };
+        }).filter((allocation) => allocation.itemId || allocation.itemNameSnapshot) : []
+      })) : [];
       next.machineUsage = cloneMachineUsage(next.machineUsage || {});
       next.buildings.filter(Boolean).forEach((building) => {
         next.machineUsage[building] = next.machineUsage[building] || {};
@@ -6422,6 +6564,11 @@
       if (!viewOptions.includes(next.ui.manualView)) next.ui.manualView = fallbackCombined;
       if (!viewOptions.includes(next.ui.reportView)) next.ui.reportView = fallbackCombined;
       if (!["full", "projectPlan", "monthly"].includes(next.ui.reportMode)) next.ui.reportMode = "full";
+      if (!["workplan", "claims"].includes(next.ui.reportSection)) next.ui.reportSection = "workplan";
+      if (!["records", "periods"].includes(next.ui.claimView)) next.ui.claimView = "records";
+      if (!next.claimRecords.some((record) => record.id === next.ui.selectedClaimRecordId)) next.ui.selectedClaimRecordId = next.claimRecords[0]?.id || "";
+      next.ui.claimDetailKey = String(next.ui.claimDetailKey || "");
+      next.ui.claimExpandedPeriods = next.ui.claimExpandedPeriods && typeof next.ui.claimExpandedPeriods === "object" ? next.ui.claimExpandedPeriods : {};
       next.ui.reportMonthlyCycle = next.ui.reportMonthlyCycle || "";
       next.ui.reportShowActualColumns = Boolean(next.ui.reportShowActualColumns);
       next.ui.holidayMonth = /^\d{4}-\d{2}$/.test(next.ui.holidayMonth || "") ? next.ui.holidayMonth : "";
@@ -6782,10 +6929,7 @@
       const allItems = period?.items || [];
       const selected = new Set(itemIds || []);
       const selectedItems = allItems.filter((item) => selected.has(item.id));
-      if (selectedItems.length === allItems.length) return n(period?.periodValue);
-      const allLabor = allItems.reduce((sum, item) => sum + n(item.laborValue), 0);
-      const selectedLabor = selectedItems.reduce((sum, item) => sum + n(item.laborValue), 0);
-      return allLabor ? n(period?.periodValue) * selectedLabor / allLabor : 0;
+      return selectedItems.reduce((sum, item) => sum + n(item.workValue), 0);
     }
 
     function selectedPeriodValue(period, plan = activeWorkPlan()) {
@@ -9679,9 +9823,10 @@
                       <th class="item-select-cell">ใช้รอบนี้</th>
                       <th>#</th>
                       <th>รายการ</th>
+                      <th class="num">มูลค่างาน</th>
                       <th class="num">มูลค่าค่าแรง</th>
                       <th class="num">%</th>
-                      <th class="num">มูลค่าตาม %</th>
+                      <th class="num">มูลค่างานตาม %</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -9691,9 +9836,10 @@
                         <td class="item-select-cell"><input type="checkbox" data-period-item-enabled="${period.id}" data-item-id="${item.id}" ${selectedItemIds.has(item.id) ? "checked" : ""} aria-label="เลือก ${esc(item.name)} ใช้ในรอบนี้"></td>
                         <td>${index + 1}</td>
                         <td><input data-item-field="name" data-period-id="${period.id}" data-item-id="${item.id}" value="${esc(item.name)}"></td>
+                        <td><input class="num" type="number" min="0" step="0.01" data-item-field="workValue" data-period-id="${period.id}" data-item-id="${item.id}" value="${esc(item.workValue)}"></td>
                         <td><input class="num" type="number" step="0.01" data-item-field="laborValue" data-period-id="${period.id}" data-item-id="${item.id}" value="${esc(item.laborValue)}"></td>
                         <td><input class="num" type="number" step="1" data-item-field="progressPct" data-period-id="${period.id}" data-item-id="${item.id}" value="${esc(item.progressPct)}"></td>
-                        <td class="num">${money(n(item.laborValue) * n(item.progressPct) / 100, 0)}</td>
+                        <td class="num">${money(n(item.workValue) * n(item.progressPct) / 100, 0)}</td>
                         <td><button class="danger" data-action="delete-item" data-period-id="${period.id}" data-item-id="${item.id}">ลบ</button></td>
                       </tr>
                     `).join("")}
@@ -9701,7 +9847,8 @@
                       <td class="item-select-cell"></td>
                       <td>${period.items.length + 1}</td>
                       <td><input id="newItemName" placeholder="เพิ่มชื่อรายการ"></td>
-                      <td><input id="newItemValue" class="num" type="number" min="0" step="0.01" placeholder="0"></td>
+                      <td><input id="newItemWorkValue" class="num" type="number" min="0" step="0.01" placeholder="0"></td>
+                      <td><input id="newItemLaborValue" class="num" type="number" min="0" step="0.01" placeholder="0"></td>
                       <td><input id="newItemProgress" class="num" type="number" min="0" step="1" value="0"></td>
                       <td class="num">0</td>
                       <td><button data-action="add-item" data-period-id="${period.id}">เพิ่ม</button></td>
@@ -10240,7 +10387,226 @@
       `;
     }
 
+    function reportSectionControl() {
+      const section = state.ui.reportSection || "workplan";
+      return `
+        <div class="report-section-switch">
+          <div>
+            <h2>${section === "claims" ? "สรุปเบิกงวด" : "รายงานแผนงานและต้นทุน"}</h2>
+            <p class="muted">${section === "claims" ? "ตรวจสอบยอดเบิกตามครั้งและติดตามยอดสะสมของแต่ละงวดงาน" : "สร้างรายงานภาพจากแผนงานและข้อมูลต้นทุนปัจจุบัน"}</p>
+          </div>
+          <div class="segmented" aria-label="ประเภทรายงาน">
+            <button data-action="set-report-section" data-report-section="workplan" aria-pressed="${section === "workplan"}">แผนงานและต้นทุน</button>
+            <button data-action="set-report-section" data-report-section="claims" aria-pressed="${section === "claims"}">สรุปเบิกงวด</button>
+          </div>
+        </div>`;
+    }
+
+    function claimableItems() {
+      return state.periods.flatMap((period) => (period.items || []).map((item) => ({ period, item })));
+    }
+
+    function getClaimRecord(id = state.ui.selectedClaimRecordId) {
+      return (state.claimRecords || []).find((record) => record.id === id) || null;
+    }
+
+    function claimRecordAmount(record) {
+      return (record?.allocations || []).reduce((sum, allocation) => sum + n(allocation.amount), 0);
+    }
+
+    function claimRecordDifference(record) {
+      return n(record?.targetAmount) - claimRecordAmount(record);
+    }
+
+    function claimRecordBalanced(record) {
+      return n(record?.targetAmount) > 0 && Math.abs(claimRecordDifference(record)) < 0.5;
+    }
+
+    function claimRecordStatus(record) {
+      if (record?.status === "claimed") return { label: "เบิกแล้ว", className: "green" };
+      if (claimRecordBalanced(record)) return { label: "พร้อมเบิก", className: "amber" };
+      return { label: "รอข้อมูล", className: "" };
+    }
+
+    function claimedAllocations() {
+      return (state.claimRecords || []).filter((record) => record.status === "claimed").flatMap((record) =>
+        (record.allocations || []).map((allocation) => ({ record, allocation }))
+      );
+    }
+
+    function claimedItemStats(itemId, excludeRecordId = "") {
+      const rows = claimedAllocations().filter(({ record, allocation }) => record.id !== excludeRecordId && allocation.itemId === itemId);
+      return {
+        amount: rows.reduce((sum, row) => sum + n(row.allocation.amount), 0),
+        percent: rows.reduce((sum, row) => sum + n(row.allocation.percent), 0),
+        rows
+      };
+    }
+
+    function claimItemOptions(selectedItemId = "") {
+      return state.periods.map((period) => {
+        const options = (period.items || []).map((item) => `<option value="${esc(item.id)}" ${item.id === selectedItemId ? "selected" : ""}>${esc(item.name)} · ${money(item.workValue, 0)} บาท</option>`).join("");
+        return options ? `<optgroup label="${esc(buildingLabel(period.building))} · งวด ${esc(period.no)}">${options}</optgroup>` : "";
+      }).join("");
+    }
+
+    function claimAllocationCard(record, allocation, index) {
+      const period = getPeriod(allocation.periodId);
+      const item = getItem(period, allocation.itemId);
+      const prior = claimedItemStats(allocation.itemId, record.id);
+      const disabled = record.status === "claimed" ? "disabled" : "";
+      const title = allocation.itemNameSnapshot || item?.name || `รายการที่ ${index + 1}`;
+      return `
+        <div class="claim-allocation-card">
+          <div class="claim-allocation-card-head">
+            <div><strong>${esc(title)}</strong><small class="muted">${esc(allocation.buildingSnapshot || period?.building || "-")} · งวด ${esc(allocation.periodNoSnapshot || period?.no || "-")}</small></div>
+            ${record.status === "claimed" ? "" : `<button class="danger" data-action="remove-claim-allocation" data-claim-id="${record.id}" data-allocation-id="${allocation.id}" aria-label="ลบรายการ">ลบ</button>`}
+          </div>
+          <div class="claim-allocation-fields">
+            <label><span>รายการย่อย</span><select data-claim-allocation-field="itemId" data-claim-id="${record.id}" data-allocation-id="${allocation.id}" ${disabled}>${claimItemOptions(allocation.itemId)}</select></label>
+            <label><span>% เบิกครั้งนี้</span><input class="num" type="number" min="0" max="100" step="0.01" value="${esc(allocation.percent)}" data-claim-allocation-field="percent" data-claim-id="${record.id}" data-allocation-id="${allocation.id}" ${disabled}></label>
+          </div>
+          <div class="claim-allocation-meta">
+            <span>มูลค่างาน ${money(allocation.workValueSnapshot, 0)} บาท · เบิกก่อนหน้า ${money(prior.percent, 2)}%</span>
+            <strong>${money(allocation.amount, 0)} บาท</strong>
+          </div>
+        </div>`;
+    }
+
+    function renderClaimRecordDetail(record) {
+      if (!record) return `<div class="panel claim-side"><div class="claim-empty">เลือกรายการเบิกทางซ้าย หรือสร้างรายการเบิกใหม่</div></div>`;
+      const status = claimRecordStatus(record);
+      const total = claimRecordAmount(record);
+      const difference = claimRecordDifference(record);
+      const disabled = record.status === "claimed" ? "disabled" : "";
+      return `
+        <aside class="panel claim-side">
+          <div class="panel-head">
+            <div><h2>เบิกงวดครั้งที่ ${esc(record.claimNo)}</h2><span class="pill ${status.className}">${status.label}</span></div>
+            <div class="inline-list">
+              <button data-action="print-claim-record">พิมพ์</button>
+              <button class="danger" data-action="delete-claim-record" data-claim-id="${record.id}">ลบ</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="claim-form-grid">
+              <label><span>ครั้งที่เบิก</span><input data-claim-field="claimNo" data-claim-id="${record.id}" value="${esc(record.claimNo)}" ${disabled}></label>
+              <label><span>วันที่เบิก</span><input type="date" data-claim-field="date" data-claim-id="${record.id}" value="${esc(record.date)}" ${disabled}></label>
+              <label class="wide"><span>ยอดที่ต้องการเบิก</span><input class="num" type="number" min="0" step="0.01" data-claim-field="targetAmount" data-claim-id="${record.id}" value="${esc(record.targetAmount)}" ${disabled}></label>
+              <label class="wide"><span>หมายเหตุ</span><textarea rows="2" data-claim-field="note" data-claim-id="${record.id}" ${disabled}>${esc(record.note)}</textarea></label>
+            </div>
+            <div class="claim-balance">
+              <div><span>ยอดขอเบิก</span><strong>${money(record.targetAmount, 0)}</strong></div>
+              <div><span>รวมรายการ</span><strong>${money(total, 0)}</strong></div>
+              <div class="${Math.abs(difference) < 0.5 ? "" : "mismatch"}"><span>ส่วนต่าง</span><strong>${money(difference, 0)}</strong></div>
+            </div>
+            <div class="claim-allocation-list">
+              ${(record.allocations || []).map((allocation, index) => claimAllocationCard(record, allocation, index)).join("") || `<div class="claim-empty">ยังไม่มีรายการย่อยในการเบิกครั้งนี้</div>`}
+            </div>
+            <div class="inline-list" style="justify-content:flex-end">
+              ${record.status === "claimed"
+                ? `<button data-action="reopen-claim-record" data-claim-id="${record.id}">กลับมาแก้ไข</button>`
+                : `<button data-action="add-claim-allocation" data-claim-id="${record.id}">+ เพิ่มผลงาน</button><button class="primary" data-action="confirm-claim-record" data-claim-id="${record.id}">ยืนยันการเบิก</button>`}
+            </div>
+          </div>
+        </aside>`;
+    }
+
+    function renderClaimRecordsView() {
+      const records = state.claimRecords || [];
+      const selected = getClaimRecord(records[0]?.id ? state.ui.selectedClaimRecordId || records[0].id : "");
+      const rows = records.map((record) => {
+        const status = claimRecordStatus(record);
+        return `<button class="claim-list-row ${selected?.id === record.id ? "active" : ""}" data-action="select-claim-record" data-claim-id="${record.id}">
+          <strong>ครั้งที่ ${esc(record.claimNo)}</strong>
+          <span><strong>${money(claimRecordAmount(record), 0)} บาท</strong><small>${money(record.allocations?.length || 0, 0)} รายการย่อย</small></span>
+          <span>${dateLabel(record.date)}</span>
+          <span class="pill ${status.className}">${status.label}</span>
+          <span aria-hidden="true">›</span>
+        </button>`;
+      }).join("");
+      return `<div class="claim-workspace"><section class="panel claim-list">${rows || `<div class="claim-empty">ยังไม่มีประวัติการเบิกงวด</div>`}</section>${renderClaimRecordDetail(selected)}</div>`;
+    }
+
+    function itemClaimSummary(itemId) {
+      const stats = claimedItemStats(itemId);
+      const latest = [...stats.rows].sort((a, b) => String(b.record.date).localeCompare(String(a.record.date)))[0];
+      return { ...stats, latest };
+    }
+
+    function claimProgressPill(percent) {
+      if (percent >= 99.999) return `<span class="pill green">ครบ 100%</span>`;
+      if (percent > 0) return `<span class="pill amber">เบิกบางส่วน</span>`;
+      return `<span class="pill">ยังไม่เบิก</span>`;
+    }
+
+    function renderClaimPeriodDetail(key) {
+      const [periodId, itemId] = String(key || "").split("|");
+      const period = getPeriod(periodId);
+      const item = getItem(period, itemId);
+      if (!period || !item) return `<aside class="panel claim-side"><div class="claim-empty">เลือกรายการย่อยเพื่อดูประวัติการเบิก</div></aside>`;
+      const summary = itemClaimSummary(item.id);
+      const percent = n(item.workValue) ? summary.amount / n(item.workValue) * 100 : summary.percent;
+      return `<aside class="panel claim-side">
+        <div class="panel-head"><div><h2>${esc(item.name)}</h2><p class="muted">${esc(buildingLabel(period.building))} · งวด ${esc(period.no)}</p></div>${claimProgressPill(percent)}</div>
+        <div class="panel-body">
+          <div class="claim-balance">
+            <div><span>มูลค่างาน</span><strong>${money(item.workValue, 0)}</strong></div>
+            <div><span>เบิกสะสม</span><strong>${money(summary.amount, 0)}</strong></div>
+            <div><span>คงเหลือ</span><strong>${money(Math.max(0, n(item.workValue) - summary.amount), 0)}</strong></div>
+          </div>
+          <div class="claim-history">
+            <h3>ประวัติการเบิก</h3>
+            ${summary.rows.sort((a, b) => String(a.record.date).localeCompare(String(b.record.date))).map(({ record, allocation }) => `<div class="claim-history-row"><span>ครั้งที่ ${esc(record.claimNo)}</span><span><strong>${money(allocation.percent, 2)}%</strong><small>${dateLabel(record.date)}</small></span><strong>${money(allocation.amount, 0)}</strong></div>`).join("") || `<div class="claim-empty">ยังไม่มีประวัติการเบิก</div>`}
+          </div>
+        </div>
+      </aside>`;
+    }
+
+    function renderClaimPeriodsView() {
+      const totalWork = claimableItems().reduce((sum, row) => sum + n(row.item.workValue), 0);
+      const totalClaimed = claimedAllocations().reduce((sum, row) => sum + n(row.allocation.amount), 0);
+      let firstItemKey = "";
+      const body = state.periods.map((period) => {
+        const items = period.items || [];
+        if (!items.length) return "";
+        const periodWork = items.reduce((sum, item) => sum + n(item.workValue), 0);
+        const periodClaimed = items.reduce((sum, item) => sum + itemClaimSummary(item.id).amount, 0);
+        const periodPct = periodWork ? periodClaimed / periodWork * 100 : 0;
+        const expanded = state.ui.claimExpandedPeriods[period.id] !== false;
+        const itemRows = expanded ? items.map((item) => {
+          const summary = itemClaimSummary(item.id);
+          const percent = n(item.workValue) ? summary.amount / n(item.workValue) * 100 : summary.percent;
+          const key = `${period.id}|${item.id}`;
+          if (!firstItemKey) firstItemKey = key;
+          return `<tr class="${(state.ui.claimDetailKey || firstItemKey) === key ? "selected-row" : ""}">
+            <td class="claim-item-name"><button class="link-button" data-action="select-claim-detail" data-claim-detail-key="${esc(key)}">${esc(item.name)}</button><small>${esc(buildingLabel(period.building))}</small></td>
+            <td class="num">${money(item.workValue, 0)}</td><td>${summary.latest ? `ครั้งที่ ${esc(summary.latest.record.claimNo)}` : "-"}</td>
+            <td class="num">${money(summary.amount, 0)}</td><td class="num">${money(percent, 2)}%</td><td class="num">${money(Math.max(0, n(item.workValue) - summary.amount), 0)}</td><td>${claimProgressPill(percent)}</td>
+          </tr>`;
+        }).join("") : "";
+        return `<tr class="claim-period-row"><td><button class="claim-period-toggle" data-action="toggle-claim-period" data-period-id="${period.id}" aria-label="${expanded ? "ย่อ" : "ขยาย"}">${expanded ? "−" : "+"}</button>งวด ${esc(period.no)} · ${esc(periodDisplayTitle(period))}</td><td class="num">${money(periodWork, 0)}</td><td>-</td><td class="num">${money(periodClaimed, 0)}</td><td class="num">${money(periodPct, 2)}%</td><td class="num">${money(Math.max(0, periodWork - periodClaimed), 0)}</td><td>${claimProgressPill(periodPct)}</td></tr>${itemRows}`;
+      }).join("");
+      const detailKey = state.ui.claimDetailKey || firstItemKey;
+      return `<div class="metric-grid claim-kpis"><div class="metric"><span>มูลค่างานทั้งหมด</span><strong>${money(totalWork, 0)}</strong></div><div class="metric"><span>เบิกสะสมแล้ว</span><strong>${money(totalClaimed, 0)}</strong></div><div class="metric"><span>ความคืบหน้าการเบิก</span><strong>${money(totalWork ? totalClaimed / totalWork * 100 : 0, 2)}%</strong></div><div class="metric"><span>มูลค่าคงเหลือ</span><strong>${money(Math.max(0, totalWork - totalClaimed), 0)}</strong></div></div>
+        <div class="claim-workspace"><section class="panel"><div class="table-wrap"><table><thead><tr><th>งวดงาน / รายการย่อย</th><th class="num">มูลค่างาน</th><th>เบิกล่าสุด</th><th class="num">เบิกสะสม</th><th class="num">สะสม %</th><th class="num">คงเหลือ</th><th>สถานะ</th></tr></thead><tbody>${body || `<tr><td colspan="7" class="claim-empty">ยังไม่มีรายการงาน</td></tr>`}</tbody></table></div></section>${renderClaimPeriodDetail(detailKey)}</div>`;
+    }
+
+    function renderClaimSummary() {
+      const view = state.ui.claimView || "records";
+      const el = $("#tab-report");
+      el.innerHTML = `<div class="section claim-shell">
+        ${reportSectionControl()}
+        <div class="claim-page-head">
+          <div><h2>สรุปเบิกงวดแบบละเอียด</h2><p>ยอดเบิกคิดจากมูลค่างานของรายการย่อย × เปอร์เซ็นต์ที่เบิกจริง</p></div>
+          <div class="claim-toolbar"><div class="segmented" aria-label="มุมมองสรุปเบิกงวด"><button data-action="set-claim-view" data-claim-view="records" aria-pressed="${view === "records"}">ดูตามครั้งที่เบิก</button><button data-action="set-claim-view" data-claim-view="periods" aria-pressed="${view === "periods"}">ดูตามงวดงาน</button></div>${view === "records" ? `<button class="primary" data-action="add-claim-record">+ สร้างรายการเบิก</button>` : ""}</div>
+        </div>
+        ${view === "records" ? renderClaimRecordsView() : renderClaimPeriodsView()}
+      </div>`;
+    }
+
     function renderReport() {
+      if ((state.ui.reportSection || "workplan") === "claims") return renderClaimSummary();
       const viewOptions = buildingViewOptions();
       const view = viewOptions.includes(state.ui.reportView) ? state.ui.reportView : (viewOptions.at(-1) || viewOptions[0] || "ALL");
       const mode = reportMode();
@@ -10257,6 +10623,7 @@
         : `<select aria-label="รอบเดือน" style="width:240px;visibility:hidden" disabled><option>รอบเดือน</option></select>`;
       el.innerHTML = `
         <div class="section">
+          ${reportSectionControl()}
           <div class="panel">
             <div class="panel-head">
               <h2>รายงานรูปภาพ</h2>
@@ -12844,6 +13211,152 @@
       showToast("ลบงานแล้ว");
     }
 
+    function nextDetailedClaimNo() {
+      const numbers = (state.claimRecords || []).map((record) => Number(record.claimNo)).filter(Number.isFinite);
+      return String((numbers.length ? Math.max(...numbers) : 0) + 1);
+    }
+
+    function addClaimRecord() {
+      recordHistory("สร้างรายการเบิกงวด");
+      const record = {
+        id: uid("cr"),
+        claimNo: nextDetailedClaimNo(),
+        date: isoToday(),
+        targetAmount: 0,
+        status: "draft",
+        note: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        allocations: []
+      };
+      state.claimRecords.push(record);
+      state.ui.selectedClaimRecordId = record.id;
+      saveState();
+      renderReport();
+      showToast("สร้างรายการเบิกแล้ว");
+    }
+
+    function claimAllocationFromItem(period, item) {
+      return {
+        id: uid("ca"),
+        periodId: period.id,
+        itemId: item.id,
+        buildingSnapshot: period.building || "",
+        periodNoSnapshot: period.no || "",
+        periodTitleSnapshot: periodDisplayTitle(period),
+        itemNameSnapshot: item.name || "รายการงาน",
+        workValueSnapshot: Math.max(0, n(item.workValue)),
+        percent: 0,
+        amount: 0
+      };
+    }
+
+    function addClaimAllocation(claimId) {
+      const record = getClaimRecord(claimId);
+      if (!record || record.status === "claimed") return;
+      const used = new Set((record.allocations || []).map((row) => row.itemId));
+      const candidate = claimableItems().find(({ item }) => !used.has(item.id) && n(item.workValue) > 0)
+        || claimableItems().find(({ item }) => !used.has(item.id));
+      if (!candidate) return showToast("ไม่มีรายการย่อยให้เพิ่ม กรุณาเพิ่มรายการในข้อมูลงวดงานก่อน");
+      recordHistory("เพิ่มผลงานในรายการเบิก");
+      record.allocations.push(claimAllocationFromItem(candidate.period, candidate.item));
+      record.updatedAt = new Date().toISOString();
+      saveState();
+      renderReport();
+    }
+
+    function removeClaimAllocation(claimId, allocationId) {
+      const record = getClaimRecord(claimId);
+      if (!record || record.status === "claimed") return;
+      recordHistory("ลบผลงานจากรายการเบิก");
+      record.allocations = (record.allocations || []).filter((row) => row.id !== allocationId);
+      record.updatedAt = new Date().toISOString();
+      saveState();
+      renderReport();
+    }
+
+    function updateClaimField(target) {
+      const record = getClaimRecord(target.dataset.claimId);
+      if (!record || record.status === "claimed") return;
+      const field = target.dataset.claimField;
+      record[field] = field === "targetAmount" ? Math.max(0, n(target.value)) : target.value;
+      record.updatedAt = new Date().toISOString();
+      saveState();
+      renderReport();
+    }
+
+    function updateClaimAllocation(target) {
+      const record = getClaimRecord(target.dataset.claimId);
+      const allocation = record?.allocations?.find((row) => row.id === target.dataset.allocationId);
+      if (!record || !allocation || record.status === "claimed") return;
+      if (target.dataset.claimAllocationField === "itemId") {
+        const duplicate = record.allocations.some((row) => row.id !== allocation.id && row.itemId === target.value);
+        if (duplicate) {
+          showToast("รายการย่อยนี้อยู่ในการเบิกครั้งนี้แล้ว");
+          return renderReport();
+        }
+        const master = claimableItems().find(({ item }) => item.id === target.value);
+        if (!master) return;
+        Object.assign(allocation, claimAllocationFromItem(master.period, master.item), { id: allocation.id });
+      } else {
+        const prior = claimedItemStats(allocation.itemId, record.id);
+        const maximum = Math.max(0, 100 - prior.percent);
+        allocation.percent = Math.min(maximum, Math.max(0, n(target.value)));
+        allocation.amount = n(allocation.workValueSnapshot) * allocation.percent / 100;
+        if (n(target.value) > maximum) showToast(`รายการนี้เหลือให้เบิกได้ ${money(maximum, 2)}%`);
+      }
+      record.updatedAt = new Date().toISOString();
+      saveState();
+      renderReport();
+    }
+
+    function claimRecordError(record) {
+      if (!record) return "ไม่พบรายการเบิก";
+      if (!n(record.targetAmount)) return "กรอกยอดที่ต้องการเบิกก่อน";
+      if (!(record.allocations || []).length) return "เพิ่มรายการย่อยอย่างน้อย 1 รายการ";
+      if ((record.allocations || []).some((allocation) => !n(allocation.workValueSnapshot))) return "กรอกมูลค่างานของรายการย่อยก่อนยืนยัน";
+      if ((record.allocations || []).some((allocation) => !n(allocation.percent))) return "กรอกเปอร์เซ็นต์ที่เบิกของทุกรายการ";
+      const itemIds = (record.allocations || []).map((allocation) => allocation.itemId);
+      if (new Set(itemIds).size !== itemIds.length) return "มีรายการย่อยซ้ำในการเบิกครั้งนี้";
+      const over = (record.allocations || []).find((allocation) => claimedItemStats(allocation.itemId, record.id).percent + n(allocation.percent) > 100.0001);
+      if (over) return `ยอดสะสมของ ${over.itemNameSnapshot} เกิน 100%`;
+      if (!claimRecordBalanced(record)) return `ยอดรวมรายการยังต่างจากยอดขอเบิก ${money(claimRecordDifference(record), 0)} บาท`;
+      return "";
+    }
+
+    function confirmClaimRecord(claimId) {
+      const record = getClaimRecord(claimId);
+      const error = claimRecordError(record);
+      if (error) return showToast(error);
+      recordHistory("ยืนยันรายการเบิกงวด");
+      record.status = "claimed";
+      record.updatedAt = new Date().toISOString();
+      saveState();
+      renderReport();
+      showToast("ยืนยันการเบิกแล้ว");
+    }
+
+    function reopenClaimRecord(claimId) {
+      const record = getClaimRecord(claimId);
+      if (!record) return;
+      recordHistory("เปิดรายการเบิกเพื่อแก้ไข");
+      record.status = "draft";
+      record.updatedAt = new Date().toISOString();
+      saveState();
+      renderReport();
+    }
+
+    function deleteClaimRecord(claimId) {
+      const record = getClaimRecord(claimId);
+      if (!record || !confirm(`ลบรายการเบิกครั้งที่ ${record.claimNo}?`)) return;
+      recordHistory("ลบรายการเบิกงวด");
+      state.claimRecords = state.claimRecords.filter((row) => row.id !== claimId);
+      state.ui.selectedClaimRecordId = state.claimRecords[0]?.id || "";
+      saveState();
+      renderReport();
+      showToast("ลบรายการเบิกแล้ว");
+    }
+
     function handleClick(event) {
       if (inboundDatePickerState && !event.target.closest?.("#inboundDatePicker, [data-action='open-inbound-date-picker']")) closeInboundDatePicker();
       const attendanceCell = event.target.closest?.("[data-attendance-comment-cell]");
@@ -12883,6 +13396,40 @@
       }
       const action = button.dataset.action;
       if (!action) return;
+
+      if (action === "set-report-section") {
+        state.ui.reportSection = button.dataset.reportSection || "workplan";
+        saveState();
+        return renderReport();
+      }
+      if (action === "set-claim-view") {
+        state.ui.claimView = button.dataset.claimView || "records";
+        saveState();
+        return renderReport();
+      }
+      if (action === "add-claim-record") return addClaimRecord();
+      if (action === "select-claim-record") {
+        state.ui.selectedClaimRecordId = button.dataset.claimId || "";
+        saveState();
+        return renderReport();
+      }
+      if (action === "add-claim-allocation") return addClaimAllocation(button.dataset.claimId);
+      if (action === "remove-claim-allocation") return removeClaimAllocation(button.dataset.claimId, button.dataset.allocationId);
+      if (action === "confirm-claim-record") return confirmClaimRecord(button.dataset.claimId);
+      if (action === "reopen-claim-record") return reopenClaimRecord(button.dataset.claimId);
+      if (action === "delete-claim-record") return deleteClaimRecord(button.dataset.claimId);
+      if (action === "print-claim-record") return window.print();
+      if (action === "toggle-claim-period") {
+        const id = button.dataset.periodId;
+        state.ui.claimExpandedPeriods[id] = state.ui.claimExpandedPeriods[id] === false;
+        saveState();
+        return renderReport();
+      }
+      if (action === "select-claim-detail") {
+        state.ui.claimDetailKey = button.dataset.claimDetailKey || "";
+        saveState();
+        return renderReport();
+      }
 
       if (action === "open-prep-work-dialog") return openPrepWorkDialog(button.dataset.prepWorkId || "");
       if (action === "open-prep-work") return openPrepWork(button.dataset.prepWorkId);
@@ -13163,7 +13710,15 @@
         const item = getItem(period, target.dataset.itemId);
         if (item) {
           const key = target.dataset.itemField;
-          item[key] = ["laborValue", "progressPct"].includes(key) ? n(target.value) : target.value;
+          item[key] = ["workValue", "laborValue", "progressPct"].includes(key) ? Math.max(0, n(target.value)) : target.value;
+          if (key === "workValue") {
+            (state.claimRecords || []).filter((record) => record.status !== "claimed").forEach((record) => {
+              (record.allocations || []).filter((allocation) => allocation.itemId === item.id).forEach((allocation) => {
+                allocation.workValueSnapshot = item.workValue;
+                allocation.amount = item.workValue * n(allocation.percent) / 100;
+              });
+            });
+          }
           saveState();
         }
       }
@@ -13227,6 +13782,8 @@
     function handleChange(event) {
       const target = event.target;
       if (target.id === "mobileNav") return setActiveTab(target.value);
+      if (target.dataset.claimField) return updateClaimField(target);
+      if (target.dataset.claimAllocationField) return updateClaimAllocation(target);
       if (target.dataset.prepStatus !== undefined) return updatePrepStatus(target.dataset.prepWorkId, target.dataset.prepItemId, target.value);
       if (target.dataset.inboundWorkerToggle) return updateAttendanceInboundDraft(target);
       if (target.id === "externalBuildingSelect") {
@@ -13458,6 +14015,7 @@
       const templateItems = !hasSubInput && template?.items?.length ? template.items.map((item) => ({
         id: uid("i"),
         name: item.name || item.note || item.order || "รายการงาน",
+        workValue: 0,
         laborValue: 0,
         progressPct: 0,
         plan: {},
@@ -13481,7 +14039,15 @@
       if (!period) return;
       const name = $("#newItemName")?.value.trim();
       if (!name) return showToast("กรอกรายการงานก่อน");
-      const item = { id: uid("i"), name, laborValue: n($("#newItemValue")?.value), progressPct: n($("#newItemProgress")?.value), plan: {}, actual: {} };
+      const item = {
+        id: uid("i"),
+        name,
+        workValue: n($("#newItemWorkValue")?.value),
+        laborValue: n($("#newItemLaborValue")?.value),
+        progressPct: n($("#newItemProgress")?.value),
+        plan: {},
+        actual: {}
+      };
       period.items.push(item);
       state.workPlans.forEach((plan) => {
         if (!(plan.periodIds || []).includes(period.id)) return;
