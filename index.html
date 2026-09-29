@@ -7179,7 +7179,11 @@
     }
 
     function periodsForBuilding(building, activeOnly = true) {
-      if (!activeOnly) return state.periods.filter((period) => period.building === building);
+      if (!activeOnly) {
+        return state.periods
+          .filter((period) => period.building === building)
+          .sort((a, b) => naturalSort(periodMainNo(a), periodMainNo(b)) || naturalSort(a.no, b.no));
+      }
       return planPeriodsForView(activeWorkPlan(), building);
     }
 
@@ -7661,6 +7665,10 @@
       const buildings = buildingsForView(view);
       return state.periods
         .filter((period) => buildings.includes(period.building) && selected.has(period.id))
+        .sort((a, b) => {
+          const buildingOrder = buildings.indexOf(a.building) - buildings.indexOf(b.building);
+          return buildingOrder || naturalSort(periodMainNo(a), periodMainNo(b)) || naturalSort(a.no, b.no);
+        })
         .map((period) => ({ ...period, items: selectedItemsForPeriod(period, plan) }));
     }
 
@@ -10403,7 +10411,9 @@
     }
 
     function claimableItems() {
-      return state.periods.flatMap((period) => (period.items || []).map((item) => ({ period, item })));
+      return [...state.periods]
+        .sort((a, b) => naturalSort(a.building, b.building) || naturalSort(periodMainNo(a), periodMainNo(b)) || naturalSort(a.no, b.no))
+        .flatMap((period) => (period.items || []).map((item) => ({ period, item })));
     }
 
     function getClaimRecord(id = state.ui.selectedClaimRecordId) {
@@ -10567,7 +10577,9 @@
       const totalWork = claimableItems().reduce((sum, row) => sum + n(row.item.workValue), 0);
       const totalClaimed = claimedAllocations().reduce((sum, row) => sum + n(row.allocation.amount), 0);
       let firstItemKey = "";
-      const body = state.periods.map((period) => {
+      const body = [...state.periods]
+        .sort((a, b) => naturalSort(a.building, b.building) || naturalSort(periodMainNo(a), periodMainNo(b)) || naturalSort(a.no, b.no))
+        .map((period) => {
         const items = period.items || [];
         if (!items.length) return "";
         const periodWork = items.reduce((sum, item) => sum + n(item.workValue), 0);
