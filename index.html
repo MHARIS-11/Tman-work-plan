@@ -1323,6 +1323,91 @@
     .work-table .cell-part.part-primary .fill-handle {
       display: block;
     }
+    .work-table .machine-section-row td {
+      height: 32px;
+      background: oklch(0.95 0.025 235);
+      color: oklch(0.27 0.07 235);
+      font-weight: 900;
+    }
+    .work-table .machine-section-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: auto;
+      min-height: 26px;
+      padding: 3px 8px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font-weight: 900;
+    }
+    .work-table .machine-section-toggle:hover,
+    .work-table .machine-section-toggle:focus-visible {
+      background: oklch(0.91 0.04 235);
+      outline: 2px solid oklch(0.58 0.12 235);
+      outline-offset: -2px;
+    }
+    .work-table .machine-row td {
+      background: oklch(0.985 0.008 235);
+    }
+    .work-table .machine-row .sticky {
+      background: oklch(0.985 0.008 235);
+    }
+    .work-table .machine-name {
+      display: grid;
+      gap: 2px;
+    }
+    .work-table .machine-name small {
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .work-table .machine-date-btn {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      min-height: 34px;
+      padding: 3px 2px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: 10.5px;
+      font-weight: 800;
+      touch-action: manipulation;
+    }
+    .work-table .machine-date-btn:hover {
+      outline: 2px solid oklch(0.58 0.12 235);
+      outline-offset: -2px;
+    }
+    .work-table .machine-date-btn.has-machine {
+      background: oklch(0.84 0.07 235);
+      color: oklch(0.24 0.07 235);
+    }
+    .work-table .machine-date-btn.selected {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+      z-index: 2;
+    }
+    .work-table .machine-date-btn.fill-source {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+    }
+    .work-table .machine-date-btn.fill-range {
+      background: oklch(0.9 0.06 160);
+      box-shadow: inset 0 0 0 2px oklch(0.65 0.12 160);
+    }
+    .work-table .machine-date-btn.fill-target {
+      box-shadow: inset 0 0 0 2px var(--warning);
+    }
+    .work-table .machine-date-btn.selected .fill-handle {
+      display: block;
+    }
+    .work-table .machine-empty-row td {
+      padding: 8px;
+      color: var(--muted);
+      background: oklch(0.985 0.008 235);
+    }
     .fill-mode {
       display: inline-flex;
       align-items: center;
@@ -5524,6 +5609,26 @@
     </div>
   </dialog>
 
+  <dialog id="machineCellDialog">
+    <form method="dialog">
+      <div class="dialog-head">
+        <div>
+          <h2 id="machineCellDialogTitle">แก้ไขค่าเครื่องจักร</h2>
+          <p class="muted" id="machineCellDialogMeta"></p>
+        </div>
+        <button class="ghost" value="cancel" aria-label="ปิด">ปิด</button>
+      </div>
+    </form>
+    <div class="dialog-body">
+      <label><span>ค่าเครื่องจักรของวันนี้</span><input id="machineCellAmount" type="number" min="0" step="0.01" inputmode="decimal"></label>
+      <p class="muted">ดับเบิลคลิกช่องเครื่องจักรเพื่อแก้ไขค่า แล้วลากจุดจับที่มุมขวาล่างเพื่อคัดลอกไปยังวันอื่น</p>
+    </div>
+    <div class="dialog-actions">
+      <button id="clearMachineCellBtn" class="danger" type="button">ล้างค่าเครื่องจักร</button>
+      <button id="saveMachineCellBtn" class="primary" type="button">บันทึกค่าเครื่องจักร</button>
+    </div>
+  </dialog>
+
   <dialog id="claimDialog">
     <form method="dialog">
       <div class="dialog-head">
@@ -5711,6 +5816,8 @@
     let prepSaving = false;
     let fillDrag = null;
     let selectDrag = null;
+    let machineFillDrag = null;
+    let machineCellDraft = null;
     let undoStack = [];
     let redoStack = [];
     let appClipboard = null;
@@ -5791,7 +5898,9 @@
           externalWorkerBuildingId: "",
           periodDataBuilding: "",
           prepWorkId: "",
-          prepItemId: ""
+          prepItemId: "",
+          selectedMachineCell: null,
+          machineRowsCollapsed: {}
         },
         sync: {
           databaseUrl: DEFAULT_SYNC_URL,
@@ -6554,7 +6663,7 @@
       }
       next.workPlans = next.workPlans.map((plan, index) => normalizeWorkPlan(plan, next, index));
       if (!next.workPlans.some((plan) => plan.id === next.ui.activeWorkPlanId)) next.ui.activeWorkPlanId = next.workPlans[0]?.id || "";
-      if (!["all", "plan", "actual", "planActual", "machine"].includes(next.ui.fillMode)) next.ui.fillMode = "all";
+      if (!["all", "plan", "actual", "planActual"].includes(next.ui.fillMode)) next.ui.fillMode = "all";
       if (!["hide", "move"].includes(next.ui.workerListMode)) next.ui.workerListMode = "hide";
       const viewOptions = buildingViewOptionsFromState(next);
       const planViewOptions = planBuildingViewOptionsFromState(next);
@@ -6569,6 +6678,8 @@
       if (!next.claimRecords.some((record) => record.id === next.ui.selectedClaimRecordId)) next.ui.selectedClaimRecordId = next.claimRecords[0]?.id || "";
       next.ui.claimDetailKey = String(next.ui.claimDetailKey || "");
       next.ui.claimExpandedPeriods = next.ui.claimExpandedPeriods && typeof next.ui.claimExpandedPeriods === "object" ? next.ui.claimExpandedPeriods : {};
+      next.ui.selectedMachineCell = next.ui.selectedMachineCell && typeof next.ui.selectedMachineCell === "object" ? next.ui.selectedMachineCell : null;
+      next.ui.machineRowsCollapsed = next.ui.machineRowsCollapsed && typeof next.ui.machineRowsCollapsed === "object" ? next.ui.machineRowsCollapsed : {};
       next.ui.reportMonthlyCycle = next.ui.reportMonthlyCycle || "";
       next.ui.reportShowActualColumns = Boolean(next.ui.reportShowActualColumns);
       next.ui.holidayMonth = /^\d{4}-\d{2}$/.test(next.ui.holidayMonth || "") ? next.ui.holidayMonth : "";
@@ -9330,7 +9441,6 @@
                 <option value="plan" ${fillMode === "plan" ? "selected" : ""}>จำนวนแรงตามแผน</option>
                 <option value="actual" ${fillMode === "actual" ? "selected" : ""}>คนงานจริง + ค่าแรง</option>
                 <option value="planActual" ${fillMode === "planActual" ? "selected" : ""}>แผน + คนงานจริง</option>
-                <option value="machine" ${fillMode === "machine" ? "selected" : ""}>เครื่องจักร</option>
               </select></label>
               <label class="fill-mode"><span>รายชื่อคนงาน</span><select id="workerListModeSelect">
                 <option value="hide" ${listMode === "hide" ? "selected" : ""}>ตัดชื่อที่ใช้แล้วออก</option>
@@ -9432,6 +9542,72 @@
       return groups;
     }
 
+    function machineAmountForDate(building, machineId, date) {
+      return (activeMachineUsage()?.[building]?.[date] || [])
+        .filter((row) => row.machineId === machineId)
+        .reduce((sum, row) => sum + n(row.amount), 0);
+    }
+
+    function machineCellMatches(a, b) {
+      return Boolean(a && b && a.building === b.building && a.machineId === b.machineId && a.date === b.date);
+    }
+
+    function machineCellRef(button) {
+      if (!button?.dataset?.building || !button?.dataset?.machineId || !button?.dataset?.date) return null;
+      return {
+        building: button.dataset.building,
+        machineId: button.dataset.machineId,
+        date: button.dataset.date
+      };
+    }
+
+    function renderMachineRows(building, dates, editable = true) {
+      const collapsed = Boolean(state.ui.machineRowsCollapsed?.[building]);
+      const selected = state.ui.selectedMachineCell;
+      const header = `
+        <tr class="machine-section-row">
+          <td class="sticky col-building" colspan="6">
+            <button type="button" class="machine-section-toggle" data-action="toggle-machine-rows" data-building="${esc(building)}" aria-expanded="${collapsed ? "false" : "true"}">
+              <span aria-hidden="true">${collapsed ? "▸" : "▾"}</span>
+              <span>เครื่องจักร ${esc(buildingLabel(building))}</span>
+              <span class="pill">${state.machines.length} รายการ</span>
+            </button>
+          </td>
+          ${dates.map((date) => `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}"></td>`).join("")}
+        </tr>`;
+      if (collapsed) return header;
+      if (!state.machines.length) {
+        return `${header}<tr class="machine-empty-row"><td class="sticky col-building" colspan="6">ยังไม่มีเครื่องจักร กรุณาเพิ่มเครื่องจักรจากหน้าเครื่องจักร</td>${dates.map((date) => `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}"></td>`).join("")}</tr>`;
+      }
+      const rows = state.machines.map((machine) => {
+        const amounts = dates.map((date) => machineAmountForDate(building, machine.id, date));
+        const total = amounts.reduce((sum, amount) => sum + amount, 0);
+        const usedDays = amounts.filter((amount) => amount > 0).length;
+        return `
+          <tr class="machine-row">
+            <td class="sticky col-building">${esc(building)}</td>
+            <td class="sticky col-period">เครื่องจักร</td>
+            <td class="sticky col-item"><span class="machine-name"><strong>${esc(machine.name)}</strong><small>ค่าต่อวัน ${money(machine.dailyCost, 0)}</small></span></td>
+            <td class="sticky col-value num">${money(machine.dailyCost, 0)}</td>
+            <td class="sticky col-actual num">${money(total, 0)}</td>
+            <td class="sticky col-percent num">${usedDays} วัน</td>
+            ${dates.map((date, index) => {
+              const amount = amounts[index];
+              const ref = { building, machineId: machine.id, date };
+              const isSelected = editable && machineCellMatches(selected, ref);
+              const attrs = editable ? `data-action="edit-machine-cell" data-building="${esc(building)}" data-machine-id="${esc(machine.id)}" data-date="${esc(date)}"` : "";
+              return `<td class="date-cell ${dateClass(date)}" data-date-col="${esc(date)}">
+                <button type="button" class="machine-date-btn ${amount ? "has-machine" : ""} ${isSelected ? "selected" : ""}" ${attrs} aria-selected="${isSelected ? "true" : "false"}" title="คลิกเพื่อเลือก ดับเบิลคลิกเพื่อแก้ไข">
+                  <span>${amount ? money(amount, 0) : ""}</span>
+                  ${editable ? `<span class="fill-handle machine-fill-handle" data-action="machine-fill-handle" aria-hidden="true"></span>` : ""}
+                </button>
+              </td>`;
+            }).join("")}
+          </tr>`;
+      }).join("");
+      return header + rows;
+    }
+
     function buildPlanTable(view, dates) {
       const editable = true;
       const plan = activeWorkPlan();
@@ -9489,6 +9665,7 @@
               `;
             }
           }
+          body += renderMachineRows(building, dates, editable);
         }
       }
       const summaryRows = activePeriods.length ? [
@@ -11635,6 +11812,81 @@
       `;
     }
 
+    function setMachineCellAmount(building, machineId, date, amount) {
+      const usage = activeMachineUsage();
+      usage[building] = usage[building] || {};
+      const retained = (usage[building][date] || []).filter((row) => row.machineId !== machineId);
+      const value = Math.max(0, n(amount));
+      if (value > 0) retained.push({ id: uid("mu"), machineId, amount: value });
+      if (retained.length) usage[building][date] = retained;
+      else delete usage[building][date];
+    }
+
+    function selectMachineCell(ref, rerender = true) {
+      if (!ref) return;
+      state.ui.selectedMachineCell = { ...ref };
+      saveState({ skipAutoSync: true });
+      if (rerender) renderPlanPreservingScroll();
+    }
+
+    function openMachineCellEditor(building, machineId, date) {
+      const machine = getMachine(machineId);
+      if (!machine || !building || !date) return;
+      machineCellDraft = {
+        building,
+        machineId,
+        date,
+        amount: machineAmountForDate(building, machineId, date)
+      };
+      $("#machineCellDialogTitle").textContent = machine.name;
+      $("#machineCellDialogMeta").textContent = `${buildingLabel(building)} · ${dateLabel(date)} · ค่าต่อวัน ${money(machine.dailyCost, 0)}`;
+      $("#machineCellAmount").value = machineCellDraft.amount || machine.dailyCost || 0;
+      $("#machineCellDialog").showModal();
+      requestAnimationFrame(() => $("#machineCellAmount")?.select());
+    }
+
+    function saveMachineCellDraft() {
+      if (!machineCellDraft) return;
+      const value = Math.max(0, n($("#machineCellAmount")?.value));
+      recordHistory("แก้ไขค่าเครื่องจักรรายวัน");
+      setMachineCellAmount(machineCellDraft.building, machineCellDraft.machineId, machineCellDraft.date, value);
+      state.ui.selectedMachineCell = { ...machineCellDraft };
+      saveState();
+      $("#machineCellDialog").close();
+      machineCellDraft = null;
+      renderPlanPreservingScroll();
+      showToast(value > 0 ? "บันทึกค่าเครื่องจักรแล้ว" : "ล้างค่าเครื่องจักรแล้ว");
+    }
+
+    function clearMachineCellDraft() {
+      if (!machineCellDraft) return;
+      $("#machineCellAmount").value = "0";
+      saveMachineCellDraft();
+    }
+
+    function copyMachineRange(source, target) {
+      if (!source || !target) return;
+      if (source.building !== target.building || source.machineId !== target.machineId) {
+        showToast("ลากเครื่องจักรได้เฉพาะแถวเดียวกัน");
+        return;
+      }
+      const amount = machineAmountForDate(source.building, source.machineId, source.date);
+      if (amount <= 0) {
+        showToast("ช่องต้นทางยังไม่มีค่าเครื่องจักร");
+        return;
+      }
+      const targetDates = dateRangeBetween(source.date, target.date);
+      if (!targetDates.length) return;
+      const overwrites = targetDates.filter((date) => machineAmountForDate(source.building, source.machineId, date) > 0);
+      if (overwrites.length && !confirm(`ปลายทางมีข้อมูลเครื่องจักรคันนี้อยู่ ${overwrites.length} วัน ต้องการเขียนทับหรือไม่?`)) return;
+      recordHistory("ลากคัดลอกเครื่องจักร");
+      targetDates.forEach((date) => setMachineCellAmount(source.building, source.machineId, date, amount));
+      state.ui.selectedMachineCell = { ...target };
+      saveState();
+      renderPlanPreservingScroll();
+      showToast(`เติมค่าเครื่องจักร ${targetDates.length} วันแล้ว`);
+    }
+
     function openCellEditor(periodId, itemId, date) {
       const period = getPeriod(periodId);
       const item = getItem(period, itemId);
@@ -12278,6 +12530,19 @@
       });
     }
 
+    function highlightMachineFillRange(source, target = source) {
+      clearFillHighlight();
+      if (!source || !target) return;
+      const span = new Set(dateSpanBetween(source.date, target.date));
+      $$('.machine-date-btn[data-action="edit-machine-cell"]').forEach((button) => {
+        const ref = machineCellRef(button);
+        if (!ref || ref.building !== source.building || ref.machineId !== source.machineId || !span.has(ref.date)) return;
+        button.classList.add("fill-range");
+        if (ref.date === source.date) button.classList.add("fill-source");
+        if (ref.date === target.date && ref.date !== source.date) button.classList.add("fill-target");
+      });
+    }
+
     function copyCellRange(source, target, mode = modeForCellRef(source)) {
       if (!source || !target) return;
       if (source.periodId !== target.periodId || source.itemId !== target.itemId) {
@@ -12331,6 +12596,21 @@
     }
 
     function handlePointerDown(event) {
+      const machineButton = event.target.closest('button[data-action="edit-machine-cell"]');
+      if (machineButton) {
+        const machineHandle = event.target.closest(".machine-fill-handle");
+        if (!machineHandle) return;
+        const source = machineCellRef(machineButton);
+        if (!source) return;
+        suppressCellClick = true;
+        machineFillDrag = { source, target: source, pointerId: event.pointerId };
+        state.ui.selectedMachineCell = { ...source };
+        highlightMachineFillRange(source);
+        try { machineHandle.setPointerCapture(event.pointerId); } catch (error) {}
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       const handle = event.target.closest(".fill-handle");
       const button = event.target.closest('button[data-action="edit-cell"]');
       if (!button) return;
@@ -12361,8 +12641,18 @@
     }
 
     function handlePointerMove(event) {
-      if (!fillDrag && !selectDrag) return;
+      if (!fillDrag && !selectDrag && !machineFillDrag) return;
       const element = document.elementFromPoint(event.clientX, event.clientY);
+      if (machineFillDrag) {
+        const button = element?.closest?.('button[data-action="edit-machine-cell"]');
+        const target = machineCellRef(button);
+        if (target && target.building === machineFillDrag.source.building && target.machineId === machineFillDrag.source.machineId) {
+          machineFillDrag.target = target;
+          highlightMachineFillRange(machineFillDrag.source, target);
+        }
+        event.preventDefault();
+        return;
+      }
       const button = element?.closest?.('button[data-action="edit-cell"]');
       const target = cellRefsFromButton(button, selectDrag?.source?.part || fillDrag?.source?.part || cellPartFromElement(element));
       if (selectDrag) {
@@ -12384,6 +12674,15 @@
     }
 
     function handlePointerUp(event) {
+      if (machineFillDrag) {
+        const { source, target } = machineFillDrag;
+        machineFillDrag = null;
+        clearFillHighlight();
+        if (target && target.date !== source.date) copyMachineRange(source, target);
+        setTimeout(() => { suppressCellClick = false; }, 0);
+        event.preventDefault();
+        return;
+      }
       if (selectDrag) {
         const { moved } = selectDrag;
         selectDrag = null;
@@ -12405,6 +12704,15 @@
     }
 
     function handleDoubleClick(event) {
+      const machineButton = event.target.closest('button[data-action="edit-machine-cell"]');
+      if (machineButton && !event.target.closest(".machine-fill-handle")) {
+        const ref = machineCellRef(machineButton);
+        if (!ref) return;
+        selectMachineCell(ref, false);
+        openMachineCellEditor(ref.building, ref.machineId, ref.date);
+        event.preventDefault();
+        return;
+      }
       const button = event.target.closest('button[data-action="edit-cell"]');
       if (!button || event.target.closest(".fill-handle")) return;
       const ref = cellRefsFromButton(button, cellPartFromEvent(button, event));
@@ -13469,6 +13777,19 @@
       if (action === "open-claim-dialog") return openClaimDialog();
       if (action === "delete-work-plan") return deleteWorkPlan();
       if (action === "complete-work-plan") return completeWorkPlan();
+      if (action === "toggle-machine-rows") {
+        const building = button.dataset.building || "";
+        state.ui.machineRowsCollapsed[building] = !state.ui.machineRowsCollapsed[building];
+        saveState({ skipAutoSync: true });
+        return renderPlanPreservingScroll();
+      }
+      if (action === "edit-machine-cell") {
+        if (suppressCellClick || event.target.closest(".machine-fill-handle")) {
+          suppressCellClick = false;
+          return;
+        }
+        return selectMachineCell(machineCellRef(button));
+      }
       if (action === "edit-cell") {
         if (suppressCellClick || event.target.closest(".fill-handle")) {
           suppressCellClick = false;
@@ -15523,6 +15844,14 @@
     window.addEventListener("scroll", positionInboundDatePicker, true);
     $("#saveCellBtn").addEventListener("click", saveCellDraft);
     $("#clearCellBtn").addEventListener("click", clearCellDraft);
+    $("#saveMachineCellBtn").addEventListener("click", saveMachineCellDraft);
+    $("#clearMachineCellBtn").addEventListener("click", clearMachineCellDraft);
+    $("#machineCellDialog").addEventListener("close", () => {
+      machineCellDraft = null;
+    });
+    $("#machineCellDialog").addEventListener("click", (event) => {
+      if (event.target?.id === "machineCellDialog") $("#machineCellDialog").close();
+    });
     $("#saveClaimBtn").addEventListener("click", saveClaimDateChange);
     $("#splitDialog").addEventListener("close", (event) => {
       if (!event.target.open) splitDraft = null;
