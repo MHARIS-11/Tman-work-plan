@@ -7531,18 +7531,25 @@
       const baseline = previousPlan
         ? accumulatedTotalsFor(view, previousPlan, planUpdateDate(previousPlan), priorPlans).costToUpdate
         : 0;
-      const dates = plan ? getDates(planStartDate(plan), planClaimDate(plan)) : [];
-      const periods = plan ? planPeriodsForView(plan, view) : [];
-      const plannedWorkers = dates.reduce((dateTotal, date) => dateTotal + periods.reduce((periodTotal, period) => {
-        return periodTotal + (period.items || []).reduce((itemTotal, item) => {
-          return itemTotal + n(plan?.itemData?.[item.id]?.plan?.[date]);
-        }, 0);
-      }, 0), 0);
+      const groupNo = plan ? claimGroupNo(plan) : "";
+      const forecastPlans = plan
+        ? (currentIndex >= 0 ? plans.slice(0, currentIndex + 1) : [plan]).filter((row) => claimGroupNo(row) === groupNo)
+        : [];
+      const plannedWorkers = forecastPlans.reduce((planTotal, forecastPlan) => {
+        const dates = getDates(planStartDate(forecastPlan), planClaimDate(forecastPlan));
+        const periods = planPeriodsForView(forecastPlan, view);
+        return planTotal + dates.reduce((dateTotal, date) => dateTotal + periods.reduce((periodTotal, period) => {
+          return periodTotal + (period.items || []).reduce((itemTotal, item) => {
+            return itemTotal + n(forecastPlan.itemData?.[item.id]?.plan?.[date]);
+          }, 0);
+        }, 0), 0);
+      }, 0);
       const plannedLabor = plannedWorkers * 480;
       const forecastTotal = baseline + plannedLabor;
       const projectLaborValue = projectLaborValueFor(view);
       return {
         baseline,
+        forecastPlanCount: forecastPlans.length,
         plannedWorkers,
         plannedLabor,
         forecastTotal,
