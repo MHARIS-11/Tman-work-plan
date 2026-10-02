@@ -6604,6 +6604,7 @@
       next.claimRecords = Array.isArray(next.claimRecords) ? next.claimRecords.map((record, recordIndex) => ({
         id: record?.id || uid("cr"),
         claimNo: String(record?.claimNo || recordIndex + 1),
+        sourceWorkPlanGroup: String(record?.sourceWorkPlanGroup || ""),
         date: String(record?.date || isoToday()),
         targetAmount: Math.max(0, n(record?.targetAmount)),
         status: record?.status === "claimed" ? "claimed" : "draft",
@@ -14426,6 +14427,82 @@
       return `${baseNo}.${(suffixes.length ? Math.max(...suffixes) : 0) + 1}`;
     }
 
+    function workPlansInClaimGroup(plan = activeWorkPlan()) {
+      if (!plan) return [];
+      const groupNo = claimGroupNo(plan);
+      return (state.workPlans || [])
+        .filter((row) => claimGroupNo(row) === groupNo)
+        .sort((a, b) => naturalSort(a.claimNo, b.claimNo));
+    }
+
+    function isLatestWorkPlanInClaimGroup(plan = activeWorkPlan()) {
+      const plans = workPlansInClaimGroup(plan);
+      return Boolean(plan && plans.at(-1)?.id === plan.id);
+    }
+
+    function claimItemsForWorkPlanGroup(plan = activeWorkPlan()) {
+      const items = new Map();
+      workPlansInClaimGroup(plan).forEach((groupPlan) => {
+        const selectedPeriods = new Set(groupPlan.periodIds || []);
+        state.periods.forEach((period) => {
+          if (!selectedPeriods.has(period.id)) return;
+          selectedItemsForPeriod(period, groupPlan).forEach((item) => {
+            if (!items.has(item.id)) items.set(item.id, { period, item });
+          });
+        });
+      });
+      return [...items.values()].sort((a, b) =>
+        naturalSort(a.period.building, b.period.building)
+        || naturalSort(periodMainNo(a.period), periodMainNo(b.period))
+        || naturalSort(a.period.no, b.period.no)
+        || naturalSort(a.item.name, b.item.name)
+      );
+    }
+
+    function syncCompletedWorkPlanClaim(plan = activeWorkPlan()) {
+      if (!plan || !isLatestWorkPlanInClaimGroup(plan)) return null;
+      const groupNo = claimGroupNo(plan);
+      const groupPlans = workPlansInClaimGroup(plan);
+      groupPlans.forEach((row) => { row.status = "เสร็จสิ้น"; });
+
+      let record = (state.claimRecords || []).find((row) => row.sourceWorkPlanGroup === groupNo)
+        || (state.claimRecords || []).find((row) => String(row.claimNo) === groupNo);
+      if (!record) {
+        record = {
+          id: uid("cr"),
+          claimNo: groupNo,
+          sourceWorkPlanGroup: groupNo,
+          date: plan.claimDate || plan.endDate || isoToday(),
+          targetAmount: 0,
+          status: "draft",
+          note: `สร้างอัตโนมัติจากแผนเบิกงวดครั้งที่ ${groupNo}`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          allocations: []
+        };
+        state.claimRecords.push(record);
+      }
+
+      record.sourceWorkPlanGroup = groupNo;
+      record.date = plan.claimDate || plan.endDate || record.date || isoToday();
+      record.allocations = Array.isArray(record.allocations) ? record.allocations : [];
+      const allocatedItemIds = new Set(record.allocations.map((allocation) => allocation.itemId));
+      claimItemsForWorkPlanGroup(plan).forEach(({ period, item }) => {
+        if (allocatedItemIds.has(item.id)) return;
+        const allocation = claimAllocationFromItem(period, item);
+        const priorPercent = claimedItemStats(item.id, record.id).percent;
+        allocation.percent = Math.min(Math.max(0, 100 - priorPercent), Math.max(0, n(item.progressPct) - priorPercent));
+        allocation.amount = n(allocation.workValueSnapshot) * allocation.percent / 100;
+        record.allocations.push(allocation);
+        allocatedItemIds.add(item.id);
+      });
+      record.targetAmount = claimRecordAmount(record);
+      record.status = "claimed";
+      record.updatedAt = new Date().toISOString();
+      state.ui.selectedClaimRecordId = record.id;
+      return record;
+    }
+
     function createWorkPlan(claimNo = nextClaimNo(), overrides = {}) {
       return normalizeWorkPlan({
         id: uid("wp"),
@@ -14550,6 +14627,7 @@
       const finishedLabel = workPlanLabel(plan);
       recordHistory("เสร็จสิ้นแผนเบิกงวด");
       plan.status = "เสร็จสิ้น";
+      syncCompletedWorkPlanClaim(plan);
       let nextPlan = nextExistingWorkPlan(plan);
       if (!nextPlan) {
         nextPlan = createWorkPlan(nextClaimNo());
