@@ -3770,6 +3770,16 @@
     .claim-balance span { color: var(--muted); font-size: 10px; font-weight: 800; }
     .claim-balance strong { margin-top: 3px; font-size: 15px; }
     .claim-balance .mismatch strong { color: var(--danger); }
+    .claim-validation-banner {
+      padding: 10px 12px;
+      border: 1px solid oklch(0.78 0.12 82);
+      border-radius: var(--radius);
+      background: oklch(0.97 0.045 82);
+      color: oklch(0.34 0.07 68);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
     .claim-period-row { background: oklch(0.975 0.01 160); font-weight: 900; }
     .claim-workspace tr.selected-row td { background: oklch(0.97 0.025 160); }
     .claim-item-name { padding-left: 30px; }
@@ -5576,6 +5586,7 @@
       <div class="content">
         <section class="tab-panel active" id="tab-dashboard"></section>
         <section class="tab-panel" id="tab-plan"></section>
+        <section class="tab-panel" id="tab-claims"></section>
         <section class="tab-panel" id="tab-prep"></section>
         <section class="tab-panel" id="tab-periods"></section>
         <section class="tab-panel" id="tab-periodData"></section>
@@ -5759,6 +5770,7 @@
     const tabs = [
       ["dashboard", "สรุปโครงการ"],
       ["plan", "แผนงวดงาน"],
+      ["claims", "สรุปเบิกงวด"],
       ["prep", "เตรียมงานล่วงหน้า"],
       ["periods", "งวดงานทั้งหมด"],
       ["periodData", "ข้อมูลงวดงาน"],
@@ -6063,6 +6075,16 @@
         },
         aliases: [
           { id: "1.1", username: "haris", password: "27" }
+        ]
+      },
+      {
+        id: "2",
+        firebase: {
+          username: "thirawat.chaloem@gmail.com",
+          password: "Thi0829236641"
+        },
+        aliases: [
+          { id: "2.1", username: "ball", password: "1234" }
         ]
       }
     ];
@@ -6630,6 +6652,11 @@
           };
         }).filter((allocation) => allocation.itemId || allocation.itemNameSnapshot) : []
       })) : [];
+      next.claimRecords.forEach((record) => {
+        if (record.sourceWorkPlanGroup && (record.allocations || []).some((allocation) => !n(allocation.workValueSnapshot))) {
+          record.status = "draft";
+        }
+      });
       next.machineUsage = cloneMachineUsage(next.machineUsage || {});
       next.buildings.filter(Boolean).forEach((building) => {
         next.machineUsage[building] = next.machineUsage[building] || {};
@@ -8615,6 +8642,7 @@
         workers: "users",
         machines: "machine",
         holidays: "calendar",
+        claims: "file",
         report: "file",
         sync: "sync",
         backup: "backup"
@@ -8660,8 +8688,8 @@
     function renderNav() {
       const desktop = $("#desktopNav");
       const mobile = $("#mobileNav");
-      const primary = tabs.slice(0, 10);
-      const utility = tabs.slice(10);
+      const primary = tabs.filter(([id]) => !["sync", "backup"].includes(id));
+      const utility = tabs.filter(([id]) => ["sync", "backup"].includes(id));
       desktop.innerHTML = `${renderNavSection(primary)}<div class="nav-divider"></div>${renderNavSection(utility)}`;
       mobile.innerHTML = tabs.map(([id, label]) => `<option value="${id}" ${activeTab === id ? "selected" : ""}>${label}</option>`).join("");
       applySidebarState();
@@ -8715,6 +8743,7 @@
       if (activeTab === "workers") renderWorkers();
       if (activeTab === "machines") renderMachines();
       if (activeTab === "holidays") renderHolidays();
+      if (activeTab === "claims") renderClaimSummary();
       if (activeTab === "report") renderReport();
       if (activeTab === "sync") renderSync();
       if (activeTab === "backup") renderBackup();
@@ -10580,21 +10609,6 @@
       `;
     }
 
-    function reportSectionControl() {
-      const section = state.ui.reportSection || "workplan";
-      return `
-        <div class="report-section-switch">
-          <div>
-            <h2>${section === "claims" ? "สรุปเบิกงวด" : "รายงานแผนงานและต้นทุน"}</h2>
-            <p class="muted">${section === "claims" ? "ตรวจสอบยอดเบิกตามครั้งและติดตามยอดสะสมของแต่ละงวดงาน" : "สร้างรายงานภาพจากแผนงานและข้อมูลต้นทุนปัจจุบัน"}</p>
-          </div>
-          <div class="segmented" aria-label="ประเภทรายงาน">
-            <button data-action="set-report-section" data-report-section="workplan" aria-pressed="${section === "workplan"}">แผนงานและต้นทุน</button>
-            <button data-action="set-report-section" data-report-section="claims" aria-pressed="${section === "claims"}">สรุปเบิกงวด</button>
-          </div>
-        </div>`;
-    }
-
     function claimableItems() {
       return [...state.periods]
         .sort((a, b) => naturalSort(a.building, b.building) || naturalSort(periodMainNo(a), periodMainNo(b)) || naturalSort(a.no, b.no))
@@ -10674,6 +10688,7 @@
       const total = claimRecordAmount(record);
       const difference = claimRecordDifference(record);
       const disabled = record.status === "claimed" ? "disabled" : "";
+      const missingWorkValueCount = (record.allocations || []).filter((allocation) => !n(allocation.workValueSnapshot)).length;
       return `
         <aside class="panel claim-side">
           <div class="panel-head">
@@ -10684,6 +10699,7 @@
             </div>
           </div>
           <div class="panel-body">
+            ${missingWorkValueCount ? `<div class="claim-validation-banner" role="alert">ยังยืนยันเบิกไม่ได้: มี ${money(missingWorkValueCount, 0)} รายการที่มูลค่างานเป็น 0 บาท กรุณากรอกมูลค่างานในหน้า “งวดงานทั้งหมด” ก่อน</div>` : ""}
             <div class="claim-form-grid">
               <label><span>ครั้งที่เบิก</span><input data-claim-field="claimNo" data-claim-id="${record.id}" value="${esc(record.claimNo)}" ${disabled}></label>
               <label><span>วันที่เบิก</span><input type="date" data-claim-field="date" data-claim-id="${record.id}" value="${esc(record.date)}" ${disabled}></label>
@@ -10791,9 +10807,8 @@
 
     function renderClaimSummary() {
       const view = state.ui.claimView || "records";
-      const el = $("#tab-report");
+      const el = $("#tab-claims");
       el.innerHTML = `<div class="section claim-shell">
-        ${reportSectionControl()}
         <div class="claim-page-head">
           <div><h2>สรุปเบิกงวดแบบละเอียด</h2><p>ยอดเบิกคิดจากมูลค่างานของรายการย่อย × เปอร์เซ็นต์ที่เบิกจริง</p></div>
           <div class="claim-toolbar"><div class="segmented" aria-label="มุมมองสรุปเบิกงวด"><button data-action="set-claim-view" data-claim-view="records" aria-pressed="${view === "records"}">ดูตามครั้งที่เบิก</button><button data-action="set-claim-view" data-claim-view="periods" aria-pressed="${view === "periods"}">ดูตามงวดงาน</button></div>${view === "records" ? `<button class="primary" data-action="add-claim-record">+ สร้างรายการเบิก</button>` : ""}</div>
@@ -10803,7 +10818,6 @@
     }
 
     function renderReport() {
-      if ((state.ui.reportSection || "workplan") === "claims") return renderClaimSummary();
       const viewOptions = buildingViewOptions();
       const view = viewOptions.includes(state.ui.reportView) ? state.ui.reportView : (viewOptions.at(-1) || viewOptions[0] || "ALL");
       const mode = reportMode();
@@ -10820,7 +10834,6 @@
         : `<select aria-label="รอบเดือน" style="width:240px;visibility:hidden" disabled><option>รอบเดือน</option></select>`;
       el.innerHTML = `
         <div class="section">
-          ${reportSectionControl()}
           <div class="panel">
             <div class="panel-head">
               <h2>รายงานรูปภาพ</h2>
@@ -13560,7 +13573,7 @@
       state.claimRecords.push(record);
       state.ui.selectedClaimRecordId = record.id;
       saveState();
-      renderReport();
+      renderClaimSummary();
       showToast("สร้างรายการเบิกแล้ว");
     }
 
@@ -13590,7 +13603,7 @@
       record.allocations.push(claimAllocationFromItem(candidate.period, candidate.item));
       record.updatedAt = new Date().toISOString();
       saveState();
-      renderReport();
+      renderClaimSummary();
     }
 
     function removeClaimAllocation(claimId, allocationId) {
@@ -13600,7 +13613,7 @@
       record.allocations = (record.allocations || []).filter((row) => row.id !== allocationId);
       record.updatedAt = new Date().toISOString();
       saveState();
-      renderReport();
+      renderClaimSummary();
     }
 
     function updateClaimField(target) {
@@ -13610,7 +13623,7 @@
       record[field] = field === "targetAmount" ? Math.max(0, n(target.value)) : target.value;
       record.updatedAt = new Date().toISOString();
       saveState();
-      renderReport();
+      renderClaimSummary();
     }
 
     function updateClaimAllocation(target) {
@@ -13621,7 +13634,7 @@
         const duplicate = record.allocations.some((row) => row.id !== allocation.id && row.itemId === target.value);
         if (duplicate) {
           showToast("รายการย่อยนี้อยู่ในการเบิกครั้งนี้แล้ว");
-          return renderReport();
+          return renderClaimSummary();
         }
         const master = claimableItems().find(({ item }) => item.id === target.value);
         if (!master) return;
@@ -13635,7 +13648,7 @@
       }
       record.updatedAt = new Date().toISOString();
       saveState();
-      renderReport();
+      renderClaimSummary();
     }
 
     function claimRecordError(record) {
@@ -13660,7 +13673,7 @@
       record.status = "claimed";
       record.updatedAt = new Date().toISOString();
       saveState();
-      renderReport();
+      renderClaimSummary();
       showToast("ยืนยันการเบิกแล้ว");
     }
 
@@ -13671,7 +13684,7 @@
       record.status = "draft";
       record.updatedAt = new Date().toISOString();
       saveState();
-      renderReport();
+      renderClaimSummary();
     }
 
     function deleteClaimRecord(claimId) {
@@ -13681,7 +13694,7 @@
       state.claimRecords = state.claimRecords.filter((row) => row.id !== claimId);
       state.ui.selectedClaimRecordId = state.claimRecords[0]?.id || "";
       saveState();
-      renderReport();
+      renderClaimSummary();
       showToast("ลบรายการเบิกแล้ว");
     }
 
@@ -13725,21 +13738,16 @@
       const action = button.dataset.action;
       if (!action) return;
 
-      if (action === "set-report-section") {
-        state.ui.reportSection = button.dataset.reportSection || "workplan";
-        saveState();
-        return renderReport();
-      }
       if (action === "set-claim-view") {
         state.ui.claimView = button.dataset.claimView || "records";
         saveState();
-        return renderReport();
+        return renderClaimSummary();
       }
       if (action === "add-claim-record") return addClaimRecord();
       if (action === "select-claim-record") {
         state.ui.selectedClaimRecordId = button.dataset.claimId || "";
         saveState();
-        return renderReport();
+        return renderClaimSummary();
       }
       if (action === "add-claim-allocation") return addClaimAllocation(button.dataset.claimId);
       if (action === "remove-claim-allocation") return removeClaimAllocation(button.dataset.claimId, button.dataset.allocationId);
@@ -13751,12 +13759,12 @@
         const id = button.dataset.periodId;
         state.ui.claimExpandedPeriods[id] = state.ui.claimExpandedPeriods[id] === false;
         saveState();
-        return renderReport();
+        return renderClaimSummary();
       }
       if (action === "select-claim-detail") {
         state.ui.claimDetailKey = button.dataset.claimDetailKey || "";
         saveState();
-        return renderReport();
+        return renderClaimSummary();
       }
 
       if (action === "open-prep-work-dialog") return openPrepWorkDialog(button.dataset.prepWorkId || "");
@@ -14013,12 +14021,7 @@
         return;
       }
       if (target.dataset.workPlanField) {
-        const plan = activeWorkPlan();
-        if (!plan) return;
-        plan[target.dataset.workPlanField] = target.value;
-        saveState();
-        renderNav();
-        return;
+        return updateWorkPlanField(target);
       }
       if (target.dataset.quickField) {
         const field = target.dataset.quickField;
@@ -14058,6 +14061,7 @@
                 allocation.workValueSnapshot = item.workValue;
                 allocation.amount = item.workValue * n(allocation.percent) / 100;
               });
+              if (record.sourceWorkPlanGroup) record.targetAmount = claimRecordAmount(record);
             });
           }
           saveState();
@@ -14262,6 +14266,7 @@
       }
       if (target.dataset.quickField) return updateQuickField(target.dataset.quickField, target.value, true);
       if (target.dataset.workPlanField) {
+        updateWorkPlanField(target);
         if (["startDate", "endDate", "updateDate", "status"].includes(target.dataset.workPlanField)) return renderActiveTab();
         return;
       }
@@ -14486,21 +14491,41 @@
       record.sourceWorkPlanGroup = groupNo;
       record.date = plan.claimDate || plan.endDate || record.date || isoToday();
       record.allocations = Array.isArray(record.allocations) ? record.allocations : [];
-      const allocatedItemIds = new Set(record.allocations.map((allocation) => allocation.itemId));
-      claimItemsForWorkPlanGroup(plan).forEach(({ period, item }) => {
-        if (allocatedItemIds.has(item.id)) return;
-        const allocation = claimAllocationFromItem(period, item);
+      const groupItems = claimItemsForWorkPlanGroup(plan);
+      const selectedItemIds = new Set(groupItems.map(({ item }) => item.id));
+      record.allocations = record.allocations.filter((allocation) => selectedItemIds.has(allocation.itemId));
+      groupItems.forEach(({ period, item }) => {
+        const existing = record.allocations.find((allocation) => allocation.itemId === item.id);
+        const fresh = claimAllocationFromItem(period, item);
+        const allocation = existing || fresh;
+        Object.assign(allocation, fresh, { id: existing?.id || fresh.id });
         const priorPercent = claimedItemStats(item.id, record.id).percent;
         allocation.percent = Math.min(Math.max(0, 100 - priorPercent), Math.max(0, n(item.progressPct) - priorPercent));
         allocation.amount = n(allocation.workValueSnapshot) * allocation.percent / 100;
-        record.allocations.push(allocation);
-        allocatedItemIds.add(item.id);
+        if (!existing) record.allocations.push(allocation);
       });
       record.targetAmount = claimRecordAmount(record);
-      record.status = "claimed";
+      record.status = claimRecordError(record) ? "draft" : "claimed";
       record.updatedAt = new Date().toISOString();
       state.ui.selectedClaimRecordId = record.id;
       return record;
+    }
+
+    function updateWorkPlanField(target) {
+      const plan = activeWorkPlan();
+      if (!plan) return null;
+      const field = target.dataset.workPlanField;
+      if (!field || plan[field] === target.value) return null;
+      plan[field] = target.value;
+      const claimRecord = field === "status" && target.value === "เสร็จสิ้น"
+        ? syncCompletedWorkPlanClaim(plan)
+        : null;
+      saveState();
+      renderNav();
+      if (claimRecord?.status === "draft") {
+        showToast("สร้างรายการเบิกเป็นฉบับร่างแล้ว กรุณาตรวจมูลค่างานและเปอร์เซ็นต์ก่อนยืนยันเบิก");
+      }
+      return claimRecord;
     }
 
     function createWorkPlan(claimNo = nextClaimNo(), overrides = {}) {
@@ -14627,7 +14652,7 @@
       const finishedLabel = workPlanLabel(plan);
       recordHistory("เสร็จสิ้นแผนเบิกงวด");
       plan.status = "เสร็จสิ้น";
-      syncCompletedWorkPlanClaim(plan);
+      const claimRecord = syncCompletedWorkPlanClaim(plan);
       let nextPlan = nextExistingWorkPlan(plan);
       if (!nextPlan) {
         nextPlan = createWorkPlan(nextClaimNo());
@@ -14639,7 +14664,9 @@
       state.ui.selectedCells = [];
       saveState();
       renderAll();
-      showToast(`${finishedLabel} เสร็จสิ้นแล้ว เปิด${workPlanLabel(nextPlan)}ใหม่`);
+      showToast(claimRecord?.status === "draft"
+        ? `${finishedLabel} เสร็จสิ้นแล้ว รายการเบิกถูกเก็บเป็นฉบับร่างเพราะข้อมูลยังไม่ครบ`
+        : `${finishedLabel} เสร็จสิ้นแล้ว เปิด${workPlanLabel(nextPlan)}ใหม่`);
     }
 
     function setBuildingPeriodsEnabled(building, enabled) {
