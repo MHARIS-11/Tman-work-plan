@@ -3284,6 +3284,78 @@
       gap: 8px;
       flex-wrap: wrap;
     }
+    .png-export-dialog {
+      width: min(540px, calc(100vw - 24px));
+      max-width: min(540px, calc(100vw - 24px));
+      overflow: hidden;
+    }
+    .png-export-dialog .dialog-head {
+      align-items: flex-start;
+      background: var(--surface);
+    }
+    .png-export-dialog .dialog-head h2 {
+      font-size: 20px;
+    }
+    .png-export-dialog .dialog-head p {
+      margin-top: 3px;
+    }
+    .png-export-preview {
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+    .png-export-preview img {
+      display: block;
+      width: 100%;
+      max-height: min(42vh, 320px);
+      object-fit: contain;
+      background: white;
+    }
+    .png-export-file {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+    .png-export-file strong,
+    .png-export-file span {
+      overflow-wrap: anywhere;
+    }
+    .png-export-file span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .png-export-help {
+      padding: 11px 12px;
+      border: 1px solid oklch(0.82 0.05 160);
+      border-radius: var(--radius);
+      background: oklch(0.975 0.015 160);
+      color: oklch(0.30 0.045 160);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+    .png-export-dialog button svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+    .png-export-dialog .dialog-actions button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
     .split-dialog {
       width: min(680px, calc(100vw - 24px));
       max-width: min(680px, calc(100vw - 24px));
@@ -3464,6 +3536,12 @@
       }
       .split-dialog .dialog-actions button {
         flex: 1 1 160px;
+      }
+      .png-export-dialog .dialog-actions {
+        justify-content: stretch;
+      }
+      .png-export-dialog .dialog-actions button {
+        flex: 1 1 100%;
       }
     }
     @media (prefers-reduced-motion: no-preference) {
@@ -5472,6 +5550,8 @@
     <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
     <symbol id="icon-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="icon-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></symbol>
+    <symbol id="icon-external-link" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
   </svg>
   <section class="planora-login" id="planoraLogin" aria-label="เข้าสู่ระบบ Planora">
     <div class="planora-hero">
@@ -5722,6 +5802,28 @@
     </div>
   </dialog>
 
+  <dialog id="pngExportDialog" class="png-export-dialog" aria-labelledby="pngExportDialogTitle">
+    <div class="dialog-head">
+      <div>
+        <h2 id="pngExportDialogTitle">บันทึกรูปลง iPhone</h2>
+        <p class="muted">ไฟล์ PNG พร้อมบันทึกแล้ว</p>
+      </div>
+      <button type="button" class="ghost" data-action="close-png-export" aria-label="ปิด"><svg aria-hidden="true"><use href="#icon-close"></use></svg></button>
+    </div>
+    <div class="dialog-body">
+      <div class="png-export-preview"><img id="pngExportPreview" alt="ตัวอย่างรูป PNG ที่สร้างเสร็จแล้ว"></div>
+      <div class="png-export-file">
+        <strong id="pngExportFilename"></strong>
+        <span id="pngExportSize"></span>
+      </div>
+      <div class="png-export-help" id="pngExportHelp">กด “บันทึกรูปลง iPhone” แล้วเลือก “บันทึกรูปภาพ” ใน Share Sheet ของ iOS</div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="ghost" data-action="open-png-export"><svg aria-hidden="true"><use href="#icon-external-link"></use></svg>เปิดรูปเต็ม</button>
+      <button type="button" class="primary" id="sharePngExportBtn" data-action="share-png-export"><svg aria-hidden="true"><use href="#icon-share"></use></svg>บันทึกรูปลง iPhone</button>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -5835,6 +5937,7 @@
     let appClipboard = null;
     let suppressCellClick = false;
     let toastTimer = null;
+    let pendingPngExport = null;
     let firebaseAuthState = null;
     let autoSyncTimer = null;
     let autoPullTimer = null;
@@ -13934,6 +14037,9 @@
       if (action === "download-report-pdf") return downloadReportPdf();
       if (action === "download-attendance-png") return downloadAttendancePng();
       if (action === "download-attendance-pdf") return downloadAttendancePdf();
+      if (action === "close-png-export") return closePngExportDialog();
+      if (action === "share-png-export") return sharePngExport();
+      if (action === "open-png-export") return openPngExport();
       if (action === "open-attendance-inbound-dialog") return openAttendanceInboundDialog();
       if (action === "close-attendance-inbound-dialog") return closeAttendanceInboundDialog();
       if (action === "save-attendance-inbound-dialog") return saveAttendanceInboundDialog();
@@ -15350,6 +15456,126 @@
       return `tman-report-${view}${suffix}-${planUpdateDate() || "update"}-${stamp}.${ext}`;
     }
 
+    function isIOSDevice() {
+      const userAgent = navigator.userAgent || "";
+      return /iPad|iPhone|iPod/i.test(userAgent)
+        || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function dataUrlToBlob(dataUrl) {
+      const [meta, payload = ""] = String(dataUrl || "").split(",", 2);
+      const mime = meta.match(/^data:([^;]+)/)?.[1] || "image/png";
+      const binary = atob(payload);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+      return new Blob([bytes], { type: mime });
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function canSharePngFile(file) {
+      if (!file || !window.isSecureContext || typeof navigator.share !== "function") return false;
+      if (typeof navigator.canShare !== "function") return true;
+      try {
+        return navigator.canShare({ files: [file] });
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function clearPendingPngExport() {
+      const preview = $("#pngExportPreview");
+      if (preview) preview.removeAttribute("src");
+      if (pendingPngExport?.url) URL.revokeObjectURL(pendingPngExport.url);
+      pendingPngExport = null;
+    }
+
+    function closePngExportDialog() {
+      const dialog = $("#pngExportDialog");
+      if (dialog?.open) dialog.close();
+      else clearPendingPngExport();
+    }
+
+    function showPngExportDialog(blob, filename, title) {
+      clearPendingPngExport();
+      const file = typeof File === "function"
+        ? new File([blob], filename, { type: "image/png", lastModified: Date.now() })
+        : null;
+      const url = URL.createObjectURL(blob);
+      pendingPngExport = { blob, file, url, filename, title };
+
+      $("#pngExportDialogTitle").textContent = title || "บันทึกรูปลง iPhone";
+      $("#pngExportPreview").src = url;
+      $("#pngExportFilename").textContent = filename;
+      $("#pngExportSize").textContent = `PNG · ${formatFileSize(blob.size)}`;
+
+      const shareButton = $("#sharePngExportBtn");
+      const openButton = document.querySelector('[data-action="open-png-export"]');
+      const shareReady = canSharePngFile(file);
+      shareButton.hidden = !shareReady;
+      openButton.classList.toggle("primary", !shareReady);
+      openButton.classList.toggle("ghost", shareReady);
+      $("#pngExportHelp").textContent = shareReady
+        ? "กด “บันทึกรูปลง iPhone” แล้วเลือก “บันทึกรูปภาพ” ใน Share Sheet ของ iOS"
+        : "เบราว์เซอร์นี้ไม่รองรับการแชร์ไฟล์ ให้กด “เปิดรูปเต็ม” แล้วกดค้างที่รูปเพื่อบันทึก หากเปิดผ่าน LINE ให้เปิดหน้านี้ใน Safari";
+
+      const dialog = $("#pngExportDialog");
+      if (!dialog.open) dialog.showModal();
+    }
+
+    function preparePngExport(canvas, filename, title) {
+      if (!isIOSDevice()) {
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+
+      showToast("กำลังสร้างไฟล์ PNG...");
+      const ready = (blob) => {
+        if (!blob?.size) return showToast("สร้างไฟล์ PNG ไม่สำเร็จ กรุณาลองอีกครั้ง");
+        showPngExportDialog(blob, filename, title);
+      };
+      if (typeof canvas.toBlob === "function") canvas.toBlob(ready, "image/png");
+      else ready(dataUrlToBlob(canvas.toDataURL("image/png")));
+    }
+
+    async function sharePngExport() {
+      const current = pendingPngExport;
+      if (!current) return showToast("ไม่พบไฟล์ PNG กรุณาสร้างรูปใหม่");
+      if (!canSharePngFile(current.file)) return openPngExport();
+      try {
+        await navigator.share({
+          files: [current.file],
+          title: current.title || "Planora PNG"
+        });
+        closePngExportDialog();
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        $("#pngExportHelp").textContent = "เปิด Share Sheet ไม่สำเร็จ ให้กด “เปิดรูปเต็ม” แล้วกดค้างที่รูปเพื่อบันทึก หากเปิดผ่าน LINE ให้เปิดหน้านี้ใน Safari";
+        showToast("เปิด Share Sheet ไม่สำเร็จ ใช้วิธีเปิดรูปเต็มแทนได้");
+      }
+    }
+
+    function openPngExport() {
+      if (!pendingPngExport?.url) return showToast("ไม่พบไฟล์ PNG กรุณาสร้างรูปใหม่");
+      const a = document.createElement("a");
+      a.href = pendingPngExport.url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast("หากรูปไม่เปิด ให้เปิดแอปผ่าน Safari แล้วลองอีกครั้ง");
+    }
+
     function downloadReport() {
       const viewOptions = buildingViewOptions();
       const view = viewOptions.includes(state.ui.reportView) ? state.ui.reportView : (viewOptions.at(-1) || viewOptions[0] || "ALL");
@@ -15357,12 +15583,7 @@
       const cycle = mode === "monthly" ? selectedReportCycle() : null;
       const canvas = document.createElement("canvas");
       drawReport(canvas, view, 2, mode, cycle);
-      const a = document.createElement("a");
-      a.href = canvas.toDataURL("image/png");
-      a.download = reportFilename("png", view, mode, cycle);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      preparePngExport(canvas, reportFilename("png", view, mode, cycle), "บันทึกรายงานลง iPhone");
     }
 
     function downloadReportPdf() {
@@ -15394,12 +15615,7 @@
       const canvas = document.createElement("canvas");
       const variant = attendanceExportMode();
       drawAttendanceReport(canvas, attendanceView(), selectedAttendanceMonth(), 2, variant);
-      const a = document.createElement("a");
-      a.href = canvas.toDataURL("image/png");
-      a.download = attendanceFilename("png", variant);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      preparePngExport(canvas, attendanceFilename("png", variant), "บันทึกรายงานวันมาทำงานลง iPhone");
     }
 
     function downloadAttendancePdf() {
@@ -15987,6 +16203,10 @@
     });
     $("#prepDialog").addEventListener("click", (event) => {
       if (event.target?.id === "prepDialog") closePrepDialog();
+    });
+    $("#pngExportDialog").addEventListener("close", clearPendingPngExport);
+    $("#pngExportDialog").addEventListener("click", (event) => {
+      if (event.target?.id === "pngExportDialog") closePngExportDialog();
     });
 
     $("#planoraLoginForm")?.addEventListener("submit", submitPlanoraLogin);
