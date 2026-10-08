@@ -15445,7 +15445,38 @@
       return "full";
     }
 
+    const REPORT_MONTH_SHORT_NAMES = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    const REPORT_MONTH_LONG_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+
+    function reportMonthRangeNames(start = planStartDate(), end = planEndDate()) {
+      const startYear = Number(String(start || "").slice(0, 4));
+      const startMonth = Number(String(start || "").slice(5, 7));
+      const endYear = Number(String(end || "").slice(0, 4));
+      const endMonth = Number(String(end || "").slice(5, 7));
+      const monthCount = (endYear - startYear) * 12 + endMonth - startMonth;
+      if (!startYear || !endYear || startMonth < 1 || startMonth > 12 || endMonth < 1 || endMonth > 12 || monthCount < 0 || monthCount > 120) return [];
+      return Array.from({ length: monthCount + 1 }, (_, index) => REPORT_MONTH_SHORT_NAMES[(startMonth - 1 + index) % 12]);
+    }
+
+    function reportFilenameView(view) {
+      return String(view || combinedViewValue() || "ALL").replace(/[^A-Za-z0-9ก-๙]/g, "") || "ALL";
+    }
+
+    function reportPdfFilename(view, mode = reportMode(), cycle = selectedReportCycle()) {
+      const viewName = reportFilenameView(view);
+      if (mode === "monthly") {
+        const monthIndex = Number(String(cycle?.end || "").slice(5, 7)) - 1;
+        const monthName = REPORT_MONTH_LONG_NAMES[monthIndex] || "ไม่ระบุเดือน";
+        return `สรุปแผนงวด-${monthName}-TMAN-${viewName}.pdf`;
+      }
+      const monthNames = reportMonthRangeNames();
+      const monthRange = monthNames.length ? monthNames.join("+") : "ไม่ระบุเดือน";
+      const prefix = mode === "projectPlan" ? "แผนงวดงานเดือน" : "สรุปแผนงวด";
+      return `${prefix}-${monthRange}-TMAN-${viewName}.pdf`;
+    }
+
     function reportFilename(ext, view, mode = reportMode(), cycle = selectedReportCycle()) {
+      if (ext === "pdf") return reportPdfFilename(view, mode, cycle);
       const now = new Date();
       const stamp = `${localISODate(now)}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
       const suffix = mode === "projectPlan"
