@@ -5862,6 +5862,8 @@
       measurementId: "G-YRV0YDYH7M"
     };
     const AUTH_STORAGE_KEY = `${STORAGE_KEY}.auth`;
+    const USER_STATE_PREFIX = `${STORAGE_KEY}.user.`;
+    const LEGACY_STATE_BACKUP_KEY = `${STORAGE_KEY}.legacyBackup.beforeAccountIsolation`;
     const SYNC_BACKUP_PREFIX = `${STORAGE_KEY}.syncBackup.`;
     const SYNC_DEVICE_KEY = `${STORAGE_KEY}.deviceId`;
     const SYNC_DIRTY_KEY = `${STORAGE_KEY}.syncDirtyAt`;
@@ -5939,12 +5941,13 @@
     let toastTimer = null;
     let pendingPngExport = null;
     let firebaseAuthState = null;
+    let activeStateUid = "";
     let autoSyncTimer = null;
     let autoPullTimer = null;
     let syncBusy = false;
     let suppressAutoSync = false;
-    let localDirtyAt = Number(localStorage.getItem(SYNC_DIRTY_KEY) || 0);
-    let localDirtyHash = localStorage.getItem(SYNC_DIRTY_HASH_KEY) || "";
+    let localDirtyAt = 0;
+    let localDirtyHash = "";
     let lastBusinessHash = "";
     let attendanceCommentMode = false;
     let attendanceCommentPopover = null;
@@ -6055,19 +6058,62 @@
       return id;
     }
 
+    function accountStorageSuffix(uidValue = activeStateUid) {
+      return encodeURIComponent(String(uidValue || "").trim());
+    }
+
+    function accountStateStorageKey(uidValue = activeStateUid) {
+      const suffix = accountStorageSuffix(uidValue);
+      return suffix ? `${USER_STATE_PREFIX}${suffix}` : "";
+    }
+
+    function accountDirtyAtStorageKey(uidValue = activeStateUid) {
+      const suffix = accountStorageSuffix(uidValue);
+      return suffix ? `${SYNC_DIRTY_KEY}.user.${suffix}` : "";
+    }
+
+    function accountDirtyHashStorageKey(uidValue = activeStateUid) {
+      const suffix = accountStorageSuffix(uidValue);
+      return suffix ? `${SYNC_DIRTY_HASH_KEY}.user.${suffix}` : "";
+    }
+
+    function accountSyncBackupPrefix(uidValue = activeStateUid) {
+      const suffix = accountStorageSuffix(uidValue);
+      return suffix ? `${SYNC_BACKUP_PREFIX}user.${suffix}.` : `${SYNC_BACKUP_PREFIX}guest.`;
+    }
+
+    function preserveLegacyStateBackup() {
+      const legacy = localStorage.getItem(STORAGE_KEY);
+      if (legacy && !localStorage.getItem(LEGACY_STATE_BACKUP_KEY)) {
+        localStorage.setItem(LEGACY_STATE_BACKUP_KEY, legacy);
+      }
+    }
+
+    function loadLocalDirty(uidValue = activeStateUid) {
+      const dirtyAtKey = accountDirtyAtStorageKey(uidValue);
+      const dirtyHashKey = accountDirtyHashStorageKey(uidValue);
+      localDirtyAt = dirtyAtKey ? Number(localStorage.getItem(dirtyAtKey) || 0) : 0;
+      localDirtyHash = dirtyHashKey ? localStorage.getItem(dirtyHashKey) || "" : "";
+    }
+
     function markLocalDirty(hash = syncBusinessHash()) {
       localDirtyAt = Date.now();
       localDirtyHash = hash || "";
-      localStorage.setItem(SYNC_DIRTY_KEY, String(localDirtyAt));
-      if (localDirtyHash) localStorage.setItem(SYNC_DIRTY_HASH_KEY, localDirtyHash);
-      else localStorage.removeItem(SYNC_DIRTY_HASH_KEY);
+      const dirtyAtKey = accountDirtyAtStorageKey();
+      const dirtyHashKey = accountDirtyHashStorageKey();
+      if (!dirtyAtKey || !dirtyHashKey) return;
+      localStorage.setItem(dirtyAtKey, String(localDirtyAt));
+      if (localDirtyHash) localStorage.setItem(dirtyHashKey, localDirtyHash);
+      else localStorage.removeItem(dirtyHashKey);
     }
 
     function clearLocalDirty() {
+      const dirtyAtKey = accountDirtyAtStorageKey();
+      const dirtyHashKey = accountDirtyHashStorageKey();
       localDirtyAt = 0;
       localDirtyHash = "";
-      localStorage.removeItem(SYNC_DIRTY_KEY);
-      localStorage.removeItem(SYNC_DIRTY_HASH_KEY);
+      if (dirtyAtKey) localStorage.removeItem(dirtyAtKey);
+      if (dirtyHashKey) localStorage.removeItem(dirtyHashKey);
     }
 
     function hasLocalDirty() {
@@ -6126,16 +6172,11 @@
       }
       firebaseAuthState = normalized;
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(normalized));
-      if (state) {
-        state.sync = normalizeSyncSettings(state.sync);
-        state.sync.authEmail = normalized.email;
-        state.sync.authUid = normalized.uid;
-        saveState({ skipAutoSync: true });
-      }
       return normalized;
     }
 
     function clearAuthState() {
+      if (state && activeStateUid) saveState({ skipAutoSync: true });
       firebaseAuthState = null;
       localStorage.removeItem(AUTH_STORAGE_KEY);
       if (state) {
@@ -6328,7 +6369,8 @@
       setPlanoraLoginBusy(true);
       try {
         const loginCredentials = resolveTemporaryAliasLogin(username, password);
-        await firebaseSignIn(loginCredentials.email, loginCredentials.password);
+        const auth = await firebaseSignIn(loginCredentials.email, loginCredentials.password);
+        activateAuthenticatedAccount(auth);
         await pullCloudAfterLogin();
         showPlanoraApp();
         renderAll();
@@ -6376,6 +6418,7 @@
       }
       try {
         await ensureAuthToken();
+        await pullCloudAfterLogin();
         showPlanoraApp();
         renderAll();
         if (hasLocalDirty()) scheduleAutoSync("init-dirty");
@@ -6393,7 +6436,9 @@
       if (!email || !password) return showToast("กรอกอีเมลและรหัสผ่านก่อน");
       try {
         setSyncStatus("กำลังเข้าสู่ระบบ");
-        await firebaseSignIn(email, password);
+        const auth = await firebaseSignIn(email, password);
+        activateAuthenticatedAccount(auth);
+        await pullCloudAfterLogin();
         setSyncStatus("เข้าสู่ระบบแล้ว");
         showToast("เข้าสู่ระบบ Firebase แล้ว");
         renderSync();
@@ -6636,9 +6681,10 @@
       return plan;
     }
 
-    function loadState() {
+    function loadState(uidValue = "") {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const key = accountStateStorageKey(uidValue);
+        const raw = key ? localStorage.getItem(key) : null;
         if (!raw) return normalizeState(createDefaultState());
         const parsed = JSON.parse(raw);
         if (!parsed.version) return normalizeState(createDefaultState());
@@ -6840,19 +6886,51 @@
       return next;
     }
 
-    state = loadState();
+    preserveLegacyStateBackup();
     firebaseAuthState = loadAuthState();
+    activeStateUid = firebaseAuthState?.uid || "";
+    state = loadState(activeStateUid);
     if (firebaseAuthState) {
       state.sync = normalizeSyncSettings(state.sync);
       state.sync.authEmail = firebaseAuthState.email;
       state.sync.authUid = firebaseAuthState.uid;
     }
+    loadLocalDirty(activeStateUid);
     lastBusinessHash = syncBusinessHash();
+
+    function activateAuthenticatedAccount(auth) {
+      const normalized = normalizeAuthState(auth);
+      if (!normalized) throw new Error("ข้อมูลบัญชี Firebase ไม่สมบูรณ์");
+      stopAutoPullLoop();
+      clearTimeout(autoSyncTimer);
+      autoSyncTimer = null;
+      suppressAutoSync = true;
+      try {
+        if (state && activeStateUid) {
+          const outgoingKey = accountStateStorageKey(activeStateUid);
+          if (outgoingKey) localStorage.setItem(outgoingKey, JSON.stringify(state));
+        }
+        activeStateUid = normalized.uid;
+        state = loadState(activeStateUid);
+        state.sync = normalizeSyncSettings(state.sync);
+        state.sync.authEmail = normalized.email;
+        state.sync.authUid = normalized.uid;
+        loadLocalDirty(activeStateUid);
+        undoStack = [];
+        redoStack = [];
+        lastBusinessHash = syncBusinessHash();
+        saveState({ skipAutoSync: true });
+      } finally {
+        suppressAutoSync = false;
+      }
+      return state;
+    }
 
     function saveState(options = {}) {
       const currentBusinessHash = syncBusinessHash();
       const businessChanged = Boolean(currentBusinessHash && currentBusinessHash !== lastBusinessHash);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const key = accountStateStorageKey();
+      if (key) localStorage.setItem(key, JSON.stringify(state));
       if (!options.skipAutoSync && (options.markDirty || businessChanged)) {
         markLocalDirty(currentBusinessHash);
         scheduleAutoSync("state-save");
@@ -11585,24 +11663,26 @@
     function saveSyncBackup(reason = "pull-cloud") {
       const now = new Date();
       const stamp = `${localISODate(now)}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
-      localStorage.setItem(`${SYNC_BACKUP_PREFIX}${stamp}`, JSON.stringify({ createdAt: now.toISOString(), reason, state }));
+      const prefix = accountSyncBackupPrefix();
+      localStorage.setItem(`${prefix}${stamp}`, JSON.stringify({ createdAt: now.toISOString(), reason, uid: activeStateUid, state }));
       const keys = [];
       for (let index = 0; index < localStorage.length; index++) {
         const key = localStorage.key(index);
-        if (key?.startsWith(SYNC_BACKUP_PREFIX)) keys.push(key);
+        if (key?.startsWith(prefix)) keys.push(key);
       }
       keys.sort().slice(0, Math.max(0, keys.length - 5)).forEach((key) => localStorage.removeItem(key));
       return stamp;
     }
 
     function latestSyncBackupLabel() {
+      const prefix = accountSyncBackupPrefix();
       const keys = [];
       for (let index = 0; index < localStorage.length; index++) {
         const key = localStorage.key(index);
-        if (key?.startsWith(SYNC_BACKUP_PREFIX)) keys.push(key);
+        if (key?.startsWith(prefix)) keys.push(key);
       }
       const latest = keys.sort().at(-1);
-      return latest ? latest.replace(SYNC_BACKUP_PREFIX, "") : "-";
+      return latest ? latest.replace(prefix, "") : "-";
     }
 
     function setSyncStatus(status, error = "") {
