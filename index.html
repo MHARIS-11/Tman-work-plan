@@ -6803,7 +6803,7 @@
       if (!planViewOptions.includes(next.ui.planView)) next.ui.planView = planViewOptions[0] || fallbackView;
       if (!viewOptions.includes(next.ui.manualView)) next.ui.manualView = fallbackCombined;
       if (!viewOptions.includes(next.ui.reportView)) next.ui.reportView = fallbackCombined;
-      if (!["full", "projectPlan", "monthly"].includes(next.ui.reportMode)) next.ui.reportMode = "full";
+      if (!["full", "projectPlan", "monthly", "compact"].includes(next.ui.reportMode)) next.ui.reportMode = "full";
       if (!["workplan", "claims"].includes(next.ui.reportSection)) next.ui.reportSection = "workplan";
       if (!["records", "periods"].includes(next.ui.claimView)) next.ui.claimView = "records";
       if (!next.claimRecords.some((record) => record.id === next.ui.selectedClaimRecordId)) next.ui.selectedClaimRecordId = next.claimRecords[0]?.id || "";
@@ -10949,6 +10949,7 @@
                   <option value="full" ${mode === "full" ? "selected" : ""}>เต็มรูปแบบ</option>
                   <option value="projectPlan" ${mode === "projectPlan" ? "selected" : ""}>แผนสำหรับ Project</option>
                   <option value="monthly" ${mode === "monthly" ? "selected" : ""}>สรุปรายเดือน</option>
+                  <option value="compact" ${mode === "compact" ? "selected" : ""}>แผนงานแบบย่อ</option>
                 </select>
                 <label class="check-row" title="แสดงคอลัมน์ใช้จริงและเปอร์เซ็นต์ในตารางรายงาน">
                   <input id="reportActualColumnsToggle" type="checkbox" ${state.ui.reportShowActualColumns ? "checked" : ""} ${mode === "projectPlan" ? "disabled" : ""}>
@@ -15442,6 +15443,7 @@
     function reportMode() {
       if (state.ui?.reportMode === "projectPlan") return "projectPlan";
       if (state.ui?.reportMode === "monthly") return "monthly";
+      if (state.ui?.reportMode === "compact") return "compact";
       return "full";
     }
 
@@ -15471,7 +15473,11 @@
       }
       const monthNames = reportMonthRangeNames();
       const monthRange = monthNames.length ? monthNames.join("+") : "ไม่ระบุเดือน";
-      const prefix = mode === "projectPlan" ? "แผนงวดงานเดือน" : "สรุปแผนงวด";
+      const prefix = mode === "projectPlan"
+        ? "แผนงวดงานเดือน"
+        : mode === "compact"
+          ? "แผนงานแบบย่อ"
+          : "สรุปแผนงวด";
       return `${prefix}-${monthRange}-TMAN-${viewName}.pdf`;
     }
 
@@ -15481,9 +15487,11 @@
       const stamp = `${localISODate(now)}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
       const suffix = mode === "projectPlan"
         ? "-project-plan"
-        : mode === "monthly" && cycle
-          ? `-monthly-${cycle.start}-${cycle.end}`
-          : "";
+        : mode === "compact"
+          ? "-compact"
+          : mode === "monthly" && cycle
+            ? `-monthly-${cycle.start}-${cycle.end}`
+            : "";
       return `tman-report-${view}${suffix}-${planUpdateDate() || "update"}-${stamp}.${ext}`;
     }
 
@@ -15839,9 +15847,30 @@
       }
     }
 
+    function drawReportLineRuns(ctx, values, x, y, dayW, rowH, color, scale) {
+      let runStart = -1;
+      for (let index = 0; index <= values.length; index += 1) {
+        const active = index < values.length && Number(values[index]) > 0;
+        if (active && runStart < 0) runStart = index;
+        if (!active && runStart >= 0) {
+          const inset = 3 * scale;
+          const thickness = 6 * scale;
+          ctx.fillStyle = color;
+          ctx.fillRect(
+            x + runStart * dayW + inset,
+            y + rowH / 2 - thickness / 2,
+            (index - runStart) * dayW - inset * 2,
+            thickness
+          );
+          runStart = -1;
+        }
+      }
+    }
+
     function drawReport(canvas, view, scale = 1, mode = reportMode(), cycle = null) {
       if (!canvas) return;
       const projectPlan = mode === "projectPlan";
+      const compactMode = mode === "compact";
       const monthlyCycle = mode === "monthly" ? (cycle || selectedReportCycle()) : null;
       const dates = monthlyCycle ? getDates(monthlyCycle.start, monthlyCycle.end) : getDates();
       const dateFilter = monthlyCycle ? new Set(dates) : null;
@@ -15861,7 +15890,8 @@
       const noteW = 76 * scale;
       const leftW = seqW + itemW + laborValueW + actualW + actualPctW + dataLabelW + progressW + noteW;
       const reportPeriods = periodsForView(view);
-      const itemRows = reportPeriods.reduce((sum, period) => sum + 1 + period.items.length * 3, 0);
+      const itemRowsPerItem = compactMode ? 2 : 3;
+      const itemRows = reportPeriods.reduce((sum, period) => sum + 1 + period.items.length * itemRowsPerItem, 0);
       const totalRows = reportPeriods.length ? 5 : 0;
       const summaryRows = 6;
       const width = leftW + dates.length * dateW + pad * 2;
@@ -15907,7 +15937,8 @@
       const titleView = reportViewTitle(view);
       ctx.fillStyle = "#111";
       const titleSafeWidth = claimBoxVisible ? tableW - (claimBoxW + 24 * scale) * 2 : tableW - 24 * scale;
-      fitText(ctx, `แผนงานประจำงวดโครงการ ${state.settings.projectName} ${titleView}`, x0 + tableW / 2, y + 22 * scale, Math.max(240 * scale, titleSafeWidth), "center");
+      const reportTitle = compactMode ? "แผนงานแบบย่อโครงการ" : "แผนงานประจำงวดโครงการ";
+      fitText(ctx, `${reportTitle} ${state.settings.projectName} ${titleView}`, x0 + tableW / 2, y + 22 * scale, Math.max(240 * scale, titleSafeWidth), "center");
       if (monthlyCycle) {
         ctx.font = `bold ${12 * scale}px Tahoma, sans-serif`;
         fitText(ctx, `สรุปรายเดือน ${monthlyCycle.label} (${monthlyCycle.rangeLabel})`, x0 + tableW / 2, y + 44 * scale, Math.max(240 * scale, titleSafeWidth), "center");
@@ -15991,12 +16022,17 @@
               : null;
             const itemActual = itemActualSummary(view, activeWorkPlan(), item, itemFilter);
             const itemRatio = n(item.laborValue) ? itemActual.total / n(item.laborValue) : 0;
-            const leftRows = [
-              ["แรงคนงาน(แผน)", (date) => itemPlanValue(item, date) || ""],
-              ["แรงคนงาน(จริง)", (date) => itemActualUnits(item, date) || ""],
-              ["มูลค่าค่าแรง", (date) => itemLaborCost(item, date) || ""]
-            ];
-            leftRows.forEach(([label, getter], subIndex) => {
+            const leftRows = compactMode
+              ? [
+                  ["วางแผน", (date) => itemPlanValue(item, date) || "", "#111111"],
+                  ["ทำจริง", (date) => itemActualUnits(item, date) || "", "#d71920"]
+                ]
+              : [
+                  ["แรงคนงาน(แผน)", (date) => itemPlanValue(item, date) || "", ""],
+                  ["แรงคนงาน(จริง)", (date) => itemActualUnits(item, date) || "", ""],
+                  ["มูลค่าค่าแรง", (date) => itemLaborCost(item, date) || "", ""]
+                ];
+            leftRows.forEach(([label, getter, lineColor], subIndex) => {
               const fill = "#ffffff";
               drawCell(ctx, x0, y, seqW, rowH, subIndex === 0 ? seq : "", false, fill);
               drawCell(ctx, x0 + seqW, y, itemW, rowH, subIndex === 0 ? item.name : "", false, fill, "#111", "left");
@@ -16008,24 +16044,33 @@
               drawCell(ctx, dataLabelX, y, dataLabelW, rowH, label, false, fill);
               drawCell(ctx, dataLabelX + dataLabelW, y, progressW, rowH, subIndex === 0 ? `${money(item.progressPct, 0)}%` : "", false, fill);
               drawCell(ctx, dataLabelX + dataLabelW + progressW, y, noteW, rowH, "", false, fill);
-              dates.forEach((date, index) => {
-                const value = projectPlan && subIndex > 0 ? "" : getter(date);
-                const x = x0 + leftW + index * dateW;
-                const hasValue = Number(value) > 0;
-                const planValue = subIndex === 0 && hasValue;
-                const actualValue = !projectPlan && subIndex === 1 && hasValue;
-                let bg = isHoliday(date) ? "#c9c9c9" : "#ffffff";
-                let color = "#111";
-                if (planValue) {
-                  bg = "#cfe8ff";
-                  color = "#0f3f66";
-                }
-                if (actualValue) {
-                  bg = "#ff2b1f";
-                  color = "#fff";
-                }
-                drawCell(ctx, x, y, dateW, rowH, value ? (subIndex === 2 ? money(value, 0) : qty(value)) : "", false, bg, color);
-              });
+              if (compactMode) {
+                const values = dates.map((date) => getter(date));
+                dates.forEach((date, index) => {
+                  const x = x0 + leftW + index * dateW;
+                  drawCell(ctx, x, y, dateW, rowH, "", false, isHoliday(date) ? "#c9c9c9" : "#ffffff");
+                });
+                drawReportLineRuns(ctx, values, x0 + leftW, y, dateW, rowH, lineColor, scale);
+              } else {
+                dates.forEach((date, index) => {
+                  const value = projectPlan && subIndex > 0 ? "" : getter(date);
+                  const x = x0 + leftW + index * dateW;
+                  const hasValue = Number(value) > 0;
+                  const planValue = subIndex === 0 && hasValue;
+                  const actualValue = !projectPlan && subIndex === 1 && hasValue;
+                  let bg = isHoliday(date) ? "#c9c9c9" : "#ffffff";
+                  let color = "#111";
+                  if (planValue) {
+                    bg = "#cfe8ff";
+                    color = "#0f3f66";
+                  }
+                  if (actualValue) {
+                    bg = "#ff2b1f";
+                    color = "#fff";
+                  }
+                  drawCell(ctx, x, y, dateW, rowH, value ? (subIndex === 2 ? money(value, 0) : qty(value)) : "", false, bg, color);
+                });
+              }
               y += rowH;
             });
           });
